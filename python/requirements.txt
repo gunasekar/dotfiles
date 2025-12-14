@@ -1,0 +1,20 @@
+# Python linting and formatting tools for development
+# Install with: pip3 install --user -r requirements.txt
+
+# Linting
+pylint  # Python linter (used by nvim)
+
+# Code formatting
+black  # Opinionated code formatter
+isort  # Import statement organizer
+
+# Type checking
+mypy  # Static type checker
+
+# Additional linters
+flake8  # Style guide enforcement
+bandit  # Security linter
+yamllint  # YAML linter (also available via brew)
+
+# Documentation
+pydocstyle  # Docstring style checker

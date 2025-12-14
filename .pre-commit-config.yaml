@@ -1,0 +1,60 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # Shellcheck - Shell script linter
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: Shellcheck
+        description: Run shellcheck on shell scripts
+        args: [--severity=warning]
+        # Check all shell scripts in sources/
+        files: ^sources/.*\.(sh|bash|zsh)$
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent committing large files
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+
+      # Check for merge conflicts
+      - id: check-merge-conflict
+
+      # Check for symlinks that point to nothing
+      - id: check-symlinks
+
+      # Detect private keys
+      - id: detect-private-key
+
+      # Check JSON files are valid
+      - id: check-json
+
+      # Check YAML files are valid
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom tags in YAML
+
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+        exclude: '\.Brewfile$'
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  # Additional security checks (optional - uncomment to enable)
+  # Requires: pip install detect-secrets
+  # Then run: detect-secrets scan --baseline .secrets.baseline
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.4.0
+  #   hooks:
+  #     - id: detect-secrets
+  #       name: Detect secrets
+  #       args: ['--baseline', '.secrets.baseline']
+  #       exclude: package.lock.json

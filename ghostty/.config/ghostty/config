@@ -1,0 +1,141 @@
+# Ghostty Configuration
+# Claude Code + Neovim Integration Setup
+# Based on: https://danielmiessler.com/blog/replacing-cursor-with-neovim-claude-code
+
+# =============================================================================
+# FONT CONFIGURATION
+# =============================================================================
+font-family = "Hack Nerd Font Mono"
+font-size = 13
+font-thicken = true
+
+# =============================================================================
+# THEME - One Dark (Atom's iconic dark theme)
+# =============================================================================
+# Import the theme from a separate file
+# Available themes: claude-dark, onedark
+theme = onedark
+
+# =============================================================================
+# WINDOW SETTINGS
+# =============================================================================
+window-padding-x = 8
+window-padding-y = 8
+window-decoration = true
+window-theme = dark
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+
+# Start with maximized window (full screen size but not fullscreen mode)
+maximize = true
+
+# =============================================================================
+# SPLITS & PANES - Claude Code Workflow Keybindings
+# =============================================================================
+# Create new split to the right (for Neovim)
+keybind = cmd+d=new_split:right
+
+# Create new split below (for shell/commands)
+keybind = cmd+shift+t=new_split:down
+
+# Navigate between panes (vim-style navigation)
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:bottom
+keybind = ctrl+k=goto_split:top
+keybind = ctrl+l=goto_split:right
+
+# Resize splits
+keybind = cmd+ctrl+h=resize_split:left,10
+keybind = cmd+ctrl+j=resize_split:down,10
+keybind = cmd+ctrl+k=resize_split:up,10
+keybind = cmd+ctrl+l=resize_split:right,10
+
+# Toggle split zoom (maximize current pane)
+keybind = cmd+shift+z=toggle_split_zoom
+
+# Close split
+keybind = cmd+w=close_surface
+
+# Equalize splits
+keybind = cmd+shift+e=equalize_splits
+
+# =============================================================================
+# TAB MANAGEMENT
+# =============================================================================
+keybind = cmd+t=new_tab
+keybind = cmd+shift+[=previous_tab
+keybind = cmd+shift+]=next_tab
+keybind = cmd+1=goto_tab:1
+keybind = cmd+2=goto_tab:2
+keybind = cmd+3=goto_tab:3
+keybind = cmd+4=goto_tab:4
+keybind = cmd+5=goto_tab:5
+
+# =============================================================================
+# GENERAL SETTINGS
+# =============================================================================
+# Shell
+command = /bin/zsh
+
+# Cursor
+cursor-style = block
+cursor-style-blink = true
+
+# Mouse
+mouse-hide-while-typing = true
+copy-on-select = false
+
+# Link clicking - Cmd+Click to open URLs on macOS
+link-url = true
+
+# Clipboard
+clipboard-read = ask
+clipboard-write = allow
+
+# Bell (using window-vsync for visual feedback instead)
+window-vsync = true
+
+# Scrollback
+scrollback-limit = 10000
+
+# Performance
+adjust-cell-height = 0
+adjust-cell-width = 0
+
+# Shell integration
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# Auto-update
+auto-update = check
+auto-update-channel = stable
+
+# =============================================================================
+# WORKFLOW TIPS
+# =============================================================================
+# Recommended Claude Code + Neovim workflow:
+#
+# 1. Open Ghostty
+# 2. Cmd+D to split right
+# 3. Cmd+Shift+T to split bottom (in either pane)
+#
+# Layout:
+#   ┌─────────────────┬──────────────────┐
+#   │                 │                  │
+#   │  Claude Code    │    Neovim        │
+#   │  (Left pane)    │  (Right pane)    │
+#   │                 │                  │
+#   ├─────────────────┴──────────────────┤
+#   │         Shell (Bottom pane)        │
+#   └────────────────────────────────────┘
+#
+# Navigation:
+#   - Ctrl+H/J/K/L: Navigate between panes (vim-style)
+#   - Cmd+W: Close current pane
+#   - Cmd+Shift+Z: Toggle zoom on current pane
+#
+# Usage:
+#   - Left pane: Run 'claude' for interactive AI assistance
+#   - Right pane: Run 'nvim' for code editing
+#   - Bottom pane: Run git, tests, builds, etc.
+#   - Use Ctrl+H/L to quickly jump between Claude and Neovim

@@ -1,0 +1,42 @@
+-- AI Assistant integrations
+return {
+  -- Claude Code integration
+  {
+    "coder/claudecode.nvim",
+    dependencies = {
+      "folke/snacks.nvim",
+    },
+    opts = {
+      -- Server settings
+      auto_start = true,
+      log_level = "info",
+
+      -- Terminal configuration
+      terminal = {
+        split_side = "right",          -- Position on right side
+        split_width_percentage = 0.3,  -- 30% of screen width
+        provider = "snacks",           -- Use snacks for terminal
+        auto_close = false,            -- Keep terminal open
+      },
+
+      -- Working directory
+      git_repo_cwd = true,  -- Use git root as working directory
+
+      -- Diff integration
+      diff = {
+        auto_close_on_accept = true,
+        vertical_split = true,
+        open_in_current_tab = true,
+        keep_terminal_focus = true,
+      },
+
+      -- Behavior
+      focus_after_send = false,
+    },
+    keys = {
+      { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
+      { "<leader>as", "<cmd>ClaudeCodeSend<cr>", mode = { "n", "v" }, desc = "Send to Claude" },
+    },
+  },
+
+}

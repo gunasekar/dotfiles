@@ -1,0 +1,28 @@
+# Generic Git Configuration (Public)
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+[commit]
+	template = ~/.git-commit-template
+[push]
+	autoSetupRemote = true
+[diff]
+	tool = vimdiff
+	colorMoved = default
+[difftool]
+	prompt = false
+[core]
+	pager = delta
+	excludesFile = ~/.global.gitignore
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	side-by-side = true
+[merge]
+	conflictstyle = diff3
