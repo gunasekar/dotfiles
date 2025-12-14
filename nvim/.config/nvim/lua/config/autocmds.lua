@@ -79,7 +79,7 @@ api.nvim_create_autocmd("BufWritePre", {
   pattern = "*",
   callback = function(event)
     local file = vim.uv.fs_realpath(event.match) or event.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+    pcall(vim.fn.mkdir, vim.fn.fnamemodify(file, ":p:h"), "p")
   end,
   desc = "Auto-create parent directories when saving",
 })
@@ -93,6 +93,66 @@ api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
     vim.diagnostic.enable(false, { bufnr = 0 })
   end,
   desc = "Disable diagnostics in node_modules",
+})
+
+-- Maintain static window layout
+-- Prevents neo-tree and terminal from being resized by other windows
+local static_layout_group = api.nvim_create_augroup("StaticLayout", { clear = true })
+
+-- Keep neo-tree width fixed
+api.nvim_create_autocmd("FileType", {
+  group = static_layout_group,
+  pattern = "neo-tree",
+  callback = function()
+    vim.wo.winfixwidth = true
+  end,
+  desc = "Fix neo-tree width",
+})
+
+-- Keep terminal height/width fixed
+api.nvim_create_autocmd("TermOpen", {
+  group = static_layout_group,
+  callback = function()
+    -- Check if this is a toggleterm terminal
+    if vim.bo.filetype == "toggleterm" then
+      -- Will be handled by toggleterm's on_open callback
+      return
+    end
+    -- For other terminals, fix the height if horizontal
+    local win_width = vim.api.nvim_win_get_width(0)
+    local total_width = vim.o.columns
+    if win_width == total_width then
+      vim.wo.winfixheight = true
+    else
+      vim.wo.winfixwidth = true
+    end
+  end,
+  desc = "Fix terminal window size",
+})
+
+-- Prevent windows from auto-equalizing when opening/closing buffers
+api.nvim_create_autocmd({ "BufWinEnter", "BufWinLeave" }, {
+  group = static_layout_group,
+  callback = function()
+    -- Restore fixed sizes for neo-tree and terminal windows
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      local buf = vim.api.nvim_win_get_buf(win)
+      local filetype = vim.bo[buf].filetype
+
+      if filetype == "neo-tree" then
+        vim.wo[win].winfixwidth = true
+      elseif filetype == "toggleterm" then
+        local win_width = vim.api.nvim_win_get_width(win)
+        local total_width = vim.o.columns
+        if win_width == total_width then
+          vim.wo[win].winfixheight = true
+        else
+          vim.wo[win].winfixwidth = true
+        end
+      end
+    end
+  end,
+  desc = "Maintain fixed window sizes",
 })
 
 -- Trim trailing whitespace on save (optional - uncomment if desired)

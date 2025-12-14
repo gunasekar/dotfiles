@@ -22,8 +22,7 @@ keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Increase w
 -- Buffer navigation
 keymap.set("n", "<S-l>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 keymap.set("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
-keymap.set("n", "<leader>bd", "<cmd>bdelete<CR>", { desc = "Delete buffer" })
-keymap.set("n", "<leader>bD", "<cmd>%bd|e#|bd#<CR>", { desc = "Delete all buffers except current" })
+-- Buffer deletion keymaps are defined in plugins/utils.lua (bufdelete.nvim plugin)
 
 -- Better indenting
 keymap.set("v", "<", "<gv", { desc = "Indent left" })

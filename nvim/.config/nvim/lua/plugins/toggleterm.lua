@@ -5,12 +5,14 @@ return {
   version = "*",
   config = function()
     require("toggleterm").setup({
-      -- Size of terminal
+      -- Size of terminal (relative sizes that adapt to screen)
       size = function(term)
         if term.direction == "horizontal" then
-          return 15
+          -- 30% of screen height (adapts to any screen size)
+          return math.floor(vim.o.lines * 0.3)
         elseif term.direction == "vertical" then
-          return vim.o.columns * 0.4
+          -- 40% of screen width (adapts to any screen size)
+          return math.floor(vim.o.columns * 0.4)
         end
       end,
 
@@ -62,16 +64,29 @@ return {
           return term.name
         end,
       },
+
+      -- Fix terminal window size (prevents resizing)
+      on_open = function(term)
+        if term.direction == "horizontal" then
+          vim.wo[term.window].winfixheight = true
+        elseif term.direction == "vertical" then
+          vim.wo[term.window].winfixwidth = true
+        end
+      end,
     })
 
     -- Keymaps
     local keymap = vim.keymap
 
-    -- Toggle terminals with different layouts
-    keymap.set("n", "<leader>th", "<cmd>ToggleTerm size=15 direction=horizontal<cr>",
-      { desc = "Toggle horizontal terminal" })
-    keymap.set("n", "<leader>tv", "<cmd>ToggleTerm size=80 direction=vertical<cr>",
-      { desc = "Toggle vertical terminal" })
+    -- Toggle terminals with different layouts (using relative sizes)
+    keymap.set("n", "<leader>th", function()
+      local size = math.floor(vim.o.lines * 0.3)
+      vim.cmd("ToggleTerm size=" .. size .. " direction=horizontal")
+    end, { desc = "Toggle horizontal terminal (30% height)" })
+    keymap.set("n", "<leader>tv", function()
+      local size = math.floor(vim.o.columns * 0.4)
+      vim.cmd("ToggleTerm size=" .. size .. " direction=vertical")
+    end, { desc = "Toggle vertical terminal (40% width)" })
     keymap.set("n", "<leader>tf", "<cmd>ToggleTerm direction=float<cr>",
       { desc = "Toggle floating terminal" })
 

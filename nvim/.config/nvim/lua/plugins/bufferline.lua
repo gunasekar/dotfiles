@@ -110,7 +110,7 @@ return {
     keymap.set("n", "<leader>bo", "<cmd>BufferLineCloseOthers<CR>", { desc = "Close other buffers" })
     keymap.set("n", "<leader>br", "<cmd>BufferLineCloseRight<CR>", { desc = "Close buffers to the right" })
     keymap.set("n", "<leader>bl", "<cmd>BufferLineCloseLeft<CR>", { desc = "Close buffers to the left" })
-    keymap.set("n", "<leader>bd", "<cmd>bdelete<CR>", { desc = "Delete buffer" })
+    -- Buffer deletion keymap is defined in plugins/utils.lua (bufdelete.nvim plugin)
 
     -- Navigate to specific buffer by number
     for i = 1, 9 do

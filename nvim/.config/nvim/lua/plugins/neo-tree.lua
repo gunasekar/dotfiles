@@ -30,7 +30,7 @@ return {
         if directory then
           -- Defer to ensure neo-tree is fully loaded
           vim.defer_fn(function()
-            vim.cmd("Neotree show")
+            pcall(vim.cmd, "Neotree show")
           end, 10)
         end
       end,
@@ -60,15 +60,23 @@ return {
       {
         event = "neo_tree_buffer_enter",
         handler = function()
-          vim.cmd("setlocal nobuflisted")
+          pcall(vim.cmd, "setlocal nobuflisted")
         end,
       },
       {
         event = "neo_tree_window_after_open",
         handler = function(args)
           if args.position == "left" or args.position == "right" then
-            vim.cmd("wincmd =")
+            -- Set fixed width for neo-tree window
+            vim.wo.winfixwidth = true
           end
+        end,
+      },
+      {
+        event = "neo_tree_window_after_close",
+        handler = function()
+          -- Don't equalize windows when neo-tree closes
+          -- This prevents the layout from shifting
         end,
       },
     },
@@ -139,7 +147,13 @@ return {
     -- Window configuration
     window = {
       position = "left",
-      width = 35,
+      -- Relative width: 15% of screen (adapts to any screen size)
+      -- Compact sidebar for maximum editor space
+      width = function()
+        return math.floor(vim.o.columns * 0.15)
+      end,
+      -- Keep neo-tree width fixed, don't let other windows resize it
+      -- This uses Neovim's built-in window options
       mapping_options = {
         noremap = true,
         nowait = true,

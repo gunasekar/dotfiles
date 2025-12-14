@@ -47,6 +47,7 @@ opt.clipboard = "unnamedplus"
 opt.splitright = true
 opt.splitbelow = true
 opt.splitkeep = "screen" -- Keep screen position on splits
+opt.equalalways = false -- Don't auto-equalize window sizes (keeps layout static)
 opt.swapfile = false
 opt.backup = false
 opt.writebackup = false

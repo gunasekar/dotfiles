@@ -35,7 +35,7 @@ return {
     },
     config = function(_, opts)
       require("gruvbox").setup(opts)
-      vim.cmd("colorscheme gruvbox")
+      pcall(vim.cmd, "colorscheme gruvbox")
     end,
   },
 
@@ -87,7 +87,7 @@ return {
     },
     config = function(_, opts)
       require("onedarkpro").setup(opts)
-      vim.cmd("colorscheme onedark_dark")
+      pcall(vim.cmd, "colorscheme onedark_dark")
     end,
   },
 }
