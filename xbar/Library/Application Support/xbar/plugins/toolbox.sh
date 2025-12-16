@@ -32,26 +32,9 @@ function createAction() {
   echo "-- $1 | bash='${SCRIPT_PATH}' param1=$2 terminal=false refresh=true"
 }
 
-# UUID functions
-function generateUUIDUpper() {
-  uuidgen | tr '[:lower:]' '[:upper:]' | copyToClip
-}
-
-function generateUUIDLower() {
-  uuidgen | tr '[:upper:]' '[:lower:]' | copyToClip
-}
-
-function generateRandHex8() {
-  openssl rand -hex 50 | cut -c1-"8" | copyToClip
-}
-
-function generateRandHex16() {
-  openssl rand -hex 50 | cut -c1-"16" | copyToClip
-}
-
-function generateRandHex32() {
-  openssl rand -hex 50 | cut -c1-"32" | copyToClip
-}
+# ============================================
+# TEXT OPERATIONS
+# ============================================
 
 # String functions
 function toUpper() {
@@ -61,6 +44,35 @@ function toUpper() {
 function toLower() {
   pbpaste | tr '[:upper:]' '[:lower:]' | copyToClip
 }
+
+# Sort functions
+function sortLines() {
+  pbpaste | sort | copyToClip
+}
+
+function sortLinesReverse() {
+  pbpaste | sort -r | copyToClip
+}
+
+function sortLinesUnique() {
+  pbpaste | sort -u | copyToClip
+}
+
+function sortLinesUniqueReverse() {
+  pbpaste | sort -u -r | copyToClip
+}
+
+function sortLinesUniqueCaseInsensitive() {
+  pbpaste | sort -u -f | copyToClip
+}
+
+function sortLinesUniqueCaseInsensitiveReverse() {
+  pbpaste | sort -u -f -r | copyToClip
+}
+
+# ============================================
+# ENCODING/DECODING
+# ============================================
 
 # Hex functions
 function toHex() {
@@ -90,6 +102,44 @@ function encodeBase64() {
 function decodeBase64() {
   pbpaste | base64 -d | copyToClip
 }
+
+# ============================================
+# CRYPTOGRAPHY
+# ============================================
+
+# UUID functions
+function generateUUIDUpper() {
+  uuidgen | tr '[:lower:]' '[:upper:]' | copyToClip
+}
+
+function generateUUIDLower() {
+  uuidgen | tr '[:upper:]' '[:lower:]' | copyToClip
+}
+
+function generateRandHex8() {
+  openssl rand -hex 50 | cut -c1-"8" | copyToClip
+}
+
+function generateRandHex16() {
+  openssl rand -hex 50 | cut -c1-"16" | copyToClip
+}
+
+function generateRandHex32() {
+  openssl rand -hex 50 | cut -c1-"32" | copyToClip
+}
+
+# Hash functions
+function hashMD5() {
+  pbpaste | openssl md5 | awk '{print $2}' | copyToClip
+}
+
+function hashSHA256() {
+  pbpaste | openssl sha256 | awk '{print $2}' | copyToClip
+}
+
+# ============================================
+# DATA FORMATS
+# ============================================
 
 # JSON functions
 function prettifyJson() {
@@ -146,6 +196,10 @@ function csv2json() {
     }' <<< "$content" | pbcopy
 }
 
+# ============================================
+# DATE/TIME
+# ============================================
+
 # Date functions
 function currentEpochSecond() {
     date +%s | copyToClip
@@ -183,6 +237,10 @@ function unixToUtcTimestamp() {
   date -r "$(pbpaste)" -u +%Y-%m-%dT%H:%M:%SZ | copyToClip
 }
 
+# ============================================
+# MEDIA/UTILITIES
+# ============================================
+
 # QR functions
 function QRDecode() {
     tmp_file=$(mktemp)
@@ -199,46 +257,24 @@ function QRDecode() {
     rm "$tmp_file_png"
 }
 
-# Sort functions
-function sortLines() {
-  pbpaste | sort | copyToClip
-}
-
-function sortLinesReverse() {
-  pbpaste | sort -r | copyToClip
-}
-
-function sortLinesUnique() {
-  pbpaste | sort -u | copyToClip
-}
-
-function sortLinesUniqueReverse() {
-  pbpaste | sort -u -r | copyToClip
-}
-
-function sortLinesUniqueCaseInsensitive() {
-  pbpaste | sort -u -f | copyToClip
-}
-
-function sortLinesUniqueCaseInsensitiveReverse() {
-  pbpaste | sort -u -f -r | copyToClip
-}
-
 [[ $# -ge 1 ]] && { $1 && exit $?; }
 
 createHeader "${APP_ICON}" 'Toolbox'
 
-createMenu "UUID"
-createAction "Uppercase" generateUUIDUpper
-createAction "Lowercase" generateUUIDLower
-createAction "Random Hex 8" generateRandHex8
-createAction "Random Hex 16" generateRandHex16
-createAction "Random Hex 32" generateRandHex32
-
+# TEXT OPERATIONS
 createMenu "String"
 createAction "To Uppercase" toUpper
 createAction "To Lowercase" toLower
 
+createMenu "Sort"
+createAction "Lines" sortLines
+createAction "Lines Reverse" sortLinesReverse
+createAction "Lines Unique" sortLinesUnique
+createAction "Lines Unique Reverse" sortLinesUniqueReverse
+createAction "Lines Unique Case Insensitive" sortLinesUniqueCaseInsensitive
+createAction "Lines Unique Case Insensitive Reverse" sortLinesUniqueCaseInsensitiveReverse
+
+# ENCODING/DECODING
 createMenu "Hex"
 createAction "To Hex" toHex
 createAction "From Hex" fromHex
@@ -251,6 +287,19 @@ createMenu "Base64"
 createAction "Encode" encodeBase64
 createAction "Decode" decodeBase64
 
+# CRYPTOGRAPHY
+createMenu "UUID"
+createAction "Uppercase" generateUUIDUpper
+createAction "Lowercase" generateUUIDLower
+createAction "Random Hex 8" generateRandHex8
+createAction "Random Hex 16" generateRandHex16
+createAction "Random Hex 32" generateRandHex32
+
+createMenu "Hash"
+createAction "MD5" hashMD5
+createAction "SHA256" hashSHA256
+
+# DATA FORMATS
 createMenu "JSON"
 createAction "Format" prettifyJson
 createAction "Minify" minifyJson
@@ -261,6 +310,7 @@ createMenu "CSV"
 createAction "JSON to CSV" json2csv
 createAction "CSV to JSON" csv2json
 
+# DATE/TIME
 createMenu "Date"
 createAction "Epoch Second" currentEpochSecond
 createAction "UTC ISO8601" currentUTCISO8601
@@ -272,13 +322,6 @@ createAction "Local YYYY-MM-DD" currentLocalDay
 createAction "Unix to UTC ISO8601" unixToUtcTimestamp
 createAction "Unix to Local ISO8601" unixToLocalTimestamp
 
+# MEDIA/UTILITIES
 createMenu "QR"
 createAction "Decode" QRDecode
-
-createMenu "Sort"
-createAction "Lines" sortLines
-createAction "Lines Reverse" sortLinesReverse
-createAction "Lines Unique" sortLinesUnique
-createAction "Lines Unique Reverse" sortLinesUniqueReverse
-createAction "Lines Unique Case Insensitive" sortLinesUniqueCaseInsensitive
-createAction "Lines Unique Case Insensitive Reverse" sortLinesUniqueCaseInsensitiveReverse
