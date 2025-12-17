@@ -66,7 +66,20 @@ return {
           right_mouse_command = function(bufnum)
             vim.cmd("Bdelete " .. bufnum)
           end,
-          left_mouse_command = "buffer %d",
+          left_mouse_command = function(bufnum)
+            -- If in a special buffer (terminal, etc.), first move to a normal window
+            if vim.bo.buftype ~= "" then
+              -- Find and focus the first normal file window
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local buf = vim.api.nvim_win_get_buf(win)
+                if vim.bo[buf].buftype == "" then
+                  vim.api.nvim_set_current_win(win)
+                  break
+                end
+              end
+            end
+            vim.cmd("buffer " .. bufnum)
+          end,
           middle_mouse_command = nil,
           indicator = {
             icon = "▎",
