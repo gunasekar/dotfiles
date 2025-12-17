@@ -96,20 +96,8 @@ api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 })
 
 -- Maintain static window layout
--- Prevents neo-tree and terminal from being resized by other windows
+-- Prevents terminals from being resized by other windows
 local static_layout_group = api.nvim_create_augroup("StaticLayout", { clear = true })
-
--- Keep neo-tree width fixed and show line numbers
-api.nvim_create_autocmd("FileType", {
-  group = static_layout_group,
-  pattern = "neo-tree",
-  callback = function()
-    vim.wo.winfixwidth = true
-    vim.wo.number = true
-    vim.wo.relativenumber = true
-  end,
-  desc = "Fix neo-tree width and enable line numbers",
-})
 
 -- Keep terminal height/width fixed
 api.nvim_create_autocmd("TermOpen", {
@@ -145,11 +133,7 @@ api.nvim_create_autocmd({ "BufWinEnter", "BufWinLeave" }, {
           if ok and vim.api.nvim_buf_is_valid(buf) then
             local filetype = vim.bo[buf].filetype
 
-            if filetype == "neo-tree" then
-              vim.wo[win].winfixwidth = true
-              vim.wo[win].number = true
-              vim.wo[win].relativenumber = true
-            elseif filetype == "toggleterm" then
+            if filetype == "toggleterm" then
               local win_width = vim.api.nvim_win_get_width(win)
               local total_width = vim.o.columns
               if win_width == total_width then

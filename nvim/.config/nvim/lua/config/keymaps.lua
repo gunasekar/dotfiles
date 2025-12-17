@@ -32,6 +32,23 @@ keymap.set("n", "<S-l>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 keymap.set("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
 -- Buffer deletion: <leader>bd (delete), <leader>bD (force delete) - defined in plugins/editor/buffer.lua
 
+-- Make <C-w>q close the buffer instead of the window (to avoid jumping to Neo-tree)
+-- Uses the safe :Bd command (bufdelete.nvim) which preserves window layout
+keymap.set("n", "<C-w>q", function()
+  -- Keep default behavior inside neo-tree itself
+  if vim.bo.filetype == "neo-tree" then
+    vim.cmd("close")
+    return
+  end
+
+  -- Close current buffer safely; prompt if modified (opt.confirm is enabled)
+  if vim.bo.modified then
+    vim.cmd("confirm Bd")
+  else
+    vim.cmd("Bd")
+  end
+end, { desc = "Close buffer and go to next/previous" })
+
 -- Override :bd to use safer buffer deletion that preserves window layout
 -- This prevents neo-tree from expanding when closing the last buffer
 vim.api.nvim_create_user_command("Bd", function(opts)

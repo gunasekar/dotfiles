@@ -43,7 +43,7 @@ return {
       statusline = false,
       sources = {
         { source = "filesystem", display_name = " Files " },
-        { source = "buffers", display_name = " Bufs " },
+        { source = "buffers", display_name = " Buffers " },
         { source = "git_status", display_name = " Git " },
       },
     },
@@ -55,24 +55,16 @@ return {
     enable_diagnostics = true,
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Trouble" },
     sort_case_insensitive = false,
-    -- Prevent neo-tree from appearing in buffer list and fix window position
+    -- Neo-tree specific behavior (kept local to the plugin)
     event_handlers = {
       {
         event = "neo_tree_buffer_enter",
         handler = function()
-          pcall(vim.cmd, "setlocal nobuflisted")
-        end,
-      },
-      {
-        event = "neo_tree_window_after_open",
-        handler = function(args)
-          if args.position == "left" or args.position == "right" then
-            pcall(function()
-              vim.wo.winfixwidth = true
-              vim.wo.number = false
-              vim.wo.relativenumber = false
-            end)
-          end
+          -- Keep the explorer clean: no numbers or sign column, not in buffer list
+          vim.opt_local.number = false
+          vim.opt_local.relativenumber = false
+          vim.opt_local.signcolumn = "no"
+          vim.opt_local.buflisted = false
         end,
       },
     },
@@ -143,10 +135,10 @@ return {
     -- Window configuration
     window = {
       position = "left",
-      -- Relative width: 15% of screen (adapts to any screen size)
+      -- Relative width: 10% of screen (adapts to any screen size)
       -- Compact sidebar for maximum editor space
       width = function()
-        return math.floor(vim.o.columns * 0.15)
+        return math.floor(vim.o.columns * 0.10)
       end,
       -- Keep neo-tree width fixed, don't let other windows resize it
       -- This uses Neovim's built-in window options
