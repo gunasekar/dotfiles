@@ -84,12 +84,6 @@ return {
         expander_expanded = "▾",
         expander_highlight = "NeoTreeExpander",
       },
-      -- icon = {
-      --   folder_closed = "📁",
-      --   folder_open = "📂",
-      --   folder_empty = "📁",
-      --   default = "📄",
-      -- },
       modified = {
         symbol = "[+]",
         highlight = "NeoTreeModified",
@@ -135,10 +129,10 @@ return {
     -- Window configuration
     window = {
       position = "left",
-      -- Relative width: 10% of screen (adapts to any screen size)
+      -- Relative width: 10% of screen (adapts to any screen size), minimum 30 columns
       -- Compact sidebar for maximum editor space
       width = function()
-        return math.floor(vim.o.columns * 0.10)
+        return math.max(30, math.floor(vim.o.columns * 0.10))
       end,
       -- Keep neo-tree width fixed, don't let other windows resize it
       -- This uses Neovim's built-in window options
