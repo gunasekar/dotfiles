@@ -5,10 +5,13 @@ return {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
     config = function()
-      require("nvim-autopairs").setup({})
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      local cmp = require("cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      require("nvim-autopairs").setup({
+        check_ts = true, -- Enable treesitter integration
+        ts_config = {
+          lua = { "string" }, -- Don't add pairs in lua string treesitter nodes
+          javascript = { "template_string" },
+        },
+      })
     end,
   },
 
@@ -45,13 +48,10 @@ return {
     },
   },
 
-  -- Better buffer deletion - Modern Lua replacement for vim-bbye
+  -- Auto close HTML/JSX tags
   {
-    "famiu/bufdelete.nvim",
-    event = "VeryLazy",
-    keys = {
-      { "<leader>bd", "<cmd>Bdelete<CR>", desc = "Delete buffer (keep window)" },
-      { "<leader>bD", "<cmd>bufdo Bdelete<CR>", desc = "Delete all buffers" },
-    },
+    "windwp/nvim-ts-autotag",
+    event = "InsertEnter",
+    opts = {},
   },
 }

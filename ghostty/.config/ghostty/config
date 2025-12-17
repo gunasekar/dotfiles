@@ -6,15 +6,15 @@
 # FONT CONFIGURATION
 # =============================================================================
 font-family = "Hack Nerd Font Mono"
-font-size = 13
-font-thicken = true
+font-size = 13.5
+font-thicken = false
 
 # =============================================================================
-# THEME - One Dark (Atom's iconic dark theme)
+# THEME
 # =============================================================================
-# Import the theme from a separate file
-# Available themes: claude-dark, onedark
-theme = onedark
+# List all themes: ghostty +list-themes
+# My Themes: claude-dark, onedark
+theme = Ultra Dark
 
 # =============================================================================
 # WINDOW SETTINGS
@@ -87,10 +87,12 @@ copy-on-select = false
 
 # Link clicking - Cmd+Click to open URLs on macOS
 link-url = true
+link-previews = true
 
 # Clipboard
 clipboard-read = ask
 clipboard-write = allow
+clipboard-paste-protection = true
 
 # Bell (using window-vsync for visual feedback instead)
 window-vsync = true

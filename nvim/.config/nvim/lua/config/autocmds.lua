@@ -99,14 +99,16 @@ api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 -- Prevents neo-tree and terminal from being resized by other windows
 local static_layout_group = api.nvim_create_augroup("StaticLayout", { clear = true })
 
--- Keep neo-tree width fixed
+-- Keep neo-tree width fixed and show line numbers
 api.nvim_create_autocmd("FileType", {
   group = static_layout_group,
   pattern = "neo-tree",
   callback = function()
     vim.wo.winfixwidth = true
+    vim.wo.number = true
+    vim.wo.relativenumber = true
   end,
-  desc = "Fix neo-tree width",
+  desc = "Fix neo-tree width and enable line numbers",
 })
 
 -- Keep terminal height/width fixed
@@ -135,22 +137,31 @@ api.nvim_create_autocmd({ "BufWinEnter", "BufWinLeave" }, {
   group = static_layout_group,
   callback = function()
     -- Restore fixed sizes for neo-tree and terminal windows
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
-      local buf = vim.api.nvim_win_get_buf(win)
-      local filetype = vim.bo[buf].filetype
+    -- Use pcall to prevent errors during window operations
+    pcall(function()
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_is_valid(win) then
+          local ok, buf = pcall(vim.api.nvim_win_get_buf, win)
+          if ok and vim.api.nvim_buf_is_valid(buf) then
+            local filetype = vim.bo[buf].filetype
 
-      if filetype == "neo-tree" then
-        vim.wo[win].winfixwidth = true
-      elseif filetype == "toggleterm" then
-        local win_width = vim.api.nvim_win_get_width(win)
-        local total_width = vim.o.columns
-        if win_width == total_width then
-          vim.wo[win].winfixheight = true
-        else
-          vim.wo[win].winfixwidth = true
+            if filetype == "neo-tree" then
+              vim.wo[win].winfixwidth = true
+              vim.wo[win].number = true
+              vim.wo[win].relativenumber = true
+            elseif filetype == "toggleterm" then
+              local win_width = vim.api.nvim_win_get_width(win)
+              local total_width = vim.o.columns
+              if win_width == total_width then
+                vim.wo[win].winfixheight = true
+              else
+                vim.wo[win].winfixwidth = true
+              end
+            end
+          end
         end
       end
-    end
+    end)
   end,
   desc = "Maintain fixed window sizes",
 })

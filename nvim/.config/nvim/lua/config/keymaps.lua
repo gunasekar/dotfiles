@@ -7,6 +7,14 @@ local opts = { noremap = true, silent = true }
 -- Better escape
 keymap.set("i", "jk", "<ESC>", { desc = "Exit insert mode" })
 
+-- Insert mode selection (IDE-like behavior with Shift+Arrow)
+keymap.set("i", "<S-Left>", "<C-o>vh", { desc = "Select left" })
+keymap.set("i", "<S-Right>", "<C-o>vl", { desc = "Select right" })
+keymap.set("i", "<S-Up>", "<C-o>vk", { desc = "Select up" })
+keymap.set("i", "<S-Down>", "<C-o>vj", { desc = "Select down" })
+keymap.set("i", "<S-Home>", "<C-o>v0", { desc = "Select to line start" })
+keymap.set("i", "<S-End>", "<C-o>v$", { desc = "Select to line end" })
+
 -- Better window navigation
 keymap.set("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
 keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })
@@ -22,7 +30,17 @@ keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Increase w
 -- Buffer navigation
 keymap.set("n", "<S-l>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 keymap.set("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
--- Buffer deletion keymaps are defined in plugins/utils.lua (bufdelete.nvim plugin)
+-- Buffer deletion: <leader>bd (delete), <leader>bD (force delete) - defined in plugins/editor/buffer.lua
+
+-- Override :bd to use safer buffer deletion that preserves window layout
+-- This prevents neo-tree from expanding when closing the last buffer
+vim.api.nvim_create_user_command("Bd", function(opts)
+  -- Use Bdelete from bufdelete.nvim plugin which handles window layout properly
+  vim.cmd((opts.bang and "Bdelete!" or "Bdelete") .. (opts.args ~= "" and " " .. opts.args or ""))
+end, { bang = true, nargs = "?", complete = "buffer", desc = "Safe buffer delete" })
+
+-- Create command abbreviation so :bd maps to :Bd
+vim.cmd([[cnoreabbrev <expr> bd (getcmdtype() == ':' && getcmdline() == 'bd') ? 'Bd' : 'bd']])
 
 -- Better indenting
 keymap.set("v", "<", "<gv", { desc = "Indent left" })

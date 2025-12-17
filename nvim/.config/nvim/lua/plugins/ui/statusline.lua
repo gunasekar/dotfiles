@@ -14,7 +14,6 @@ return {
         winbar = 100,
       },
     },
-    -- Disable tabline since we're using bufferline
     tabline = {},
     sections = {
       lualine_a = { "mode" },
@@ -35,7 +34,6 @@ return {
       lualine_z = { "location" },
     },
     extensions = { "neo-tree", "lazy", "mason" },
-    -- Disable winbar completely to let neo-tree show its source selector tabs
     winbar = {},
     inactive_winbar = {},
   },

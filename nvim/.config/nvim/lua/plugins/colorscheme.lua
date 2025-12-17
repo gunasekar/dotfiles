@@ -9,7 +9,7 @@ return {
   {
     "ellisonleao/gruvbox.nvim",
     priority = 1000,
-    enabled = false,
+    enabled = true,
     opts = {
       terminal_colors = true,
       undercurl = true,
@@ -46,7 +46,7 @@ return {
   {
     "olimorris/onedarkpro.nvim",
     priority = 1000,
-    enabled = true,
+    enabled = false,
     opts = {
       styles = {
         types = "NONE",

@@ -55,10 +55,10 @@ return {
     "neovim/nvim-lspconfig",
     dependencies = {
       "williamboman/mason-lspconfig.nvim",
-      "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
-      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+      -- Use default LSP capabilities (blink.cmp handles completion)
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
 
       -- Keymaps on LSP attach
       local on_attach = function(client, bufnr)
@@ -72,9 +72,6 @@ return {
         vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Rename" }))
         vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "Code action" }))
         vim.keymap.set("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", opts, { desc = "References" }))
-        vim.keymap.set("n", "<leader>f", function()
-          vim.lsp.buf.format({ async = true })
-        end, vim.tbl_extend("force", opts, { desc = "Format buffer" }))
       end
 
       -- Configure servers using vim.lsp.config

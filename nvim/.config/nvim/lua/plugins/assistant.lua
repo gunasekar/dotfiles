@@ -15,7 +15,7 @@ return {
       terminal = {
         split_side = "right",          -- Position on right side
         split_width_percentage = 0.3,  -- 30% of screen width
-        provider = "snacks",           -- Use snacks for terminal
+        provider = "native",           -- Use native Neovim terminal
         auto_close = false,            -- Keep terminal open
       },
 
@@ -34,6 +34,7 @@ return {
       focus_after_send = false,
     },
     keys = {
+      { "<C-\\>", "<cmd>ClaudeCode<cr>", mode = { "n", "i", "v", "t" }, desc = "Toggle Claude Code" },
       { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
       { "<leader>as", "<cmd>ClaudeCodeSend<cr>", mode = { "n", "v" }, desc = "Send to Claude" },
     },

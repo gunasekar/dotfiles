@@ -6,6 +6,10 @@ local g = vim.g
 g.mapleader = " "
 g.maplocalleader = "\\"
 
+-- Disable netrw (we use Neo-tree)
+g.loaded_netrw = 1
+g.loaded_netrwPlugin = 1
+
 -- Line numbers
 opt.number = true
 opt.relativenumber = true
@@ -33,10 +37,12 @@ opt.signcolumn = "yes"
 opt.cursorline = true
 opt.wrap = false
 opt.linebreak = true
+opt.breakindent = true -- Wrap lines with indent (better line wrapping)
 opt.showmode = false -- Don't show mode in command line (shown in statusline)
 opt.pumheight = 10 -- Maximum number of items in popup menu
 opt.pumblend = 10 -- Popup menu transparency
 opt.winblend = 0 -- Window transparency
+opt.title = true -- Set terminal title to filename
 
 -- Font (GUI clients only - terminal uses terminal font)
 opt.guifont = "Hack Nerd Font Mono:h13"
@@ -44,6 +50,7 @@ opt.guifont = "Hack Nerd Font Mono:h13"
 -- Behavior
 opt.mouse = "a"
 opt.clipboard = "unnamedplus"
+opt.fileencoding = "utf-8" -- File encoding
 opt.splitright = true
 opt.splitbelow = true
 opt.splitkeep = "screen" -- Keep screen position on splits
@@ -65,7 +72,7 @@ opt.shortmess:append("c") -- Don't show completion messages
 
 -- Performance
 opt.updatetime = 250
-opt.timeoutlen = 300
+opt.timeoutlen = 1000 -- Time to wait for mapped sequence (more forgiving for key combos)
 opt.lazyredraw = false -- Don't redraw during macros
 
 -- Scrolling
@@ -82,13 +89,14 @@ opt.foldenable = true
 -- Command line
 opt.cmdheight = 1
 opt.showcmd = true
+opt.fillchars = { eob = " " } -- Remove ~ at end of buffer
 
 -- Formatting
 opt.formatoptions = "jcroqlnt" -- tcqj format options
 
 -- Misc
 opt.virtualedit = "block" -- Allow cursor beyond end of line in visual block mode
-opt.conceallevel = 2 -- Hide concealed text
+opt.conceallevel = 0 -- Show concealed text (better for markdown)
 opt.spelllang = "en_us"
 opt.spelloptions:append("camel") -- Spell check camelCase words
 

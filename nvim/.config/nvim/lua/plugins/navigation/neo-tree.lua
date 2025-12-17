@@ -49,7 +49,7 @@ return {
     },
     use_default_mappings = false,
     default_source = "filesystem",
-    close_if_last_window = true,
+    close_if_last_window = false,
     popup_border_style = "rounded",
     enable_git_status = true,
     enable_diagnostics = true,
@@ -67,16 +67,12 @@ return {
         event = "neo_tree_window_after_open",
         handler = function(args)
           if args.position == "left" or args.position == "right" then
-            -- Set fixed width for neo-tree window
-            vim.wo.winfixwidth = true
+            pcall(function()
+              vim.wo.winfixwidth = true
+              vim.wo.number = false
+              vim.wo.relativenumber = false
+            end)
           end
-        end,
-      },
-      {
-        event = "neo_tree_window_after_close",
-        handler = function()
-          -- Don't equalize windows when neo-tree closes
-          -- This prevents the layout from shifting
         end,
       },
     },
@@ -96,12 +92,12 @@ return {
         expander_expanded = "▾",
         expander_highlight = "NeoTreeExpander",
       },
-      icon = {
-        folder_closed = "📁",
-        folder_open = "📂",
-        folder_empty = "📁",
-        default = "📄",
-      },
+      -- icon = {
+      --   folder_closed = "📁",
+      --   folder_open = "📂",
+      --   folder_empty = "📁",
+      --   default = "📄",
+      -- },
       modified = {
         symbol = "[+]",
         highlight = "NeoTreeModified",
