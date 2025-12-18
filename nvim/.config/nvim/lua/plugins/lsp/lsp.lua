@@ -88,6 +88,8 @@ return {
               workspace = {
                 library = vim.api.nvim_get_runtime_file("", true),
                 checkThirdParty = false,
+                -- Exclude heavy directories to speed up workspace loading
+                ignoreDir = { ".git", "node_modules", ".venv", "venv", "build", "dist" },
               },
               telemetry = {
                 enable = false,

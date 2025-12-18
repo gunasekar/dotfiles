@@ -8,16 +8,6 @@ return {
     -- Handle large files gracefully
     bigfile = { enabled = true },
 
-    -- Dashboard on startup
-    dashboard = {
-      enabled = true,
-      sections = {
-        { section = "header" },
-        { section = "keys", gap = 1, padding = 1 },
-        { section = "startup" },
-      },
-    },
-
     -- Better input prompts
     input = { enabled = true },
 
@@ -60,13 +50,22 @@ return {
   },
 
   keys = {
-    -- Snacks dashboard
+    -- Words navigation
     {
-      "<leader>;",
+      "]]",
       function()
-        Snacks.dashboard()
+        Snacks.words.jump(vim.v.count1)
       end,
-      desc = "Dashboard",
+      desc = "Next Reference",
+      mode = { "n", "t" },
+    },
+    {
+      "[[",
+      function()
+        Snacks.words.jump(-vim.v.count1)
+      end,
+      desc = "Prev Reference",
+      mode = { "n", "t" },
     },
 
     -- Snacks picker (alternative to Telescope)
@@ -158,15 +157,6 @@ return {
     --   desc = "Toggle Terminal (Snacks)",
     --   mode = { "n", "t" },
     -- },
-
-    -- Create new file with template
-    {
-      "<leader>fn",
-      function()
-        Snacks.new()
-      end,
-      desc = "New File",
-    },
   },
 
   init = function()
@@ -181,18 +171,6 @@ return {
           Snacks.debug.backtrace()
         end
         vim.print = _G.dd -- Override print to use snacks for `:=` command
-
-        -- Create some toggle mappings
-        Snacks.toggle.option("spell", { name = "Spelling" }):map("<leader>us")
-        Snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
-        Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
-        Snacks.toggle.diagnostics():map("<leader>ud")
-        Snacks.toggle.line_number():map("<leader>ul")
-        Snacks.toggle
-          .option("conceallevel", { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2 })
-          :map("<leader>uc")
-        Snacks.toggle.treesitter():map("<leader>uT")
-        Snacks.toggle.inlay_hints():map("<leader>uh")
       end,
     })
   end,
