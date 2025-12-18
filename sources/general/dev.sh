@@ -5,11 +5,19 @@ function c {
         if ! command -v code &>/dev/null; then
             echo "no editors found. please install cursor or vscode"
         else
-            code "$@"
+            code "${@:-.}"
         fi
     else
-        cursor "$@"
+        cursor "${@:-.}"
     fi
+}
+
+function v {
+    if ! command -v nvim &>/dev/null; then
+        echo "nvim not found. please install neovim"
+        return 1
+    fi
+    nvim "${@:-.}"
 }
 
 ##### Go
