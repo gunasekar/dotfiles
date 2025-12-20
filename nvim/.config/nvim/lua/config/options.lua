@@ -43,6 +43,7 @@ opt.pumheight = 10 -- Maximum number of items in popup menu
 opt.pumblend = 10 -- Popup menu transparency
 opt.winblend = 0 -- Window transparency
 opt.title = true -- Set terminal title to filename
+opt.titlestring = "> %{fnamemodify(getcwd(), ':t')}" -- Show "> <directory_name>"
 
 -- Font (GUI clients only - terminal uses terminal font)
 opt.guifont = "Hack Nerd Font Mono:h13"

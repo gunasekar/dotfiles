@@ -13,8 +13,7 @@ font-thicken = false
 # THEME
 # =============================================================================
 # List all themes: ghostty +list-themes
-# My Themes: claude-dark, onedark
-theme = Ultra Dark
+theme = Tomorrow Night Bright
 
 # =============================================================================
 # WINDOW SETTINGS
