@@ -117,6 +117,16 @@ keymap.set("n", "Yf", function()
   print("Copied: " .. path)
 end, { desc = "Yank filename only" })
 
+-- Open file from clipboard path
+keymap.set("n", "<leader>fp", function()
+  local path = vim.fn.getreg("+"):gsub("^%s*(.-)%s*$", "%1")
+  Snacks.input({ prompt = "Open file:", default = path }, function(value)
+    if value and value ~= "" then
+      vim.cmd.edit(value)
+    end
+  end)
+end, { desc = "Open file from clipboard" })
+
 -- Select all
 keymap.set("n", "<C-a>", "ggVG", { desc = "Select all" })
 

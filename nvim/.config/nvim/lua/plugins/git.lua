@@ -1,6 +1,44 @@
 -- Git integration plugins
--- All git-related functionality: signs, hunks, blame, and LazyGit TUI
+-- All git-related functionality: signs, hunks, blame, diffview, and LazyGit TUI
 return {
+  -- Diffview: Split diff viewer for git changes
+  {
+    "sindrets/diffview.nvim",
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory", "DiffviewToggleFiles" },
+    keys = {
+      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff view (index)" },
+      { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "File history (current)" },
+      { "<leader>gH", "<cmd>DiffviewFileHistory<cr>", desc = "File history (branch)" },
+      { "<leader>gc", "<cmd>DiffviewClose<cr>", desc = "Close diff view" },
+      { "<leader>gx", "<cmd>DiffviewClose<cr>", desc = "Close diff view" },
+    },
+    opts = {
+      enhanced_diff_hl = true,
+      view = {
+        default = {
+          layout = "diff2_horizontal",
+        },
+        merge_tool = {
+          layout = "diff3_horizontal",
+        },
+        file_history = {
+          layout = "diff2_horizontal",
+        },
+      },
+      file_panel = {
+        listing_style = "tree",
+        tree_options = {
+          flatten_dirs = true,
+          folder_statuses = "only_folded",
+        },
+        win_config = {
+          position = "left",
+          width = 35,
+        },
+      },
+    },
+  },
+
   -- Gitsigns: Git decorations and hunk operations
   {
     "lewis6991/gitsigns.nvim",
