@@ -1,4 +1,4 @@
--- Neo-tree file explorer with Filesystem, Buffers, and Git sources
+-- Neo-tree file explorer with buffer number indicators
 return {
   "nvim-neo-tree/neo-tree.nvim",
   branch = "v3.x",
@@ -7,7 +7,7 @@ return {
     "nvim-tree/nvim-web-devicons",
     "MunifTanjim/nui.nvim",
   },
-  lazy = false, -- Load immediately to show tabs
+  lazy = false, -- Load immediately
   priority = 1000,
   keys = {
     { "<leader>e", "<cmd>Neotree toggle<CR>", desc = "Toggle file explorer" },
@@ -47,7 +47,8 @@ return {
     enable_diagnostics = true,
     open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Trouble" },
     sort_case_insensitive = false,
-    -- Neo-tree specific behavior (kept local to the plugin)
+    enable_normal_mode_for_inputs = false,
+    -- Neo-tree specific behavior
     event_handlers = {
       {
         event = "neo_tree_buffer_enter",
@@ -196,6 +197,45 @@ return {
     },
     -- Filesystem source configuration
     filesystem = {
+      -- Custom components for the filesystem view
+      components = {
+        -- Show buffer number for open files
+        bufnr = function(config, node, state)
+          local bufnr = vim.fn.bufnr(node.path)
+          if bufnr ~= -1 and vim.api.nvim_buf_is_loaded(bufnr) then
+            -- Get all loaded, listed buffers and find this buffer's position
+            local buffers = vim.tbl_filter(function(buf)
+              return vim.bo[buf].buflisted and vim.api.nvim_buf_is_loaded(buf)
+            end, vim.api.nvim_list_bufs())
+
+            table.sort(buffers)
+
+            for i, buf in ipairs(buffers) do
+              if buf == bufnr then
+                return {
+                  text = string.format("%d ", i),
+                  highlight = "NeoTreeBufferNumber",
+                }
+              end
+            end
+          end
+          return {
+            text = "  ",
+            highlight = "NeoTreeDimText",
+          }
+        end,
+      },
+      -- Custom renderer to include buffer numbers
+      renderers = {
+        file = {
+          { "bufnr" }, -- Buffer number at the start
+          { "indent" },
+          { "icon" },
+          { "name", use_git_status_colors = true },
+          { "git_status" },
+          { "diagnostics" },
+        },
+      },
       filtered_items = {
         visible = false,
         hide_dotfiles = false,
@@ -250,6 +290,111 @@ return {
   },
   config = function(_, opts)
     require("neo-tree").setup(opts)
-    -- OneDark Pro theme provides all neo-tree colors
+
+    -- Set up highlight group for buffer numbers (theme-adaptive)
+    vim.api.nvim_create_autocmd("ColorScheme", {
+      callback = function()
+        vim.api.nvim_set_hl(0, "NeoTreeBufferNumber", {
+          fg = vim.api.nvim_get_hl(0, { name = "Function" }).fg,
+          bold = true
+        })
+      end,
+    })
+    -- Set initially
+    vim.api.nvim_set_hl(0, "NeoTreeBufferNumber", {
+      fg = vim.api.nvim_get_hl(0, { name = "Function" }).fg or "#61afef",
+      bold = true
+    })
+
+    -- Auto-refresh neo-tree when buffers change to update buffer numbers
+    local refresh_neo_tree = vim.schedule_wrap(function()
+      if package.loaded["neo-tree.sources.manager"] then
+        local manager = require("neo-tree.sources.manager")
+        local state = manager.get_state("filesystem")
+        if state then
+          local renderer = require("neo-tree.ui.renderer")
+          renderer.redraw(state)
+        end
+      end
+    end)
+
+    vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete", "BufEnter" }, {
+      callback = refresh_neo_tree,
+    })
+
+    -- Show buffer title in winbar at the top of each window
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+      callback = function()
+        local buftype = vim.bo.buftype
+        local filetype = vim.bo.filetype
+
+        -- Don't show winbar for special buffers
+        if buftype ~= "" or filetype == "neo-tree" then
+          vim.opt_local.winbar = nil
+          return
+        end
+
+        -- Get buffer number
+        local bufnr = vim.api.nvim_get_current_buf()
+        local buffers = vim.tbl_filter(function(buf)
+          return vim.bo[buf].buflisted and vim.api.nvim_buf_is_loaded(buf)
+        end, vim.api.nvim_list_bufs())
+
+        table.sort(buffers)
+        local buf_index = nil
+        for i, buf in ipairs(buffers) do
+          if buf == bufnr then
+            buf_index = i
+            break
+          end
+        end
+
+        -- Get filename
+        local filename = vim.fn.expand("%:t")
+        if filename == "" then
+          filename = "[No Name]"
+        end
+
+        -- Show buffer number and filename in winbar (centered)
+        if buf_index then
+          vim.opt_local.winbar = string.format("%%=%%#NeoTreeBufferNumber# %d %%#Normal# %s%%=", buf_index, filename)
+        else
+          vim.opt_local.winbar = string.format("%%=%%#Normal# %s%%=", filename)
+        end
+      end,
+    })
+
+    -- Buffer navigation keymaps (replacing bufferline functionality)
+    local keymap = vim.keymap
+
+    -- Cycle through buffers
+    keymap.set("n", "<Tab>", "<cmd>bnext<CR>", { desc = "Next buffer" })
+    keymap.set("n", "<S-Tab>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
+
+    -- Navigate to specific buffer by number (1-9)
+    for i = 1, 9 do
+      keymap.set("n", "<leader>" .. i, function()
+        local buffers = vim.tbl_filter(function(buf)
+          return vim.bo[buf].buflisted and vim.api.nvim_buf_is_loaded(buf)
+        end, vim.api.nvim_list_bufs())
+
+        -- Sort buffers by buffer number
+        table.sort(buffers)
+
+        if buffers[i] then
+          vim.api.nvim_set_current_buf(buffers[i])
+        end
+      end, { desc = "Go to buffer " .. i })
+    end
+
+    -- Close other buffers
+    keymap.set("n", "<leader>bo", function()
+      local current_buf = vim.api.nvim_get_current_buf()
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if buf ~= current_buf and vim.bo[buf].buflisted then
+          vim.api.nvim_buf_delete(buf, { force = false })
+        end
+      end
+    end, { desc = "Close other buffers" })
   end,
 }

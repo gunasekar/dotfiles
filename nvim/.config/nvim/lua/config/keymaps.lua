@@ -32,18 +32,8 @@ keymap.set("n", "<S-l>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 keymap.set("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
 -- Buffer deletion: <leader>bd (delete), <leader>bD (delete all) - defined in plugins/editor/snacks.lua
 
--- Make <C-w>q close the buffer instead of the window (to avoid jumping to Neo-tree)
--- Uses Snacks.bufdelete() which preserves window layout
-keymap.set("n", "<C-w>q", function()
-  -- Keep default behavior inside neo-tree itself
-  if vim.bo.filetype == "neo-tree" then
-    vim.cmd("close")
-    return
-  end
-
-  -- Close current buffer safely using Snacks
-  Snacks.bufdelete()
-end, { desc = "Close buffer and go to next/previous" })
+-- Make <C-w>q behave like <leader>sx (close window only, keep buffer)
+keymap.set("n", "<C-w>q", "<cmd>close<CR>", { desc = "Close current split" })
 
 -- Override :bd to use safer buffer deletion that preserves window layout
 -- This prevents neo-tree from expanding when closing the last buffer
