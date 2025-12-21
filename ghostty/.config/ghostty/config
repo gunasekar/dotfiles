@@ -140,3 +140,4 @@ auto-update-channel = stable
 #   - Right pane: Run 'nvim' for code editing
 #   - Bottom pane: Run git, tests, builds, etc.
 #   - Use Ctrl+H/L to quickly jump between Claude and Neovim
+keybind = shift+enter=text:\x1b\r
