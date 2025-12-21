@@ -8,6 +8,9 @@ return {
     -- Handle large files gracefully
     bigfile = { enabled = true },
 
+    -- Buffer deletion that preserves window layout
+    bufdelete = { enabled = true },
+
     -- Better input prompts
     input = { enabled = true },
 
@@ -107,6 +110,20 @@ return {
         Snacks.picker.buffers()
       end,
       desc = "Browse Buffers (Snacks)",
+    },
+    {
+      "<leader>bd",
+      function()
+        Snacks.bufdelete()
+      end,
+      desc = "Delete Buffer",
+    },
+    {
+      "<leader>bD",
+      function()
+        Snacks.bufdelete.all()
+      end,
+      desc = "Delete All Buffers",
     },
 
     -- Notifications

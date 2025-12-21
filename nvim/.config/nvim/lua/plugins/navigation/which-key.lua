@@ -3,8 +3,7 @@ return {
   "folke/which-key.nvim",
   event = "VeryLazy",
   opts = {
-    -- your configuration comes here
-    -- or leave it empty to use the default settings
+    delay = 1000, -- Delay before showing popup (milliseconds) - gives you time to complete ]c, [c, etc.
   },
   keys = {
     {

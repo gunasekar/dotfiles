@@ -12,9 +12,6 @@ return {
   keys = {
     { "<leader>e", "<cmd>Neotree toggle<CR>", desc = "Toggle file explorer" },
     { "<leader>ef", "<cmd>Neotree reveal<CR>", desc = "Reveal current file in explorer" },
-    { "<leader>eb", "<cmd>Neotree buffers<CR>", desc = "Open buffers explorer" },
-    { "<leader>eg", "<cmd>Neotree git_status<CR>", desc = "Open git status explorer" },
-    { "<leader>er", "<cmd>Neotree close<CR><cmd>Neotree show<CR>", desc = "Reset explorer to sidebar" },
   },
   init = function()
     -- Disable netrw
@@ -37,15 +34,10 @@ return {
     })
   end,
   opts = {
-    sources = { "filesystem", "buffers", "git_status" },
+    sources = { "filesystem" },
     source_selector = {
-      winbar = true,
+      winbar = false,
       statusline = false,
-      sources = {
-        { source = "filesystem", display_name = " Files " },
-        { source = "buffers", display_name = " Buffers " },
-        { source = "git_status", display_name = " Git " },
-      },
     },
     use_default_mappings = false,
     default_source = "filesystem",
@@ -129,11 +121,8 @@ return {
     -- Window configuration
     window = {
       position = "left",
-      -- Relative width: 10% of screen (adapts to any screen size), minimum 30 columns
-      -- Compact sidebar for maximum editor space
-      width = function()
-        return math.max(30, math.floor(vim.o.columns * 0.10))
-      end,
+      -- Fixed width: 30 columns (compact, widely used - LunarVim standard)
+      width = 30,
       -- Keep neo-tree width fixed, don't let other windows resize it
       -- This uses Neovim's built-in window options
       mapping_options = {
@@ -165,6 +154,9 @@ return {
         ["d"] = "delete",
         ["r"] = "rename",
         ["y"] = "copy_to_clipboard",
+        ["Yp"] = "copy_absolute_path",
+        ["Yr"] = "copy_relative_path",
+        ["Yf"] = "copy_filename",
         ["x"] = "cut_to_clipboard",
         ["p"] = "paste_from_clipboard",
         ["c"] = "copy",
@@ -172,12 +164,36 @@ return {
         ["q"] = "close_window",
         ["R"] = "refresh",
         ["?"] = "show_help",
-        ["<"] = "prev_source",
-        [">"] = "next_source",
         ["i"] = "show_file_details",
       },
     },
     nesting_rules = {},
+    -- Custom commands
+    commands = {
+      -- Copy absolute file path
+      copy_absolute_path = function(state)
+        local node = state.tree:get_node()
+        local filepath = node:get_id()
+        vim.fn.setreg("+", filepath)
+        print("Copied: " .. filepath)
+      end,
+      -- Copy relative file path
+      copy_relative_path = function(state)
+        local node = state.tree:get_node()
+        local filepath = node:get_id()
+        local relative = vim.fn.fnamemodify(filepath, ":.")
+        vim.fn.setreg("+", relative)
+        print("Copied: " .. relative)
+      end,
+      -- Copy filename only
+      copy_filename = function(state)
+        local node = state.tree:get_node()
+        local filepath = node:get_id()
+        local filename = vim.fn.fnamemodify(filepath, ":t")
+        vim.fn.setreg("+", filename)
+        print("Copied: " .. filename)
+      end,
+    },
     -- Filesystem source configuration
     filesystem = {
       filtered_items = {
@@ -230,51 +246,6 @@ return {
         },
       },
       commands = {},
-    },
-    -- Buffers source configuration
-    buffers = {
-      follow_current_file = {
-        enabled = true,
-        leave_dirs_open = false,
-      },
-      group_empty_dirs = true,
-      show_unloaded = true,
-      window = {
-        mappings = {
-          ["bd"] = "buffer_delete",
-          ["<bs>"] = "navigate_up",
-          ["."] = "set_root",
-          ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-          ["oc"] = { "order_by_created", nowait = false },
-          ["od"] = { "order_by_diagnostics", nowait = false },
-          ["om"] = { "order_by_modified", nowait = false },
-          ["on"] = { "order_by_name", nowait = false },
-          ["os"] = { "order_by_size", nowait = false },
-          ["ot"] = { "order_by_type", nowait = false },
-        },
-      },
-    },
-    -- Git status source configuration
-    git_status = {
-      window = {
-        position = "left",
-        mappings = {
-          ["A"]  = "git_add_all",
-          ["gu"] = "git_unstage_file",
-          ["ga"] = "git_add_file",
-          ["gr"] = "git_revert_file",
-          ["gc"] = "git_commit",
-          ["gp"] = "git_push",
-          ["gg"] = "git_commit_and_push",
-          ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-          ["oc"] = { "order_by_created", nowait = false },
-          ["od"] = { "order_by_diagnostics", nowait = false },
-          ["om"] = { "order_by_modified", nowait = false },
-          ["on"] = { "order_by_name", nowait = false },
-          ["os"] = { "order_by_size", nowait = false },
-          ["ot"] = { "order_by_type", nowait = false },
-        },
-      },
     },
   },
   config = function(_, opts)

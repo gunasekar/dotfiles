@@ -225,11 +225,11 @@ ssh-keygen-ecdsa "email@example.com"     # ECDSA 521-bit
 Includes conditional configurations for different projects:
 
 ```gitconfig
-[includeIf "gitdir:~/workspace/saturn/"]
-    path = ~/.dotfiles/git/workspace/saturn/.saturn.gitconfig
+[includeIf "gitdir:~/workspace/acme/"]
+    path = ~/.dotfiles/git/workspace/acme/.acme.gitconfig
 
-[includeIf "gitdir:~/workspace/lattiq/"]
-    path = ~/.dotfiles/git/workspace/lattiq/.lattiq.gitconfig
+[includeIf "gitdir:~/workspace/techcorp/"]
+    path = ~/.dotfiles/git/workspace/techcorp/.techcorp.gitconfig
 ```
 
 Each workspace can have its own email, signing key, etc.

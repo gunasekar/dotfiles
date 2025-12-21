@@ -30,10 +30,10 @@ keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Increase w
 -- Buffer navigation
 keymap.set("n", "<S-l>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 keymap.set("n", "<S-h>", "<cmd>bprevious<CR>", { desc = "Previous buffer" })
--- Buffer deletion: <leader>bd (delete), <leader>bD (force delete) - defined in plugins/editor/buffer.lua
+-- Buffer deletion: <leader>bd (delete), <leader>bD (delete all) - defined in plugins/editor/snacks.lua
 
 -- Make <C-w>q close the buffer instead of the window (to avoid jumping to Neo-tree)
--- Uses the safe :Bd command (bufdelete.nvim) which preserves window layout
+-- Uses Snacks.bufdelete() which preserves window layout
 keymap.set("n", "<C-w>q", function()
   -- Keep default behavior inside neo-tree itself
   if vim.bo.filetype == "neo-tree" then
@@ -41,19 +41,21 @@ keymap.set("n", "<C-w>q", function()
     return
   end
 
-  -- Close current buffer safely; prompt if modified (opt.confirm is enabled)
-  if vim.bo.modified then
-    vim.cmd("confirm Bd")
-  else
-    vim.cmd("Bd")
-  end
+  -- Close current buffer safely using Snacks
+  Snacks.bufdelete()
 end, { desc = "Close buffer and go to next/previous" })
 
 -- Override :bd to use safer buffer deletion that preserves window layout
 -- This prevents neo-tree from expanding when closing the last buffer
 vim.api.nvim_create_user_command("Bd", function(opts)
-  -- Use Bdelete from bufdelete.nvim plugin which handles window layout properly
-  vim.cmd((opts.bang and "Bdelete!" or "Bdelete") .. (opts.args ~= "" and " " .. opts.args or ""))
+  -- Use Snacks.bufdelete() which handles window layout properly
+  if opts.args ~= "" then
+    -- Parse buffer number/name from args
+    local bufnr = tonumber(opts.args) or vim.fn.bufnr(opts.args)
+    Snacks.bufdelete(bufnr)
+  else
+    Snacks.bufdelete()
+  end
 end, { bang = true, nargs = "?", complete = "buffer", desc = "Safe buffer delete" })
 
 -- Create command abbreviation so :bd maps to :Bd
@@ -105,6 +107,25 @@ keymap.set({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete without yanking" }
 -- Yank to system clipboard
 keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
 keymap.set("n", "<leader>Y", '"+Y', { desc = "Yank line to system clipboard" })
+
+-- Copy file paths to clipboard (non-leader for speed)
+keymap.set("n", "Yp", function()
+  local path = vim.fn.expand("%:p")
+  vim.fn.setreg("+", path)
+  print("Copied: " .. path)
+end, { desc = "Yank absolute file path" })
+
+keymap.set("n", "Yr", function()
+  local path = vim.fn.expand("%:.")
+  vim.fn.setreg("+", path)
+  print("Copied: " .. path)
+end, { desc = "Yank relative file path" })
+
+keymap.set("n", "Yf", function()
+  local path = vim.fn.expand("%:t")
+  vim.fn.setreg("+", path)
+  print("Copied: " .. path)
+end, { desc = "Yank filename only" })
 
 -- Select all
 keymap.set("n", "<C-a>", "ggVG", { desc = "Select all" })

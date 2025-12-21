@@ -1,36 +1,14 @@
 -- Buffer management plugins
--- Includes buffer line UI, safe deletion, and navigation keymaps
+-- Includes buffer line UI and navigation keymaps
+-- Buffer deletion is handled by snacks.nvim (see plugins/editor/snacks.lua)
 return {
-  -- Safe buffer removal that preserves window layout
-  -- Part of mini.nvim ecosystem: https://github.com/echasnovski/mini.nvim
-  {
-    "echasnovski/mini.bufremove",
-    version = false,
-    config = function()
-      require("mini.bufremove").setup({
-        -- Set to true to disable "Buffer X deleted" messages
-        silent = false,
-      })
-    end,
-  },
-
-  -- Better buffer deletion - Modern Lua replacement for vim-bbye
-  {
-    "famiu/bufdelete.nvim",
-    event = "VeryLazy",
-    keys = {
-      { "<leader>bd", "<cmd>Bdelete<CR>", desc = "Delete buffer (keep window)" },
-      { "<leader>bD", "<cmd>bufdo Bdelete<CR>", desc = "Delete all buffers" },
-    },
-  },
-
   -- Buffer tab line - shows all open buffers as tabs
   {
     "akinsho/bufferline.nvim",
     version = "*",
     dependencies = {
       "nvim-tree/nvim-web-devicons",
-      "echasnovski/mini.bufremove",
+      "folke/snacks.nvim", -- For Snacks.bufdelete()
     },
     event = "VeryLazy",
     config = function()
@@ -58,13 +36,12 @@ return {
             -- Show number of modified buffers in each tab
             return string.format("%s", opts.raise(opts.ordinal))
           end,
-          -- Use bufdelete.nvim for safe buffer deletion that preserves window layout
-          -- This handles unsaved buffers better than mini.bufremove (proper save dialog + window management)
+          -- Use Snacks.bufdelete for safe buffer deletion that preserves window layout
           close_command = function(bufnum)
-            vim.cmd("Bdelete " .. bufnum)
+            Snacks.bufdelete(bufnum)
           end,
           right_mouse_command = function(bufnum)
-            vim.cmd("Bdelete " .. bufnum)
+            Snacks.bufdelete(bufnum)
           end,
           left_mouse_command = function(bufnum)
             -- If in a special buffer (terminal, etc.), first move to a normal window
@@ -103,7 +80,7 @@ return {
           offsets = {
             {
               filetype = "neo-tree",
-              text = "Explorer",
+              text = "󰙅 Navigator",
               text_align = "center",
               separator = true,
             },

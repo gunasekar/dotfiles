@@ -15,8 +15,13 @@ return {
       terminal = {
         split_side = "right",          -- Position on right side
         split_width_percentage = 0.3,  -- 30% of screen width
-        provider = "native",           -- Use native Neovim terminal
+        provider = "snacks",           -- Use snacks.nvim terminal
         auto_close = false,            -- Keep terminal open
+        snacks_win_opts = {
+          wo = {
+            winhighlight = "Normal:Normal,NormalFloat:Normal", -- Match editor background
+          },
+        },
       },
 
       -- Working directory

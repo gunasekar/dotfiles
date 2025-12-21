@@ -81,6 +81,9 @@ yy          Copy line
 p           Paste
 ciw         Change word
 di"         Delete inside quotes
+Yp          Copy absolute file path
+Yr          Copy relative file path
+Yf          Copy filename only
 ```
 
 ### LSP (Code Intelligence)
@@ -188,10 +191,7 @@ n/N             Next/previous match
 ```
 <Space>e        Toggle explorer
 <Space>ef       Reveal current file in explorer
-<Space>eb       Open buffers view
-<Space>eg       Open git status view
 Inside explorer:
-  < / >         Switch between Filesystem/Buffers/Git tabs
   j/k           Navigate
   Enter         Open file/folder
   s             Open in vertical split
@@ -200,6 +200,9 @@ Inside explorer:
   A             New directory
   d             Delete
   r             Rename
+  Yp            Copy absolute file path
+  Yr            Copy relative file path
+  Yf            Copy filename only
   H             Toggle hidden files
   ?             Show help
   q             Close

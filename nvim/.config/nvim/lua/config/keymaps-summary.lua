@@ -5,7 +5,7 @@
 -- and config/keymaps.lua
 --
 -- Leader key: Space
--- Last updated: 2025-12-17
+-- Last updated: 2025-12-21
 -- ══════════════════════════════════════════════════════════════════════════════
 
 --[[
@@ -111,6 +111,9 @@ p               Paste after cursor
 P               Paste before cursor
 <Space>y        Yank to system clipboard
 <Space>Y        Yank line to system clipboard
+Yp              Yank absolute file path
+Yr              Yank relative file path
+Yf              Yank filename only
 <Space>p        Paste without yanking (visual mode)
 v p             Paste without yanking (replaces selection)
 
@@ -151,9 +154,6 @@ FILE EXPLORER (NEO-TREE)
 ------------------------
 <Space>e        Toggle Neo-tree file explorer
 <Space>ef       Reveal current file in explorer
-<Space>eb       Open buffers explorer
-<Space>eg       Open git status explorer
-<Space>er       Reset explorer to sidebar
 
 In Neo-tree:
   Enter         Open file/folder
@@ -161,6 +161,12 @@ In Neo-tree:
   A             New directory
   d             Delete
   r             Rename
+  y             Copy file (for paste operation)
+  Yp            Yank absolute file path
+  Yr            Yank relative file path
+  Yf            Yank filename only
+  x             Cut to clipboard
+  p             Paste from clipboard
   s             Open in vertical split
   S             Open in horizontal split
   H             Toggle hidden files
@@ -656,7 +662,7 @@ ciw             Change word under cursor
 
 
 ════════════════════════════════════════════════════════════════════════════════
-Generated: 2025-12-17
+Generated: 2025-12-21
 Config location: ~/.dotfiles/nvim/.config/nvim
 Verified against: All plugin configurations and core keymaps
 ════════════════════════════════════════════════════════════════════════════════
