@@ -12,7 +12,7 @@ function c {
     fi
 }
 
-function v {
+function n {
     if ! command -v nvim &>/dev/null; then
         echo "nvim not found. please install neovim"
         return 1
@@ -149,3 +149,7 @@ export PATH="$PATH:$HOME/.claude/local"
 if [ -d "$HOME/.antigravity/antigravity/bin" ]; then
     export PATH="$PATH:$HOME/.antigravity/antigravity/bin"
 fi
+
+# Lazy tool aliases
+command -v lazygit &>/dev/null && alias gitl='lazygit'
+command -v lazydocker &>/dev/null && alias dockerl='lazydocker'
