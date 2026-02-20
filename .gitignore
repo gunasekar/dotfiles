@@ -57,6 +57,44 @@ gnupg/.gnupg/pubring.kbx~
 # Never commit work secrets file
 sources/work/secrets.sh
 
-### Claude Code Settings ###
-# Local settings are machine-specific and should not be shared
-.claude/settings.local.json
+### Temporary Files ###
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+### Logs ###
+*.log
+
+### IDEs and Editors ###
+.idea/
+.vscode/
+
+### Environment Files ###
+.env
+.env.*
+!.env.example
+.envrc
+
+### Security and Credentials ###
+*.secret
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+credentials.json
+service-account.json
+*-credentials.json
+
+### AI and LLM Tools ###
+.claude/
+.cursor/
+.aider*
+.codeium/
+.copilot/
+*.anthropic
+*.openai
+.ai-cache/
+llm-cache/

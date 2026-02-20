@@ -50,6 +50,12 @@
       "search.match_background": "#3a3a00FF",
       "border.variant": "#222222FF",
       "panel.focused_border": "#4a4a4aFF",
+      "hidden": "#777777FF",
+      "hidden.background": "#00000000",
+      "hidden.border": "#00000000",
+      "ignored": "#666666FF",
+      "ignored.background": "#00000000",
+      "ignored.border": "#00000000",
     },
   },
 
