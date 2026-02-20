@@ -1,7 +1,6 @@
 # ─── Common Taps ──────────────────────────────────────────────────────────────
 tap "jenkins-zh/jcli"
 tap "lusingander/tap"
-tap "teamookla/speedtest"
 tap "tylerbrock/saw"
 
 # ─── Common Brews (cross-platform) ───────────────────────────────────────────
@@ -76,7 +75,6 @@ brew "ranger"
 brew "repomix"
 brew "ripgrep"
 brew "shellcheck"
-brew "teamookla/speedtest/speedtest"
 brew "stow"
 brew "terraform-docs"
 brew "tesseract"
@@ -118,6 +116,7 @@ if OS.mac?
   tap "jorgelbg/tap"
   tap "ngrok/ngrok"
   tap "steipete/tap"
+  tap "teamookla/speedtest"
   tap "yakitrak/yakitrak"
 
   brew "gh"
@@ -128,6 +127,7 @@ if OS.mac?
   brew "jorgelbg/tap/pinentry-touchid"
   brew "steipete/tap/remindctl"
   brew "yakitrak/yakitrak/obsidian-cli"
+  brew "teamookla/speedtest/speedtest"
 
   cask "beyond-compare"
   cask "chatgpt-atlas"
