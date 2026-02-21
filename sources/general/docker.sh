@@ -1,5 +1,7 @@
 ##### exports
-export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+if [[ "$(uname)" == "Darwin" ]]; then
+    export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+fi
 
 ##### functions
 function docker-stop-all {
