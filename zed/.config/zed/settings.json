@@ -8,6 +8,7 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   // Theme
+  "vim_mode": false,
   "git_panel": {
     "tree_view": true,
   },

@@ -4,6 +4,9 @@ export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 # Use ~/.config for XDG-compliant apps (e.g., lazygit on macOS)
 export XDG_CONFIG_HOME="$HOME/.config"
 
+# Default user — prompt hides user@host when logged in as this user locally
+DEFAULT_USER="guna"
+
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
@@ -77,6 +80,12 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+# Show user@host when in SSH session or running as different user
+if [[ -n "$SSH_CONNECTION" || "$USER" != "$DEFAULT_USER" ]]; then
+  PROMPT="%{$fg_bold[green]%}%n@%m %(?:%{$fg_bold[green]%}%1{➜%} :%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%c%{$reset_color%}"
+  PROMPT+=' $(git_prompt_info)'
+fi
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -134,3 +143,11 @@ export GPG_TTY=$(tty)
 gpgconf --launch gpg-agent
 
 alias refreSH="exec $SHELL -l"
+
+# ─── Brew-sourced zsh plugins (no git clones needed) ────────────────────────
+if command -v brew &>/dev/null; then
+  BREW_PREFIX="$(brew --prefix)"
+  [[ -d "$BREW_PREFIX/share/zsh-completions" ]] && FPATH="$BREW_PREFIX/share/zsh-completions:$FPATH"
+  [[ -f "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  [[ -f "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+fi

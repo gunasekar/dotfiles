@@ -1,3 +1,12 @@
+gui:
+  mouseEvents: true
+  showDivergenceFromBaseBranch: arrowAndNumber
+
+refresher:
+  refreshInterval: 5
+
+notARepository: skip
+
 git:
   pagers:
     - colorArg: always

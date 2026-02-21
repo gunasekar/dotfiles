@@ -9,19 +9,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      // "shift shift": "file_finder::Toggle"
-    },
-  },
-  {
-    "context": "Editor && vim_mode == insert",
-    "bindings": {
-      // "j k": "vim::NormalBefore
-    },
-  },
-  {
-    "context": "Workspace",
-    "bindings": {
-      "cmd-shift-g": "git_panel::ToggleFocus",
-    },
-  },
+      "cmd-shift-g": "git_panel::ToggleFocus"
+    }
+  }
 ]
