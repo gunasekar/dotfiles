@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Set Black Background
+Exec=sh -c 'sleep 2 && xfconf-query -c xfce4-desktop -l | grep "/workspace0/" | sed "s|/workspace0/.*|/workspace0|" | sort -u | while read -r p; do xfconf-query -c xfce4-desktop -p "$p/last-image" -s ""; xfconf-query -c xfce4-desktop -p "$p/image-style" -s 0; xfconf-query -c xfce4-desktop -p "$p/color-style" --create -t int -s 0; xfconf-query -c xfce4-desktop -p "$p/rgba1" -t double -t double -t double -t double -s 0.0 -s 0.0 -s 0.0 -s 1.0; done'
+Hidden=false
+NoDisplay=true
+X-XFCE-Autostart-Override=true

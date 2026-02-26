@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Scanner
+Comment=Make a digital copy of your photos and documents
+Exec=simple-scan
+Icon=org.gnome.SimpleScan
+Terminal=false
+StartupNotify=true
+Type=Application
+Categories=GNOME;GTK;Graphics;Scanning;

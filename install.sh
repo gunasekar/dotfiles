@@ -74,6 +74,25 @@ if [[ "$(uname)" == "Darwin" ]]; then
     stow -v --no-folding xbar
 fi
 
+# --- Linux-only packages ---
+
+if [[ "$(uname)" == "Linux" ]]; then
+    # XFCE-specific packages
+    if command -v xfce4-panel &> /dev/null; then
+        echo "  • XFCE4 → ~/.config/xfce4/, ~/.local/share/applications/"
+        mkdir -p "$HOME/.local/share/applications"
+        stow -v --no-folding xfce4
+        update-desktop-database "$HOME/.local/share/applications/"
+
+        # Set LightDM login screen to solid black background
+        if [[ -f /etc/lightdm/lightdm-gtk-greeter.conf ]]; then
+            echo "  • LightDM → solid black login background"
+            sudo sed -i 's|^background=.*|background=#000000|' /etc/lightdm/lightdm-gtk-greeter.conf
+            sudo sed -i 's|^#\?user-background=.*|user-background=false|' /etc/lightdm/lightdm-gtk-greeter.conf
+        fi
+    fi
+fi
+
 echo ""
 echo "Public dotfiles installed successfully!"
 echo ""
