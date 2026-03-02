@@ -1,0 +1,5 @@
+[misc]
+no_retry = true
+
+[brew]
+greedy_cask = true

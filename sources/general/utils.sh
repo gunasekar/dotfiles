@@ -144,7 +144,7 @@ function brew-sync {
     case "$ans" in
         i)
             echo ""
-            brew bundle --global
+            brew bundle --global --no-upgrade
             ;;
         I)
             echo ""
