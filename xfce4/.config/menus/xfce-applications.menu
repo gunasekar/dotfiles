@@ -25,11 +25,44 @@
         <Filename>md.obsidian.Obsidian.desktop</Filename>
         <Filename>org.gnome.SimpleScan.desktop</Filename>
         <Separator/>
+        <Menuname>Applications</Menuname>
         <Menuname>Settings</Menuname>
         <Menuname>System</Menuname>
         <Separator/>
         <Filename>xfce4-session-logout.desktop</Filename>
     </Layout>
+
+    <Menu>
+        <Name>Applications</Name>
+        <Directory>xfce-applications.directory</Directory>
+        <Include>
+            <Or>
+                <Category>AudioVideo</Category>
+                <Category>Development</Category>
+                <Category>Education</Category>
+                <Category>Game</Category>
+                <Category>Graphics</Category>
+                <Category>Network</Category>
+                <Category>Office</Category>
+                <Category>Utility</Category>
+            </Or>
+        </Include>
+        <Exclude>
+            <Or>
+                <Filename>xfce4-terminal.desktop</Filename>
+                <Filename>thunar.desktop</Filename>
+                <Filename>com.google.Chrome.desktop</Filename>
+                <Filename>dev.zed.Zed.desktop</Filename>
+                <Filename>md.obsidian.Obsidian.desktop</Filename>
+                <Filename>org.gnome.SimpleScan.desktop</Filename>
+                <Category>Settings</Category>
+                <Category>System</Category>
+            </Or>
+        </Exclude>
+        <Layout>
+            <Merge type="all"/>
+        </Layout>
+    </Menu>
 
     <Menu>
         <Name>Settings</Name>
