@@ -1,13 +1,13 @@
 gui:
   mouseEvents: true
   showDivergenceFromBaseBranch: arrowAndNumber
-
 refresher:
   refreshInterval: 5
-
 notARepository: skip
-
 git:
+  diffContextSize: 5
+  log:
+    showWholeGraph: true
   pagers:
     - colorArg: always
       pager: delta --paging=never --side-by-side
