@@ -8,6 +8,9 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   // Theme
+  "agent_servers": {
+    "claude": {},
+  },
   "icon_theme": "Zed (Default)",
   "theme": "One Dark",
   "theme_overrides": {
@@ -52,7 +55,7 @@
   // Keymap
   "base_keymap": "VSCode",
   // Editor behavior
-  "preferred_line_length": 100,
+  "preferred_line_length": 120,
   "buffer_line_height": "comfortable",
   "tab_size": 2,
   "soft_wrap": "none",
@@ -213,19 +216,11 @@
       },
     },
     "Python": {
-      "language_servers": [
-        "pyright",
-        "ruff"
-      ],
+      "language_servers": ["pyright", "ruff"],
       "formatter": {
         "external": {
           "command": "ruff",
-          "arguments": [
-            "format",
-            "--stdin-filename",
-            "{buffer_path}",
-            "-"
-          ],
+          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"],
         },
       },
     },
@@ -233,10 +228,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
@@ -244,10 +236,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
@@ -255,10 +244,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
@@ -266,10 +252,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
