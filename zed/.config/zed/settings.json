@@ -163,6 +163,7 @@
   // AI Agent
   "agent": {
     "dock": "right",
+    "sidebar_side": "right",
     "tool_permissions": {
       "default": "allow",
     },

@@ -7,8 +7,15 @@
 // from the command palette.
 [
   {
-    "context": "Workspace",
-    "bindings": {}
+    "bindings": {
+      "cmd-shift-m": "workspace::ToggleZoom",
+      "cmd-shift-l": [
+        "action::Sequence",
+        [
+          ["task::Spawn", { "task_name": "LazyGit", "reveal_target": "center" }]
+        ]
+      ]
+    }
   },
   {
     "context": "Editor",
