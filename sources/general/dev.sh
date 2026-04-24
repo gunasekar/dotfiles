@@ -155,3 +155,6 @@ fi
 # Lazy tool aliases
 command -v lazygit &>/dev/null && alias gitl='lazygit'
 command -v lazydocker &>/dev/null && alias dockerl='lazydocker'
+
+# direnv hook
+command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
