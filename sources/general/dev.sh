@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
 function c {
-    if command -v zed &>/dev/null; then
-        zed "${@:-.}"
-    elif command -v cursor &>/dev/null; then
+    if command -v cursor &>/dev/null; then
         cursor "${@:-.}"
     elif command -v code &>/dev/null; then
         code "${@:-.}"
     elif command -v nvim &>/dev/null; then
         nvim "${@:-.}"
     else
-        echo "no editors found. please install cursor, zed, vscode, or nvim"
+        echo "no editors found. please install cursor, vscode, or nvim"
     fi
 }
 

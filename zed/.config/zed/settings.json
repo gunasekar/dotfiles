@@ -12,7 +12,7 @@
   "agent_servers": {
     "claude-acp": {
       "default_config_options": {
-        "mode": "auto"
+        "mode": "bypassPermissions"
       },
       "favorite_config_option_values": {
         "mode": [
@@ -267,17 +267,17 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--stdin-filepath", "{buffer_path}"],
-        },
-      },
+          "arguments": ["--stdin-filepath", "{buffer_path}"]
+        }
+      }
     },
     "JSONC": {
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--parser", "json", "--stdin-filepath", "{buffer_path}"],
-        },
-      },
+          "arguments": ["--parser", "json", "--stdin-filepath", "{buffer_path}"]
+        }
+      }
     },
     "Markdown": {
       "soft_wrap": "preferred_line_length",
