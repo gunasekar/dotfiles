@@ -11,6 +11,9 @@ return {
       auto_start = true,
       log_level = "info",
 
+      -- Launch Claude with permissions bypassed
+      terminal_cmd = "claude --dangerously-skip-permissions",
+
       -- Terminal configuration
       terminal = {
         split_side = "right",          -- Position on right side
