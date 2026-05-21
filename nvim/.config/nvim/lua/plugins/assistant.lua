@@ -17,12 +17,24 @@ return {
       -- Terminal configuration
       terminal = {
         split_side = "right",          -- Position on right side
-        split_width_percentage = 0.3,  -- 30% of screen width
+        split_width_percentage = 0.4,  -- 40% of screen width
         provider = "snacks",           -- Use snacks.nvim terminal
         auto_close = false,            -- Keep terminal open
         snacks_win_opts = {
           wo = {
             winhighlight = "Normal:Normal,NormalFloat:Normal", -- Match editor background
+          },
+          keys = {
+            -- Single <Esc> passes through to Claude (interrupt/cancel).
+            -- Double <Esc> exits terminal mode into Neovim normal mode.
+            term_normal = {
+              "<Esc><Esc>",
+              function()
+                vim.cmd("stopinsert")
+              end,
+              mode = "t",
+              desc = "Double Esc to Neovim normal mode",
+            },
           },
         },
       },
