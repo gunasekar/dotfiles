@@ -28,6 +28,15 @@ macos-option-as-alt = true
 # Start with maximized window (full screen size but not fullscreen mode)
 maximize = true
 
+# New tabs/splits/windows always open in the home directory
+# instead of inheriting the current surface's working directory.
+# Windows, tabs, and splits each have their own inherit setting —
+# all three must be disabled or that surface type keeps inheriting.
+window-inherit-working-directory = false
+tab-inherit-working-directory = false
+split-inherit-working-directory = false
+working-directory = home
+
 # =============================================================================
 # SPLITS & PANES - Claude Code Workflow Keybindings
 # =============================================================================
