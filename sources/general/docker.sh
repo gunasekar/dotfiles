@@ -1,6 +1,10 @@
 ##### exports
+# Keep Colima's home under XDG so its config lives in the dotfiles repo and
+# Colima stops warning about the legacy ~/.colima directory.
+export COLIMA_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/colima"
+
 if [[ "$(uname)" == "Darwin" ]]; then
-    export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+    export DOCKER_HOST="unix://${COLIMA_HOME}/default/docker.sock"
 fi
 
 ##### functions
@@ -86,20 +90,27 @@ function docker-ips {
     docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
 }
 
-##### mysql
-function del-all-mysql-db {
-    # Confirmation prompt
-    echo "⚠️  WARNING: This will DROP ALL user databases in MySQL"
-    read -p "Are you absolutely sure? Type 'DELETE ALL' to confirm: " -r
-    echo
-    if [[ "$REPLY" == "DELETE ALL" ]]; then
-        # Use environment variable for password to avoid command-line exposure
-        if [ -z "$LOCAL_MYSQL_PASSWORD" ]; then
-            echo "Error: LOCAL_MYSQL_PASSWORD not set. Set it or use mycli instead." >&2
-            return 1
-        fi
-        mysql -uroot -p"$LOCAL_MYSQL_PASSWORD" -e "show databases" | grep -v Database | grep -v mysql| grep -v information_schema| awk '{print "drop database " $1 ";select sleep(0.1);"}' | mysql -uroot -p"$LOCAL_MYSQL_PASSWORD"
-    else
-        echo "Cancelled (must type 'DELETE ALL' exactly)"
+##### postgres
+# Start the local dev Postgres, creating the container on first run.
+# Data lives in the 'pgdata' named volume (fast VM-native disk, not a host bind mount).
+function pg-up {
+    local name="postgresdb"
+
+    if ! docker info &>/dev/null; then
+        echo "Error: Docker is not running (start it with 'colima start')" >&2
+        return 1
     fi
+
+    if docker ps -a --format '{{.Names}}' | grep -qx "$name"; then
+        docker start "$name" >/dev/null && echo "Started '$name' on localhost:5432"
+        return
+    fi
+
+    docker run --restart always --name "$name" -d \
+        -p 5432:5432 \
+        -e POSTGRES_PASSWORD=password \
+        -v pgdata:/var/lib/postgresql/data \
+        --shm-size=256m \
+        postgres:17 >/dev/null \
+        && echo "Created '$name' on localhost:5432 (user=postgres, password=password)"
 }
