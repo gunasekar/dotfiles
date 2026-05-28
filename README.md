@@ -81,6 +81,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── nodejs/           # Node.js guidelines (see nodejs/README.md)
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
 ├── ghostty/          # Ghostty terminal (see ghostty/README.md)
+├── colima/           # Colima container runtime config (see colima/README.md)
 ├── aws/              # AWS CLI configuration
 ├── ssh/              # SSH client configuration
 ├── gnupg/            # GPG configuration

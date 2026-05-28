@@ -72,6 +72,11 @@ stow -v --no-folding zed
 if [[ "$(uname)" == "Darwin" ]]; then
     echo "  • xbar → ~/Library/Application Support/xbar/plugins/"
     stow -v --no-folding xbar
+
+    # --no-folding — Colima writes VM state into this dir; only the yaml is ours
+    echo "  • Colima → ~/.config/colima/default/colima.yaml"
+    mkdir -p "$HOME/.config/colima/default"
+    stow -v --no-folding colima
 fi
 
 # --- Linux-only packages ---

@@ -37,6 +37,12 @@ Temporary Items
 # End of https://www.toptal.com/developers/gitignore/api/macos
 
 ### Custom Security Exclusions ###
+# Colima: track only the profile config, never VM state, disks, or sockets
+colima/.config/colima/*
+!colima/.config/colima/default/
+colima/.config/colima/default/*
+!colima/.config/colima/default/colima.yaml
+
 # Never commit AWS credentials
 aws/.aws/credentials
 
