@@ -173,6 +173,8 @@ See: [nvim/README.md](nvim/README.md)
 # ECS
 ecs-clusters                                  # List clusters
 ecs-services <cluster>                        # List services
+ecs-tasks <cluster> <service>                 # List running tasks
+ecs-logs <cluster> <service> [since]          # Tail logs (live, or e.g. 15m)
 ecs-metrics <cluster> <service> all -120M -0S 60  # Get metrics
 
 # S3

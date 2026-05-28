@@ -30,8 +30,34 @@ function portable-date() {
     fi
 }
 
-function show-aws-creds {
-    cat ~/.aws/credentials
+# Convert a `-s`/`-e` value to an absolute ISO timestamp.
+# Offsets start with `-` (e.g. -2H, -0S) and go through portable-date;
+# anything else (e.g. 2020-09-09T14:00:19Z) is passed through unchanged.
+function _maybe_portable_date() {
+    local val=$1
+    if [[ "$val" == -* ]]; then
+        portable-date "$val"
+    else
+        echo "$val"
+    fi
+}
+
+# Map short metric aliases to their CloudWatch metric names.
+# Unknown values pass through unchanged so full names still work.
+function _resolve_metric_alias() {
+    case "$1" in
+        cpu)      echo "CPUUtilization" ;;
+        cpu-used) echo "CpuUtilized" ;;
+        mem)      echo "MemoryUtilization" ;;
+        mem-used) echo "MemoryUtilized" ;;
+        tasks)    echo "RunningTaskCount" ;;
+        msgs)     echo "ApproximateNumberOfMessagesVisible" ;;
+        sent)     echo "NumberOfMessagesSent" ;;
+        received) echo "NumberOfMessagesReceived" ;;
+        delayed)  echo "ApproximateNumberOfMessagesDelayed" ;;
+        age)      echo "ApproximateAgeOfOldestMessage" ;;
+        *)        echo "$1" ;;
+    esac
 }
 
 function get-aws-identity {
@@ -53,14 +79,29 @@ function launch-dynamodb-admin {
     dynamodb-admin
 }
 
+##### EC2
+# List EC2 instances (name, ID, launch time), sorted by launch time.
+function ec2-instances {
+    aws ec2 describe-instances \
+        --query 'sort_by(Reservations[].Instances[].{Name: Tags[?Key==`Name`]|[0].Value, ID: InstanceId, Launched: LaunchTime}, &Launched)' \
+        --output table
+}
+
+
 ##### ECS
 function ecs-clusters {
     aws ecs list-clusters --output json | jq -r ".clusterArns[] | select(contains(\"$1\"))"
 }
 
 function ecs-services {
-    [[ $# != 1 ]] && { echo "$0 <cluster-name> \nExamples:\n$0 some-ecs-cluster"; return; }
-    aws ecs list-services --cluster $1 --output json
+    local cluster
+    case $# in
+        1) cluster=$1 ;;
+        0) cluster=$AWS_ECS_CLUSTER ;;
+        *) echo "Usage: $0 [cluster]  (set AWS_ECS_CLUSTER to omit)"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    aws ecs list-services --cluster "$cluster" --output json
 }
 
 function internal-ecs-get-service {
@@ -69,18 +110,36 @@ function internal-ecs-get-service {
 }
 
 function ecs-service {
-    [[ $# != 2 ]] && { echo "$0 <cluster-name> <service-name> \nExamples:\n$0 some-ecs-cluster some-service"; return; }
-    internal-ecs-describe-service "serviceOnly" "$@"
+    local cluster service
+    case $# in
+        2) cluster=$1; service=$2 ;;
+        1) cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *) echo "Usage: $0 [cluster] <service>  (set AWS_ECS_CLUSTER to omit cluster)"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    internal-ecs-describe-service "serviceOnly" "$cluster" "$service"
 }
 
 function ecs-service-events {
-    [[ $# != 3 ]] && { echo "$0 <cluster-name> <service-name> <number_of_events> \nExamples:\n$0 some-ecs-cluster some-service 5"; return; }
-    internal-ecs-describe-service "serviceEventsOnly" "$@"
+    local cluster service count
+    case $# in
+        3) cluster=$1; service=$2; count=$3 ;;
+        2) cluster=$AWS_ECS_CLUSTER; service=$1; count=$2 ;;
+        *) echo "Usage: $0 [cluster] <service> <num_events>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    internal-ecs-describe-service "serviceEventsOnly" "$cluster" "$service" "$count"
 }
 
 function ecs-service-task-definition {
-    [[ $# != 2 ]] && { echo "$0 <cluster-name> <service-name> \nExamples:\n$0 some-ecs-cluster some-service"; return; }
-    internal-ecs-describe-service "taskDefinition" "$@"
+    local cluster service
+    case $# in
+        2) cluster=$1; service=$2 ;;
+        1) cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *) echo "Usage: $0 [cluster] <service>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    internal-ecs-describe-service "taskDefinition" "$cluster" "$service"
 }
 
 function internal-ecs-describe-service {
@@ -115,15 +174,21 @@ function internal-ecs-describe-service {
 }
 
 function ecs-service-complete {
-    [[ $# != 2 ]] && { echo "$0 <cluster-name> <service-name> \nExamples:\n$0 some-ecs-cluster some-service"; return; }
+    local cluster service
+    case $# in
+        2) cluster=$1; service=$2 ;;
+        1) cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *) echo "Usage: $0 [cluster] <service>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
 
-    serviceName=`internal-ecs-get-service "$@"`
-    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return; }
-    serviceDesc=`aws ecs describe-services --cluster $1 --service $serviceName`
+    serviceName=`internal-ecs-get-service "$cluster" "$service"`
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
+    serviceDesc=`aws ecs describe-services --cluster "$cluster" --service "$serviceName"`
     echo ">>> Service"
     echo $serviceDesc | jq
 
-    tdFilter=`echo "$2:[0-9]*"`
+    tdFilter=`echo "$service:[0-9]*"`
     taskDefinition=`echo $serviceDesc | jq ".services[].taskDefinition" | grep -o $tdFilter`
     taskDefinitionDesc=`aws ecs describe-task-definition --task-definition $taskDefinition`
     echo ">>> Task Definition"
@@ -131,17 +196,94 @@ function ecs-service-complete {
 }
 
 function ecs-force-deploy {
-    [[ $# != 2 ]] && { echo "$0 <cluster-name> <service-name> \nExamples:\n$0 some-ecs-cluster some-service"; return; }
-    serviceName=`internal-ecs-get-service "$@"`
-    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return; }
-    aws ecs update-service --cluster $1 --service $serviceName --force-new-deployment | jq ".service | {serviceName, status, desiredCount, runningCount, pendingCount, launchType, taskDefinition, clusterArn, loadBalancers, roleArn}"
+    local cluster service
+    case $# in
+        2) cluster=$1; service=$2 ;;
+        1) cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *) echo "Usage: $0 [cluster] <service>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    serviceName=`internal-ecs-get-service "$cluster" "$service"`
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
+    aws ecs update-service --cluster "$cluster" --service "$serviceName" --force-new-deployment | jq ".service | {serviceName, status, desiredCount, runningCount, pendingCount, launchType, taskDefinition, clusterArn, loadBalancers, roleArn}"
 }
 
 function ecs-set-desired-count {
-    [[ $# != 3 ]] && { echo "$0 <cluster-name> <service-name> <num_of_instances>\nExamples:\n$0 some-ecs-cluster some-service 3"; return; }
-    serviceName=`internal-ecs-get-service "$@"`
-    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return; }
-    aws ecs update-service --cluster $1 --service $serviceName --desired-count $3 | jq ".service | {serviceName, status, desiredCount, runningCount, pendingCount, launchType, taskDefinition, clusterArn, loadBalancers, roleArn}"
+    local cluster service count
+    case $# in
+        3) cluster=$1; service=$2; count=$3 ;;
+        2) cluster=$AWS_ECS_CLUSTER; service=$1; count=$2 ;;
+        *) echo "Usage: $0 [cluster] <service> <num_of_instances>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    serviceName=`internal-ecs-get-service "$cluster" "$service"`
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
+    aws ecs update-service --cluster "$cluster" --service "$serviceName" --desired-count "$count" | jq ".service | {serviceName, status, desiredCount, runningCount, pendingCount, launchType, taskDefinition, clusterArn, loadBalancers, roleArn}"
+}
+
+# List running tasks for a service (task id, status, health, start time).
+function ecs-tasks {
+    local cluster service
+    case $# in
+        2) cluster=$1; service=$2 ;;
+        1) cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *) echo "Usage: $0 [cluster] <service>"; return 1 ;;
+    esac
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    serviceName=`internal-ecs-get-service "$cluster" "$service"`
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
+
+    # Newline-separated ARNs piped through xargs, so this works whether the
+    # function is sourced into bash or zsh (zsh doesn't word-split "$taskArns").
+    taskArns=`aws ecs list-tasks --cluster "$cluster" --service-name "$serviceName" --output json | jq -r '.taskArns[]'`
+    [ -z "$taskArns" ] && { echo "no running tasks for $serviceName"; return; }
+    echo "$taskArns" | xargs aws ecs describe-tasks --output json --cluster "$cluster" --tasks | \
+        jq -r '.tasks[] | "\(.taskArn|split("/")[-1])\t\(.lastStatus)\t\(.healthStatus)\t\(.startedAt // "n/a")"'
+}
+
+# Tail the CloudWatch logs for a service. Live tail by default; pass a
+# duration (e.g. 15m, 1h) as the third argument for a recent snapshot.
+function ecs-logs {
+    local cluster service since
+    case $# in
+        2|3) cluster=$1; service=$2; since=$3 ;;
+        1)   cluster=$AWS_ECS_CLUSTER; service=$1 ;;
+        *)
+            echo "Usage: $0 [cluster] <service> [since]"
+            echo "  since: omit for live tail (--follow); pass a duration (e.g. 15m, 1h) for a recent snapshot"
+            echo "Examples:"
+            echo "  $0 some-ecs-cluster some-service        # live tail"
+            echo "  $0 some-ecs-cluster some-service 15m    # last 15 minutes"
+            echo "  $0 some-service                         # with AWS_ECS_CLUSTER set"
+            return 1
+            ;;
+    esac
+    # Special case: 2 args + env set could mean (service, since) instead of (cluster, service).
+    # Disambiguate: if cluster (=$1) doesn't look like a duration and env is set,
+    # treat $1 as service and $2 as since.
+    if [[ $# -eq 2 && -n "$AWS_ECS_CLUSTER" && "$2" =~ ^[0-9]+[smhd]$ ]]; then
+        cluster=$AWS_ECS_CLUSTER
+        service=$1
+        since=$2
+    fi
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+
+    serviceName=`internal-ecs-get-service "$cluster" "$service"`
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
+
+    taskDefinition=`aws ecs describe-services --cluster "$cluster" --service "$serviceName" --output json | jq -r '.services[0].taskDefinition'`
+    { [ -z "$taskDefinition" ] || [ "$taskDefinition" = "null" ]; } && { echo "task definition not found"; return 1; }
+
+    logGroup=`aws ecs describe-task-definition --task-definition "$taskDefinition" --output json | \
+        jq -r '[.taskDefinition.containerDefinitions[].logConfiguration.options."awslogs-group"] | map(select(. != null)) | unique | .[0]'`
+    { [ -z "$logGroup" ] || [ "$logGroup" = "null" ]; } && { echo "no awslogs log group configured for this service"; return 1; }
+
+    echo "log group :: $logGroup"
+    if [ -n "$since" ]; then
+        aws logs tail "$logGroup" --since "$since" --format short
+    else
+        aws logs tail "$logGroup" --since 1m --follow --format short
+    fi
 }
 
 ##### SSM
@@ -356,50 +498,116 @@ function sqs-all-attrs() {
 
 
 ##### CLOUDWATCH
-function ecs-metrics-ts() {
-    [[ $# != 6 ]] && { echo "$0 <cluster_name> <service> <metric_required> <start_time> <end_time> <period> \nMetrics Available: all, CPUUtilization, CpuUtilized, MemoryUtilization, MemoryUtilized, RunningTaskCount\nExamples:\n$0 some-ecs-cluster some-service all 2020-09-09T14:00:19Z 2020-09-09T15:00:19Z 60\n$0 some-ecs-cluster some-service CpuUtilized 2020-09-09T14:00:19Z 2020-09-09T15:00:19Z 60"; return; }
-    serviceName=`internal-ecs-get-service "$@"`
-    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return; }
 
-    clusterName=$1
-    metricRequired=$3
-    period=$4
-    startTime=$5
-    endTime=$6
-
-    # shellcheck disable=SC2089,SC2090
-    metricsJson="[{\"Namespace\":\"AWS\/ECS\",\"MetricName\":\"CPUUtilization\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$clusterName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"CpuUtilized\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$clusterName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/ECS\",\"MetricName\":\"MemoryUtilization\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$clusterName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"MemoryUtilized\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$clusterName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"RunningTaskCount\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$clusterName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]}]"
-    # shellcheck disable=SC2090
-    internal-get-metric $metricsJson $metricRequired
-}
-
+# Show CloudWatch metrics charts for an ECS service.
+# Usage: ecs-metrics [-c cluster] [-m metric] [-s since] [-e end] [-p period] <service>
+#   --since / --end accept offsets (-2H, -120M, -0S) or ISO timestamps.
 function ecs-metrics() {
-    [[ $# != 6 ]] && { echo "$0 <cluster_name> <service> <metric_required> <start_time> <end_time> <period> \nMetrics Available: all, CPUUtilization, CpuUtilized, MemoryUtilization, MemoryUtilized, RunningTaskCount\nExamples:\n$0 some-ecs-cluster some-service all -120M -0S 60\n$0 some-ecs-cluster some-service CpuUtilized -120M -0S 60"; return; }
-    startTime=$(portable-date "$5")
-    endTime=$(portable-date "$6")
-    ecs-metrics-ts $1 $2 $3 $4 $startTime $endTime
-}
+    local cluster=$AWS_ECS_CLUSTER service metric=all
+    local since=-1H end=-0S period=60
 
-function sqs-metrics-ts() {
-    [[ $# != 5 ]] && { echo "$0 <queue_name> <metric_required> <start_time> <end_time> <period> \nMetrics Available: all, ApproximateNumberOfMessagesVisible, NumberOfMessagesSent, NumberOfMessagesReceived, ApproximateNumberOfMessagesDelayed, ApproximateAgeOfOldestMessage\nExamples:\n$0 some-sqs-queue all 2020-09-09T14:00:19Z 2020-09-09T15:00:19Z 60\n$0 some-sqs-queue NumberOfMessagesSent 2020-09-09T14:00:19Z 2020-09-09T15:00:19Z 60"; return; }
-    queueName=$1
-    metricRequired=$2
-    period=$3
-    startTime=$4
-    endTime=$5
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -c|--cluster) cluster=$2; shift 2 ;;
+            -m|--metric)  metric=$(_resolve_metric_alias "$2"); shift 2 ;;
+            -s|--since)   since=$2; shift 2 ;;
+            -e|--end)     end=$2; shift 2 ;;
+            -p|--period)  period=$2; shift 2 ;;
+            -h|--help)
+                cat <<EOF
+Usage: ecs-metrics [opts] <service>
+  -c, --cluster <name>   ECS cluster (default: \$AWS_ECS_CLUSTER)
+  -m, --metric <name>    Metric or alias (default: all)
+                         aliases: cpu, cpu-used, mem, mem-used, tasks
+                         full:    CPUUtilization, CpuUtilized,
+                                  MemoryUtilization, MemoryUtilized,
+                                  RunningTaskCount
+  -s, --since <when>     Start (default: -1H). Offset like -2H or ISO timestamp.
+  -e, --end <when>       End   (default: -0S). Same format as --since.
+  -p, --period <secs>    Period in seconds (default: 60)
+
+Examples:
+  ecs-metrics my-svc                          # all metrics, last hour
+  ecs-metrics my-svc -m cpu -s -2H            # CPU over last 2 hours
+  ecs-metrics -c my-cluster my-svc -m mem
+  ecs-metrics my-svc -s 2020-09-09T14:00:19Z -e 2020-09-09T15:00:19Z
+EOF
+                return 0
+                ;;
+            -*) echo "Unknown option: $1" >&2; return 1 ;;
+            *)  service=$1; shift ;;
+        esac
+    done
+
+    [[ -z "$cluster" ]] && { echo "Error: cluster not given and AWS_ECS_CLUSTER not set" >&2; return 1; }
+    [[ -z "$service" ]] && { echo "Error: service required (try -h)" >&2; return 1; }
+
+    local startTime endTime
+    startTime=$(_maybe_portable_date "$since") || return 1
+    endTime=$(_maybe_portable_date "$end") || return 1
+
+    local serviceName
+    serviceName=$(internal-ecs-get-service "$cluster" "$service")
+    [ -z "$serviceName" ] && { echo "service not found in the cluster"; return 1; }
 
     # shellcheck disable=SC2089,SC2090
-    metricsJson="[{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateNumberOfMessagesVisible\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queueName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"NumberOfMessagesSent\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queueName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Sum\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"NumberOfMessagesReceived\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queueName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Sum\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateNumberOfMessagesDelayed\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queueName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateAgeOfOldestMessage\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queueName\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]}]"
+    local metricsJson="[{\"Namespace\":\"AWS\/ECS\",\"MetricName\":\"CPUUtilization\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$cluster\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"CpuUtilized\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$cluster\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/ECS\",\"MetricName\":\"MemoryUtilization\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$cluster\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"MemoryUtilized\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$cluster\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"ECS\/ContainerInsights\",\"MetricName\":\"RunningTaskCount\",\"Dimensions\":[{\"Name\":\"ServiceName\",\"Value\":\"$serviceName\"},{\"Name\":\"ClusterName\",\"Value\":\"$cluster\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]}]"
     # shellcheck disable=SC2090
-    internal-get-metric $metricsJson $metricRequired
+    internal-get-metric $metricsJson $metric
 }
 
+# Kept for muscle memory; ecs-metrics now accepts absolute timestamps via -s/-e.
+function ecs-metrics-ts() { ecs-metrics "$@"; }
+
+# Show CloudWatch metrics charts for an SQS queue.
+# Usage: sqs-metrics [-m metric] [-s since] [-e end] [-p period] <queue>
 function sqs-metrics() {
-    [[ $# != 5 ]] && { echo "$0 <queue_name> <metric_required> <start_time> <end_time> <period> \nMetrics Available: all, ApproximateNumberOfMessagesVisible, NumberOfMessagesSent, NumberOfMessagesReceived, ApproximateNumberOfMessagesDelayed, ApproximateAgeOfOldestMessage\nExamples:\n$0 some-sqs-queue all -120M -0S 60\n$0 some-sqs-queue NumberOfMessagesSent -120M -0S 60"; return; }
-    startTime=$(portable-date "$4")
-    endTime=$(portable-date "$5")
-    sqs-metrics-ts $1 $2 $3 $startTime $endTime
+    local queue metric=all
+    local since=-1H end=-0S period=60
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -m|--metric)  metric=$(_resolve_metric_alias "$2"); shift 2 ;;
+            -s|--since)   since=$2; shift 2 ;;
+            -e|--end)     end=$2; shift 2 ;;
+            -p|--period)  period=$2; shift 2 ;;
+            -h|--help)
+                cat <<EOF
+Usage: sqs-metrics [opts] <queue>
+  -m, --metric <name>    Metric or alias (default: all)
+                         aliases: msgs, sent, received, delayed, age
+                         full:    ApproximateNumberOfMessagesVisible,
+                                  NumberOfMessagesSent, NumberOfMessagesReceived,
+                                  ApproximateNumberOfMessagesDelayed,
+                                  ApproximateAgeOfOldestMessage
+  -s, --since <when>     Start (default: -1H)
+  -e, --end <when>       End   (default: -0S)
+  -p, --period <secs>    Period in seconds (default: 60)
+
+Examples:
+  sqs-metrics my-queue
+  sqs-metrics my-queue -m sent -s -2H
+EOF
+                return 0
+                ;;
+            -*) echo "Unknown option: $1" >&2; return 1 ;;
+            *)  queue=$1; shift ;;
+        esac
+    done
+
+    [[ -z "$queue" ]] && { echo "Error: queue required (try -h)" >&2; return 1; }
+
+    local startTime endTime
+    startTime=$(_maybe_portable_date "$since") || return 1
+    endTime=$(_maybe_portable_date "$end") || return 1
+
+    # shellcheck disable=SC2089,SC2090
+    local metricsJson="[{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateNumberOfMessagesVisible\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queue\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"NumberOfMessagesSent\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queue\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Sum\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"NumberOfMessagesReceived\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queue\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Sum\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateNumberOfMessagesDelayed\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queue\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]},{\"Namespace\":\"AWS\/SQS\",\"MetricName\":\"ApproximateAgeOfOldestMessage\",\"Dimensions\":[{\"Name\":\"QueueName\",\"Value\":\"$queue\"}],\"StartTime\":\"$startTime\",\"EndTime\":\"$endTime\",\"Period\":$period,\"Statistics\":[\"Average\"]}]"
+    # shellcheck disable=SC2090
+    internal-get-metric $metricsJson $metric
 }
+
+function sqs-metrics-ts() { sqs-metrics "$@"; }
 
 function db-metrics {
     name=$1
@@ -460,4 +668,47 @@ function internal-get-metric() {
             loopFlag=false
         fi
     done
+}
+
+##### ECS DISPATCHER
+# Single entry point: `ecs <subcommand> [args...]`. All ecs-* functions still
+# work directly; this is an additive convenience. Cluster is optional in most
+# subcommands when AWS_ECS_CLUSTER is set.
+function ecs() {
+    local subcmd=$1
+    [[ $# -gt 0 ]] && shift
+    case "$subcmd" in
+        clusters) ecs-clusters "$@" ;;
+        services) ecs-services "$@" ;;
+        service)  ecs-service "$@" ;;
+        events)   ecs-service-events "$@" ;;
+        td)       ecs-service-task-definition "$@" ;;
+        info)     ecs-service-complete "$@" ;;
+        deploy)   ecs-force-deploy "$@" ;;
+        scale)    ecs-set-desired-count "$@" ;;
+        tasks)    ecs-tasks "$@" ;;
+        logs)     ecs-logs "$@" ;;
+        metrics)  ecs-metrics "$@" ;;
+        ""|-h|--help|help)
+            cat <<EOF
+Usage: ecs <subcommand> [args...]
+
+Subcommands:
+  clusters [pattern]                List ECS clusters (optional substring filter)
+  services [cluster]                List services in cluster
+  service  [cluster] <service>      Describe a service
+  events   [cluster] <service> <n>  Show last n service events
+  td       [cluster] <service>      Show task definition for service
+  info     [cluster] <service>      Full service + task definition dump
+  deploy   [cluster] <service>      Force a new deployment
+  scale    [cluster] <service> <n>  Set desired count
+  tasks    [cluster] <service>      List running tasks
+  logs     [cluster] <service> [since]   Tail CloudWatch logs
+  metrics  [opts] <service>         Metrics charts (see: ecs metrics -h)
+
+Set AWS_ECS_CLUSTER to omit [cluster] from any subcommand.
+EOF
+            ;;
+        *) echo "Unknown ecs subcommand: $subcmd (try: ecs help)" >&2; return 1 ;;
+    esac
 }
