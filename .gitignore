@@ -46,12 +46,6 @@ colima/.config/colima/default/*
 # Never commit AWS credentials
 aws/.aws/credentials
 
-# Never commit SSH private keys
-ssh/.ssh/id_*
-ssh/.ssh/*_rsa
-ssh/.ssh/*_ed25519
-!ssh/.ssh/*.pub
-
 # Never commit GPG private keys
 gnupg/.gnupg/private-keys-v1.d/
 gnupg/.gnupg/openpgp-revocs.d/

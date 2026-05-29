@@ -46,7 +46,7 @@ sudo dnf install git stow      # Fedora/RHEL
    stow */
 
    # Or deploy specific configurations
-   stow zsh git brew ssh
+   stow zsh git brew
 
    # Note: Use --no-folding if needed to prevent symlinking entire directories
    stow --no-folding <directory>
@@ -83,7 +83,6 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── ghostty/          # Ghostty terminal (see ghostty/README.md)
 ├── colima/           # Colima container runtime config (see colima/README.md)
 ├── aws/              # AWS CLI configuration
-├── ssh/              # SSH client configuration
 ├── gnupg/            # GPG configuration
 ├── mpv/              # mpv player configuration
 ├── mycli/            # MySQL CLI configuration

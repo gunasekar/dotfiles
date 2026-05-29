@@ -37,9 +37,6 @@ stow -v brew
 
 # --- Packages needing --no-folding (tools write their own data to these dirs) ---
 
-echo "  • SSH → ~/.ssh/"
-stow -v --no-folding ssh
-
 echo "  • GnuPG → ~/.gnupg/"
 stow -v --no-folding gnupg
 
