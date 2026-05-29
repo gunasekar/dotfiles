@@ -114,7 +114,10 @@ adjust-cell-width = 0
 
 # Shell integration
 shell-integration = detect
-shell-integration-features = cursor,sudo,title
+# ssh-terminfo copies Ghostty's terminfo to remote hosts (fixes garbled
+# rendering when TERM=xterm-ghostty is unknown there); ssh-env forces
+# TERM=xterm-256color as a fallback when terminfo can't be installed.
+shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
 
 # Auto-update
 auto-update = check
