@@ -109,7 +109,6 @@ go "honnef.co/go/tools/cmd/staticcheck"
 # ─── macOS Only ───────────────────────────────────────────────────────────────
 if OS.mac?
   tap "jorgelbg/tap"
-  tap "ngrok/ngrok"
   tap "steipete/tap"
   tap "teamookla/speedtest"
   tap "yakitrak/yakitrak"
@@ -150,7 +149,7 @@ if OS.mac?
   cask "iterm2"
   cask "itsycal"
   cask "mitmproxy"
-  cask "ngrok/ngrok/ngrok"
+  cask "ngrok"
   cask "obsidian"
   cask "openemu"
   cask "postman"
