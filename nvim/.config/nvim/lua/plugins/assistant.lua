@@ -25,7 +25,20 @@ return {
             winhighlight = "Normal:Normal,NormalFloat:Normal", -- Match editor background
           },
           keys = {
-            -- Single <Esc> passes through to Claude (interrupt/cancel).
+            -- Single <Esc> passes through to Claude (interrupt/cancel last prompt).
+            -- This buffer-local mapping overrides the global "t" <Esc> mapping
+            -- (keymaps.lua) that would otherwise exit terminal mode.
+            term_interrupt = {
+              "<Esc>",
+              function()
+                local chan = vim.bo.channel
+                if chan and chan > 0 then
+                  vim.api.nvim_chan_send(chan, "\27") -- send ESC byte to Claude
+                end
+              end,
+              mode = "t",
+              desc = "Single Esc to Claude (interrupt)",
+            },
             -- Double <Esc> exits terminal mode into Neovim normal mode.
             term_normal = {
               "<Esc><Esc>",

@@ -35,7 +35,8 @@ return {
 
       -- Persist terminals across sessions
       persist_size = true,
-      persist_mode = true,
+      -- Always reopen in insert mode (don't restore the last-used mode)
+      persist_mode = false,
 
       -- Terminal direction: 'vertical' | 'horizontal' | 'tab' | 'float'
       direction = "horizontal",
@@ -64,6 +65,19 @@ return {
           return term.name
         end,
       },
+    })
+
+    -- Always enter insert mode when focusing a toggleterm window
+    -- (covers window navigation into an already-open terminal, where
+    --  start_in_insert does not fire)
+    vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+      pattern = "term://*",
+      callback = function()
+        if vim.bo.filetype == "toggleterm" then
+          vim.cmd("startinsert")
+        end
+      end,
+      desc = "Start in insert mode when focusing a toggleterm",
     })
 
     -- Keymaps
