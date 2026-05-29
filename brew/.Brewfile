@@ -138,6 +138,7 @@ if OS.mac?
   cask "claude"
   cask "codex"
   cask "cursor"
+  cask "cursor-cli"
   cask "dbeaver-community"
   cask "font-fira-code-nerd-font"
   cask "font-hack-nerd-font"
