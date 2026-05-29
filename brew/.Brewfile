@@ -39,6 +39,7 @@ brew "librsvg"
 brew "libxmlsec1"
 brew "luacheck"
 brew "markdownlint-cli"
+brew "mermaid-cli"
 brew "mkcert"
 brew "mpv"
 brew "mycli"
@@ -145,7 +146,6 @@ if OS.mac?
   cask "fork"
   cask "ghostty"
   cask "google-chrome"
-  cask "google-drive"
   cask "intellij-idea-ce"
   cask "iterm2"
   cask "itsycal"
@@ -159,7 +159,6 @@ if OS.mac?
   cask "slack"
   cask "steam"
   cask "visual-studio-code"
-  cask "whatsapp"
   cask "xbar"
   cask "zed"
   cask "zoom"
@@ -169,6 +168,7 @@ if OS.mac?
   mas "Monosnap", id: 540348655
   mas "Numbers", id: 409203825
   mas "Windows App", id: 1295203466
+  mas "WhatsApp", id: 310633997
 end
 
 # ─── Linux Only ───────────────────────────────────────────────────────────────
