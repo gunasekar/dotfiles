@@ -74,6 +74,12 @@ if [[ "$(uname)" == "Darwin" ]]; then
     echo "  • Colima → ~/.config/colima/default/colima.yaml"
     mkdir -p "$HOME/.config/colima/default"
     stow -v --no-folding colima
+
+    # Load the autostart LaunchAgent so Colima boots at login. The plist pins
+    # COLIMA_HOME, which launchd would otherwise not inherit from the shell.
+    echo "  • Colima autostart → ~/Library/LaunchAgents/com.guna.colima.plist"
+    launchctl bootstrap "gui/$(id -u)" \
+        "$HOME/Library/LaunchAgents/com.guna.colima.plist" 2>/dev/null || true
 fi
 
 # --- Linux-only packages ---

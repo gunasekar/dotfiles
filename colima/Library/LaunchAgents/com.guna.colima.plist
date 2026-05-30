@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.guna.colima</string>
+
+	<!-- colima start -f runs in the foreground so launchd owns the process. -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/homebrew/opt/colima/bin/colima</string>
+		<string>start</string>
+		<string>-f</string>
+	</array>
+
+	<!--
+	    launchd does NOT inherit the interactive shell environment, so the
+	    COLIMA_HOME set by sources/general/docker.sh is invisible here. Without
+	    it, colima would fall back to ~/.colima instead of the XDG profile this
+	    dotfiles package manages. Pin it (and a sane PATH for limactl/colima).
+	-->
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>COLIMA_HOME</key>
+		<string>/Users/guna/.config/colima</string>
+	</dict>
+
+	<!-- Start once at login. No KeepAlive so `colima stop` is not fought. -->
+	<key>RunAtLoad</key>
+	<true/>
+
+	<key>WorkingDirectory</key>
+	<string>/Users/guna</string>
+
+	<key>StandardOutPath</key>
+	<string>/Users/guna/Library/Logs/colima.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/guna/Library/Logs/colima.log</string>
+</dict>
+</plist>
