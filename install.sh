@@ -52,6 +52,9 @@ stow -v mpv
 echo "  • Ranger → ~/.config/ranger/"
 stow -v ranger
 
+echo "  • Topgrade → ~/.config/topgrade.toml"
+stow -v topgrade
+
 # --no-folding — these tools write their own files to config dir
 echo "  • Ghostty → ~/.config/ghostty/"
 stow -v --no-folding ghostty
