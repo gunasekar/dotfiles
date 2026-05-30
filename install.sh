@@ -35,11 +35,6 @@ stow -v git
 echo "  • Homebrew → ~/.Brewfile"
 stow -v brew
 
-# --- Packages needing --no-folding (tools write their own data to these dirs) ---
-
-echo "  • GnuPG → ~/.gnupg/"
-stow -v --no-folding gnupg
-
 # --- ~/.config packages (mkdir prevents ~/.config itself from becoming a symlink) ---
 
 mkdir -p "$HOME/.config"
