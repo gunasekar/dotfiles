@@ -82,17 +82,15 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
 ├── ghostty/          # Ghostty terminal (see ghostty/README.md)
 ├── colima/           # Colima container runtime config (see colima/README.md)
-├── aws/              # AWS CLI configuration
-├── gnupg/            # GPG configuration
+├── lazygit/          # Lazygit Git TUI configuration
 ├── mpv/              # mpv player configuration
-├── mycli/            # MySQL CLI configuration
-├── pgcli/            # PostgreSQL CLI configuration
 ├── ranger/           # Ranger file manager configuration
-├── jenkins/          # Jenkins CLI configuration
+├── topgrade/         # Topgrade (upgrade-all-tools) configuration
+├── zed/              # Zed editor configuration
 ├── macos/            # macOS-specific setup scripts
 ├── linux/            # Linux-specific setup scripts
 ├── xbar/             # xbar menu bar plugins (macOS)
-└── ...
+└── xfce4/            # XFCE4 desktop configuration (Linux)
 ```
 
 **Note:** Each major component has its own README with detailed setup instructions.
