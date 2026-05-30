@@ -91,7 +91,6 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── jenkins/          # Jenkins CLI configuration
 ├── macos/            # macOS-specific setup scripts
 ├── linux/            # Linux-specific setup scripts
-├── claude/           # Claude Code configuration
 ├── xbar/             # xbar menu bar plugins (macOS)
 └── ...
 ```
