@@ -8,6 +8,7 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   // Theme
+  "diff_view_style": "split",
   "cli_default_open_behavior": "new_window",
   "agent_servers": {
     "claude-acp": {
@@ -23,7 +24,7 @@
     },
   },
   "icon_theme": "Zed (Default)",
-  "theme": "One Dark",
+  "theme": "Ayu Dark",
   "theme_overrides": {
     "One Dark": {
       "border": "#333333FF",
@@ -162,7 +163,7 @@
   },
   // AI Agent
   "agent": {
-    "dock": "right",
+    "dock": "left",
     "sidebar_side": "right",
     "tool_permissions": {
       "default": "allow",
@@ -280,7 +281,7 @@
       }
     },
     "Markdown": {
-      "soft_wrap": "preferred_line_length",
+      "soft_wrap": "prefer_line",
     },
   },
 }

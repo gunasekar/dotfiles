@@ -54,9 +54,6 @@ gnupg/.gnupg/pubring.kbx~
 # Never commit password store
 .password-store/
 
-# Never commit work secrets file
-sources/work/secrets.sh
-
 ### Temporary Files ###
 *.tmp
 *.bak
