@@ -31,7 +31,7 @@ sudo dnf install git stow      # Fedora/RHEL
 
 1. **Clone this repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
+   git clone https://github.com/gunasekar/dotfiles.git ~/.dotfiles
    cd ~/.dotfiles
    ```
 
@@ -40,16 +40,14 @@ sudo dnf install git stow      # Fedora/RHEL
    brew bundle --file=brew/.Brewfile
    ```
 
-3. **Deploy configurations with Stow**
+3. **Deploy configurations**
    ```bash
-   # Deploy all configurations
-   stow */
+   # Recommended: run the installer — stows the curated package set and
+   # handles --no-folding plus the macOS/Linux-specific packages
+   ./install.sh
 
-   # Or deploy specific configurations
+   # Or deploy individual packages manually
    stow zsh git brew
-
-   # Note: Use --no-folding if needed to prevent symlinking entire directories
-   stow --no-folding <directory>
    ```
 
 4. **Reload your shell**
@@ -64,18 +62,15 @@ sudo dnf install git stow      # Fedora/RHEL
 .dotfiles/
 ├── zsh/              # Zsh configuration (.zshrc, .zshenv)
 ├── git/              # Git config with workspace-specific settings
-├── sources/          # Shell function libraries
-│   ├── general/      # Cross-platform utilities
-│   │   ├── dev.sh           # Development tools (Go, Python, Java, NVM)
-│   │   ├── aws.sh           # AWS CLI utilities (90+ functions)
-│   │   ├── docker.sh        # Docker helpers
-│   │   ├── media.sh         # Media download/playback utilities
-│   │   ├── file.sh          # File operations
-│   │   ├── ssh.sh           # SSH key management
-│   │   ├── network.sh       # Network utilities
-│   │   ├── jenkins.sh       # Jenkins CLI utilities
-│   │   ├── utils.sh         # General utility functions
-│   │   └── linux.sh         # Linux-specific utilities
+├── sources/          # Shell function libraries (sourced by .zshrc)
+│   ├── dev.sh       # Development tools (Go, Python, Java, NVM)
+│   ├── aws.sh       # AWS CLI utilities (90+ functions)
+│   ├── docker.sh    # Docker helpers
+│   ├── file.sh      # File operations
+│   ├── ssh.sh       # SSH key management
+│   ├── network.sh   # Network utilities
+│   ├── utils.sh     # General utility functions
+│   └── linux.sh     # Linux-specific utilities
 ├── brew/             # Homebrew packages (see brew/README.md)
 ├── python/           # Python dev tools (see python/README.md)
 ├── nodejs/           # Node.js guidelines (see nodejs/README.md)
@@ -87,10 +82,11 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── ranger/           # Ranger file manager configuration
 ├── topgrade/         # Topgrade (upgrade-all-tools) configuration
 ├── zed/              # Zed editor configuration
-├── macos/            # macOS-specific setup scripts
-├── linux/            # Linux-specific setup scripts
 ├── xbar/             # xbar menu bar plugins (macOS)
-└── xfce4/            # XFCE4 desktop configuration (Linux)
+├── xfce4/            # XFCE4 desktop configuration (Linux)
+└── setup/            # One-off setup scripts (run by hand, not stowed)
+    ├── macos-defaults.sh
+    └── linux-remove-mint-apps.sh
 ```
 
 **Note:** Each major component has its own README with detailed setup instructions.
@@ -103,22 +99,30 @@ Use `pass` (password manager, already in Brewfile):
 ```bash
 # Initialize pass
 pass init your-gpg-key-id
-
-# Store secrets
-pass insert llm/deepseek
-pass insert llm/groq
-pass insert llm/openrouter
-
-# Use in shell scripts or aliases:
-export API_KEY=$(pass llm/deepseek)
 ```
+
+## Local & Private Overrides
+
+The shell loads extra function libraries from a machine-local drop-in directory
+that lives **outside** this repo, so you can extend it without forking:
+
+```bash
+# Every *.sh here is sourced by .zshrc, after this repo's own sources/
+~/.config/zsh/local.d/*.sh
+```
+
+- The directory is optional — if it doesn't exist, it's silently skipped.
+- Drop your own `*.sh` files in (work aliases, machine-specific paths, secrets
+  loaders), or point it elsewhere by setting `ZSH_LOCAL_DIR`.
+- A common pattern is to back it with a separate private dotfiles repo and
+  symlink it: `ln -sfn ~/my-private-dotfiles/sources ~/.config/zsh/local.d`.
 
 ## Development Tools & Linters
 
 ### Homebrew Packages
 System-wide tools including linters for Shell, Dockerfile, Lua, YAML, Markdown, and Go.
 ```bash
-cd brew && brew bundle
+brew bundle --file=brew/.Brewfile
 ```
 See: [brew/README.md](brew/README.md)
 
@@ -157,10 +161,6 @@ See: [nvim/README.md](nvim/README.md)
 - Auto-loads completion
 - Linters: `eslint_d` (per-project)
 
-### LLM API Keys
-- Run `setup-llm-keys` to load API keys from `pass`
-- Supports: DeepSeek, Groq, OpenRouter
-
 ## AWS Utilities
 
 90+ functions for AWS operations:
@@ -183,7 +183,7 @@ ssm-params <name_filter>                      # List parameters
 ssm-get-param <name>                          # Get value
 ```
 
-See `sources/general/aws.sh` for the complete list.
+See `sources/aws.sh` for the complete list.
 
 ## Docker Helpers
 
@@ -217,7 +217,7 @@ ssh-keygen-ecdsa "email@example.com"     # ECDSA 521-bit
 ### Linux
 - ✅ Ubuntu/Debian
 - ✅ Fedora/RHEL
-- Includes Linux-specific utilities in `sources/general/linux.sh`
+- Includes Linux-specific utilities in `sources/linux.sh`
 
 ## Git Configuration
 
@@ -237,10 +237,10 @@ Each workspace can have its own email, signing key, etc.
 
 Menu bar utilities (macOS only):
 
-- **worldclock.30s.sh**: World clock with multiple timezones
-- **mmi.5m.sh**: Market Mood Index tracker
-- **toolbox.12h.sh**: Developer utilities (UUID, hash generators, etc.)
-- **totp.20s.sh**: TOTP/2FA token generator
+- **worldclock.1m.sh**: World clock with multiple timezones
+- **mmi.30m.sh**: Market Mood Index tracker
+- **toolbox.sh**: Developer utilities (UUID, hash generators, etc.)
+- **totp.sh**: TOTP/2FA token generator
 
 ## Maintenance
 
@@ -280,10 +280,10 @@ You can also manually check scripts:
 brew install shellcheck
 
 # Check all scripts
-shellcheck sources/general/*.sh
+shellcheck sources/*.sh
 
 # Check specific script
-shellcheck sources/general/dev.sh
+shellcheck sources/dev.sh
 ```
 
 ## Troubleshooting

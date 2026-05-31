@@ -32,7 +32,7 @@ Personal dotfiles repository managing cross-platform development environment con
 - Always update `nvim/.config/nvim/lua/plugins/lint.lua`
 
 ### Shell Scripts
-- Location: `sources/general/*.sh`
+- Location: `sources/*.sh`
 - Must pass `shellcheck` before committing
 - Detect architecture dynamically (ARM vs Intel)
 

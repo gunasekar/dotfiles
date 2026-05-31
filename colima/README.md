@@ -19,7 +19,7 @@ and the config lives in the dotfiles repo.
 
 ## How it works
 
-- `sources/general/docker.sh` exports `COLIMA_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/colima"`
+- `sources/docker.sh` exports `COLIMA_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/colima"`
   so Colima always uses `~/.config/colima` deterministically (and `DOCKER_HOST`
   points at the socket under it).
 - `install.sh` stows this package with `--no-folding` — Colima writes VM state into

@@ -1,11 +1,6 @@
-##### exports
-# Keep Colima's home under XDG so its config lives in the dotfiles repo and
-# Colima stops warning about the legacy ~/.colima directory.
-export COLIMA_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/colima"
-
-if [[ "$(uname)" == "Darwin" ]]; then
-    export DOCKER_HOST="unix://${COLIMA_HOME}/default/docker.sock"
-fi
+# COLIMA_HOME / DOCKER_HOST are exported from ~/.zshenv so they're available in
+# non-interactive shells and scripts too (Colima keeps its home under XDG to
+# avoid the legacy ~/.colima warning). This file holds only the helpers.
 
 ##### functions
 function docker-stop-all {
@@ -106,11 +101,12 @@ function pg-up {
         return
     fi
 
+    local pw="${PG_PASSWORD:-password}"
     docker run --restart always --name "$name" -d \
         -p 5432:5432 \
-        -e POSTGRES_PASSWORD=password \
+        -e POSTGRES_PASSWORD="$pw" \
         -v pgdata:/var/lib/postgresql/data \
         --shm-size=256m \
-        postgres:17 >/dev/null \
-        && echo "Created '$name' on localhost:5432 (user=postgres, password=password)"
+        "postgres:${PG_VERSION:-17}" >/dev/null \
+        && echo "Created '$name' on localhost:5432 (user=postgres, password=$pw)"
 }

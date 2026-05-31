@@ -15,7 +15,7 @@
 
 	<!--
 	    launchd does NOT inherit the interactive shell environment, so the
-	    COLIMA_HOME set by sources/general/docker.sh is invisible here. Without
+	    COLIMA_HOME set by sources/docker.sh is invisible here. Without
 	    it, colima would fall back to ~/.colima instead of the XDG profile this
 	    dotfiles package manages. Pin it (and a sane PATH for limactl/colima).
 	-->

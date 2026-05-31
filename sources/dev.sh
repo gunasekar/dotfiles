@@ -104,28 +104,6 @@ alias python=python3
 alias pip=pip3
 alias pipx=pipx3
 
-### Setup llm keys for aider
-function setup-llm-keys {
-if command -v pass &>/dev/null; then
-    if [ -z "$DEEPSEEK_API_KEY" ]; then
-        if pass llm/deepseek > /dev/null 2>&1; then
-            export DEEPSEEK_API_KEY=$(pass llm/deepseek)
-        fi
-    fi
-    if [ -z "$GROQ_API_KEY" ]; then
-        if pass llm/groq > /dev/null 2>&1; then
-            export GROQ_API_KEY=$(pass llm/groq)
-        fi
-    fi
-    if [ -z "$OPENROUTER_API_KEY" ]; then
-        if pass llm/openrouter > /dev/null 2>&1; then
-            export OPENROUTER_API_KEY=$(pass llm/openrouter)
-        fi
-    fi
-fi
-}
-
-
 # nvm - Load if installed (supports both ARM and Intel Macs)
 if command -v brew &>/dev/null; then
     NVM_BREW_PREFIX="$(brew --prefix nvm 2>/dev/null)"
@@ -134,20 +112,6 @@ if command -v brew &>/dev/null; then
         [ -s "$NVM_BREW_PREFIX/nvm.sh" ] && \. "$NVM_BREW_PREFIX/nvm.sh"  # This loads nvm
         [ -s "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm" ] && \. "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
     fi
-fi
-
-# Added by Windsurf
-if [ -d "$HOME/.codeium/windsurf" ]; then
-    export PATH="$PATH:$HOME/.codeium/windsurf/bin"
-fi
-
-# Add Claude to PATH
-export PATH="$PATH:$HOME/.claude/local"
-
-
-# Added by Antigravity
-if [ -d "$HOME/.antigravity/antigravity/bin" ]; then
-    export PATH="$PATH:$HOME/.antigravity/antigravity/bin"
 fi
 
 # Lazy tool aliases

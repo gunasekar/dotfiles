@@ -129,12 +129,12 @@ echo "How would you like to proceed?"
 echo "1. Remove specific applications"
 echo "2. Interactive menu"
 echo "3. Remove all default applications"
-read -p "Enter your choice (1/2/3): " choice
+read -rp "Enter your choice (1/2/3): " choice
 
 case $choice in
   1)
     # Get applications to remove
-    read -p "Enter the numbers of applications to remove (separated by space): " selections
+    read -rp "Enter the numbers of applications to remove (separated by space): " selections
 
     for selection in $selections; do
       if [[ "$selection" =~ ^[0-9]+$ && "$selection" -ge 1 && "$selection" -le "${#MINT_APPS[@]}" ]]; then
@@ -164,7 +164,7 @@ case $choice in
       echo "  Type 'r' to remove selected applications"
       echo "  Type 'q' to quit without making changes"
       echo ""
-      read -p "> " selection
+      read -rp "> " selection
 
       if [[ "$selection" =~ ^[0-9]+$ && "$selection" -ge 1 && "$selection" -le "${#MINT_APPS[@]}" ]]; then
         # Toggle selection
@@ -204,7 +204,7 @@ case $choice in
           fi
         done
 
-        read -p "Are you sure you want to continue? (y/n): " confirm
+        read -rp "Are you sure you want to continue? (y/n): " confirm
         if [ "$confirm" = "y" ]; then
           for app in "${MINT_APPS[@]}"; do
             IFS="|" read -r package display type <<< "$app"
@@ -228,7 +228,7 @@ case $choice in
     # Remove all applications
     echo "Removing all default applications..."
     echo "This will remove all applications listed above."
-    read -p "Are you sure you want to continue? (y/n): " confirm
+    read -rp "Are you sure you want to continue? (y/n): " confirm
 
     if [ "$confirm" = "y" ]; then
       for app in "${MINT_APPS[@]}"; do
