@@ -82,7 +82,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── ranger/           # Ranger file manager configuration
 ├── topgrade/         # Topgrade (upgrade-all-tools) configuration
 ├── zed/              # Zed editor configuration
-├── xbar/             # xbar menu bar plugins (macOS)
+├── swiftbar/         # SwiftBar (xbar-compatible) menu bar plugins (macOS)
 ├── xfce4/            # XFCE4 desktop configuration (Linux)
 └── setup/            # One-off setup scripts (run by hand, not stowed)
     ├── macos-defaults.sh
@@ -233,9 +233,13 @@ Includes conditional configurations for different projects:
 
 Each workspace can have its own email, signing key, etc.
 
-## xbar Plugins
+## SwiftBar Plugins
 
-Menu bar utilities (macOS only):
+Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
+run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
+SwiftBar is the actively maintained successor to xbar. Plugins use native
+`<swiftbar.*>` metadata. The private dotfiles' LattIQ Connect plugin shares the
+same folder.
 
 - **worldclock.1m.sh**: World clock with multiple timezones
 - **mmi.30m.sh**: Market Mood Index tracker

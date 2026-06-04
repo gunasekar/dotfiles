@@ -65,8 +65,14 @@ stow -v --no-folding zed
 # --- macOS-only packages ---
 
 if [[ "$(uname)" == "Darwin" ]]; then
-    echo "  • xbar → ~/Library/Application Support/xbar/plugins/"
-    stow -v --no-folding xbar
+    # SwiftBar (xbar's maintained successor — runs the same plugin format).
+    # --no-folding: ~/.config/swiftbar/plugins is a real dir shared with the
+    # private dotfiles' LattIQ Connect plugin. Point SwiftBar at it explicitly
+    # since its default plugin folder is elsewhere.
+    echo "  • SwiftBar plugins → ~/.config/swiftbar/plugins/"
+    mkdir -p "$HOME/.config/swiftbar/plugins"
+    stow -v --no-folding swiftbar
+    defaults write com.ambar.SwiftBar PluginDirectory "$HOME/.config/swiftbar/plugins" 2>/dev/null || true
 
     # --no-folding — Colima writes VM state into this dir; only the yaml is ours
     echo "  • Colima → ~/.config/colima/default/colima.yaml"

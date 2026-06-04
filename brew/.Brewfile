@@ -157,8 +157,8 @@ if OS.mac?
   cask "session-manager-plugin"
   cask "slack"
   cask "steam"
+  cask "swiftbar"
   cask "visual-studio-code"
-  cask "xbar"
   cask "zed"
   cask "zoom"
 
