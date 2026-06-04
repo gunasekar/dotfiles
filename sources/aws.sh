@@ -302,7 +302,6 @@ function ssm-to-exports() {
 }
 
 function ssm-add-update-params() {
-    # Check if at least input file is provided
     [[ $# -lt 1 ]] && {
         echo "Usage: $0 <input_json_file> [options]"
         echo "Options:"
@@ -311,93 +310,65 @@ function ssm-add-update-params() {
         return 1
     }
 
-    local inputFile=""
-    local targetName=""
-    local keyId="alias/aws/ssm"
+    local inputFile="" targetName="" keyId="alias/aws/ssm"
 
-    # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -n|--name)
-                targetName="$2"
-                shift 2
-                ;;
-            -k|--key-id)
-                keyId="$2"
-                shift 2
-                ;;
-            *)
-                inputFile="$1"
-                shift
-                ;;
+            -n|--name)   targetName="$2"; shift 2 ;;
+            -k|--key-id) keyId="$2";      shift 2 ;;
+            *)           inputFile="$1";  shift   ;;
         esac
     done
 
     [[ -z "$inputFile" ]] && { echo "Error: Input file is required"; return 1; }
 
-    i=0
-    loopFlag=true
-    while $loopFlag
-    do
-        # Updated jq path to handle new JSON structure
-        node=`cat $inputFile | jq ".Parameters[$i]"`
-        name=`cat $inputFile | jq ".Parameters[$i].Name" | sed -e 's/^"//' -e 's/"$//' `
+    while IFS= read -r param; do
+        local name type newValue node
+        name=$(echo "$param" | jq -r '.Name')
+        type=$(echo "$param" | jq -r '.Type')
+        newValue=$(echo "$param" | jq -r '.Value')
 
-        node=`echo $node`
-        if [ "$node" != "null" ]
-        then
-            # Skip if targetName is specified and doesn't match
-            if [[ -n "$targetName" && "$targetName" != "$name" ]]; then
-                i=`expr $i + 1`
-                continue
-            fi
+        [[ -n "$targetName" && "$targetName" != "$name" ]] && continue
 
-            newValue=`cat $inputFile | jq ".Parameters[$i].Value" | sed -e 's/^"//' -e 's/"$//'`
-
-            # Only pick the required fields
-            node=$(echo "$node" | jq '{Name, Type, Value}')
-
-            # Add KeyId to SecureString parameters
-            if [ "$(echo "$node" | jq -r '.Type')" = "SecureString" ]; then
-                node=$(echo "$node" | jq --arg kid "$keyId" '. + {"KeyId": $kid}')
-            fi
-
-            local oldVersion=0
-            local oldValue=""
-            if result=$(aws ssm get-parameter --name "$name" --with-decryption 2>/dev/null); then
-                oldVersion=$(echo "$result" | jq -r '.Parameter.Version')
-                oldValue=$(echo "$result" | jq -r '.Parameter.Value')
-
-                if [ "$oldValue" = "$newValue" ]; then
-                    echo "ssm parameter :: $name"
-                    echo -e "\tvalue unchanged (version: $oldVersion)"
-                else
-                    newVersion=`aws ssm put-parameter --cli-input-json "$node" --overwrite --output json | jq ".Version"`
-                    echo "ssm put-parameter :: $name"
-                    echo -e "\tvalue: $oldValue -> $newValue"
-                    echo -e "\tversion: $oldVersion -> $newVersion"
-                fi
-            else
-                newVersion=`aws ssm put-parameter --cli-input-json "$node" --output json | jq ".Version"`
-                echo "ssm put-parameter :: $name"
-                echo -e "\tvalue: (new parameter) -> $newValue"
-                echo -e "\tversion: 0 -> $newVersion"
-            fi
-
-            # If we found and processed the target parameter, we can exit
-            [[ -n "$targetName" ]] && break
-
-            i=`expr $i + 1`
+        if [[ "$type" == "SecureString" ]]; then
+            node=$(echo "$param" | jq -c --arg kid "$keyId" '{Name, Type, Value} + {KeyId: $kid}')
         else
-            loopFlag=false
+            node=$(echo "$param" | jq -c '{Name, Type, Value}')
         fi
-    done
+
+        local oldVersion=0 oldValue="" newVersion result
+        if result=$(aws ssm get-parameter --name "$name" --with-decryption 2>/dev/null); then
+            oldVersion=$(echo "$result" | jq -r '.Parameter.Version')
+            oldValue=$(echo "$result" | jq -r '.Parameter.Value')
+
+            if [[ "$oldValue" == "$newValue" ]]; then
+                echo "ssm parameter :: $name"
+                echo -e "\tvalue unchanged (version: $oldVersion)"
+            else
+                newVersion=$(aws ssm put-parameter --cli-input-json "$node" --overwrite --output json | jq '.Version')
+                echo "ssm put-parameter :: $name"
+                echo -e "\tvalue: $oldValue -> $newValue"
+                echo -e "\tversion: $oldVersion -> $newVersion"
+            fi
+        else
+            newVersion=$(aws ssm put-parameter --cli-input-json "$node" --output json | jq '.Version')
+            echo "ssm put-parameter :: $name"
+            echo -e "\tvalue: (new parameter) -> $newValue"
+            echo -e "\tversion: 0 -> $newVersion"
+        fi
+
+        [[ -n "$targetName" ]] && break
+    done < <(jq -c '.Parameters[]' "$inputFile")
 }
 
 function ssm-delete-params() {
-    [[ $# != 1 ]] && { echo "$0 <path>"; return; }
-    parameter_path=$1
-    aws ssm get-parameters-by-path --path $parameter_path --recursive | jq '.Parameters[].Name' | xargs -L1 -I'{}' aws ssm delete-parameter --name {}
+    [[ $# != 1 ]] && { echo "Usage: $0 <input_json_file>"; return 1; }
+    local inputFile=$1
+    jq -r '.Parameters[].Name' "$inputFile" | while IFS= read -r name; do
+        aws ssm delete-parameter --name "$name" 2>/dev/null \
+            && echo "ssm delete-parameter :: $name" \
+            || echo "ssm delete-parameter :: $name (not found, skipped)"
+    done
 }
 
 
