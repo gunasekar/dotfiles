@@ -21,6 +21,12 @@ fi
 # Change to dotfiles directory
 cd "$DOTFILES"
 
+# Deploy the per-user stow ignore list before any stow runs. A global-ignore
+# file REPLACES stow's built-in defaults, so .stow-global-ignore reproduces them
+# and adds macOS junk (.DS_Store, ._*, .Spotlight-V100, …) — stow doesn't read
+# .gitignore, so without this Finder droppings get stowed and cause conflicts.
+ln -sfn "$DOTFILES/.stow-global-ignore" "$HOME/.stow-global-ignore"
+
 echo "Deploying configurations..."
 echo ""
 
