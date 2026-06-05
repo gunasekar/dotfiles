@@ -82,7 +82,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── ranger/           # Ranger file manager configuration
 ├── topgrade/         # Topgrade (upgrade-all-tools) configuration
 ├── zed/              # Zed editor configuration
-├── swiftbar/         # SwiftBar (xbar-compatible) menu bar plugins (macOS)
+├── swiftbar/         # SwiftBar menu bar plugins (macOS)
 ├── xfce4/            # XFCE4 desktop configuration (Linux)
 └── setup/            # One-off setup scripts (run by hand, not stowed)
     ├── macos-defaults.sh
@@ -237,7 +237,7 @@ Each workspace can have its own email, signing key, etc.
 
 Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
 run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
-SwiftBar is the actively maintained successor to xbar. Plugins use native
+Plugins use native
 `<swiftbar.*>` metadata. The private dotfiles' LattIQ Connect plugin shares the
 same folder.
 

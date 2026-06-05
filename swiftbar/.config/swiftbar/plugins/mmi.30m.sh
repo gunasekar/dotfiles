@@ -16,20 +16,20 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:${PATH}"
 
 CACHE_FILE="${SWIFTBAR_PLUGIN_DATA_PATH:-/tmp}/mmi_cache"
 
-SENTIMENTS=("🔴" "🟠" "🟡" "🟢")
 SENTIMENT_LABELS=("Extreme Fear" "Fear" "Greed" "Extreme Greed")
 SENTIMENT_COLORS=("#ef4444" "#f97316" "#eab308" "#22c55e")
+SENTIMENT_ICONS=("exclamationmark.triangle.fill" "arrow.down.circle.fill" "arrow.up.circle.fill" "flame.fill")
 
 value=$(curl -s --max-time 10 --connect-timeout 5 "https://api.tickertape.in/mmi/now" 2>/dev/null | jq -r '.data.currentValue' 2>/dev/null)
 
 if [[ -z "${value}" ]] || [[ "${value}" == "null" ]]; then
   if [[ -f "${CACHE_FILE}" ]]; then
     value=$(cat "${CACHE_FILE}")
-    echo "❓$(printf "%.2f" "${value}") | refresh=true"
+    echo " | sfimage=questionmark.circle.fill color=#888888"
     echo '---'
-    echo "Stale — API unavailable | color=#888888"
+    echo "Stale — $(printf "%.2f" "${value}") | sfimage=questionmark.circle.fill color=#888888"
   else
-    echo "— | refresh=true"
+    echo " | sfimage=questionmark.circle.fill color=#888888"
     echo '---'
     echo "No data — check network | color=#888888"
   fi
@@ -44,9 +44,10 @@ segment=$(( int_val / 25 ))
 
 label="${SENTIMENT_LABELS[$segment]}"
 color="${SENTIMENT_COLORS[$segment]}"
+icon="${SENTIMENT_ICONS[$segment]}"
 
-echo "${SENTIMENTS[$segment]}$(printf "%.2f" "${value}") | refresh=true"
+echo " | sfimage=${icon} color=${color}"
 echo '---'
-echo "${label} | color=${color}"
+echo "${label} — $(printf "%.2f" "${value}") | sfimage=${icon} color=${color}"
 echo '---'
 echo "Refresh | refresh=true sfimage=arrow.clockwise"

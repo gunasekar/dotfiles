@@ -71,8 +71,7 @@ stow -v --no-folding zed
 # --- macOS-only packages ---
 
 if [[ "$(uname)" == "Darwin" ]]; then
-    # SwiftBar (xbar's maintained successor — runs the same plugin format).
-    # --no-folding: ~/.config/swiftbar/plugins is a real dir shared with the
+    # SwiftBar — --no-folding: ~/.config/swiftbar/plugins is a real dir shared with the
     # private dotfiles' LattIQ Connect plugin. Point SwiftBar at it explicitly
     # since its default plugin folder is elsewhere.
     echo "  • SwiftBar plugins → ~/.config/swiftbar/plugins/"

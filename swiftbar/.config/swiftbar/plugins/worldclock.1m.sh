@@ -19,9 +19,9 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:${PATH}"
 
 ZONES="Australia/Sydney Asia/Singapore Asia/Kolkata Asia/Dubai Europe/Amsterdam America/New_York America/Los_Angeles"
-date -u +'%H:%M UTC'
+echo "| sfimage=globe.asia.australia.fill"
 echo '---'
-echo "$(date -u +'%H:%M:%S') UTC (click to refresh) | refresh=true"
+echo "$(date -u +'%H:%M:%S') UTC | refresh=true"
 for zone in ${ZONES}; do
   echo "$(TZ=${zone} date +'%H:%M:%S %z') ${zone} | refresh=true"
 done
