@@ -39,11 +39,11 @@ return {
 
       return {
         preview = {
-          -- Reveal a node's raw markdown when the cursor is on it (in normal
-          -- mode), keeping the rest of the buffer previewed. Needed so wrapped
-          -- tables can be edited in place under `wrap`: moving onto a table
-          -- shows its raw source, leaving re-renders the pretty virtual table.
-          hybrid_modes = { "n" },
+          -- Show rendered preview in normal mode (no raw on the cursor line);
+          -- raw markdown is revealed only in insert/edit mode. `hybrid_modes`
+          -- is left empty (markview default) so normal mode stays fully
+          -- previewed. To edit a wrapped table, enter insert mode.
+          hybrid_modes = {},
         },
         markdown = {
           headings = {
@@ -68,7 +68,7 @@ return {
             -- Smallest a column may shrink to before long words are hard-broken.
             wrap_minwidth = 6,
             -- Thin rule between data rows (grid style). Colour comes from
-            -- `hl.row_separator` (defaults to `Comment` -> dimmer than the header).
+            -- `hl.row_separator` (defaults to the table border colour).
             row_separator = true,
           },
         },
