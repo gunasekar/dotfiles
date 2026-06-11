@@ -12,7 +12,7 @@ g.loaded_netrwPlugin = 1
 
 -- Line numbers
 opt.number = true
-opt.relativenumber = true
+opt.relativenumber = false
 opt.numberwidth = 2
 
 -- Indentation
@@ -37,12 +37,12 @@ opt.signcolumn = "yes"
 opt.cursorline = true
 opt.wrap = true
 opt.linebreak = true
-opt.breakindent = true -- Wrap lines with indent (better line wrapping)
-opt.showmode = false -- Don't show mode in command line (shown in statusline)
-opt.pumheight = 10 -- Maximum number of items in popup menu
-opt.pumblend = 10 -- Popup menu transparency
-opt.winblend = 0 -- Window transparency
-opt.title = true -- Set terminal title to filename
+opt.breakindent = true                               -- Wrap lines with indent (better line wrapping)
+opt.showmode = false                                 -- Don't show mode in command line (shown in statusline)
+opt.pumheight = 10                                   -- Maximum number of items in popup menu
+opt.pumblend = 10                                    -- Popup menu transparency
+opt.winblend = 0                                     -- Window transparency
+opt.title = true                                     -- Set terminal title to filename
 opt.titlestring = "> %{fnamemodify(getcwd(), ':t')}" -- Show "> <directory_name>"
 
 -- Font (GUI clients only - terminal uses terminal font)
@@ -55,7 +55,7 @@ opt.fileencoding = "utf-8" -- File encoding
 opt.splitright = true
 opt.splitbelow = true
 opt.splitkeep = "screen" -- Keep screen position on splits
-opt.equalalways = false -- Don't auto-equalize window sizes (keeps layout static)
+opt.equalalways = false  -- Don't auto-equalize window sizes (keeps layout static)
 opt.swapfile = false
 opt.backup = false
 opt.writebackup = false
@@ -73,7 +73,7 @@ opt.shortmess:append("c") -- Don't show completion messages
 
 -- Performance
 opt.updatetime = 250
-opt.timeoutlen = 1000 -- Time to wait for mapped sequence (more forgiving for key combos)
+opt.timeoutlen = 1000  -- Time to wait for mapped sequence (more forgiving for key combos)
 opt.lazyredraw = false -- Don't redraw during macros
 
 -- Scrolling
@@ -96,8 +96,8 @@ opt.fillchars = { eob = " " } -- Remove ~ at end of buffer
 opt.formatoptions = "jcroqlnt" -- tcqj format options
 
 -- Misc
-opt.virtualedit = "block" -- Allow cursor beyond end of line in visual block mode
-opt.conceallevel = 0 -- Show concealed text (better for markdown)
+opt.virtualedit = "block"        -- Allow cursor beyond end of line in visual block mode
+opt.conceallevel = 0             -- Show concealed text (better for markdown)
 opt.spelllang = "en_us"
 opt.spelloptions:append("camel") -- Spell check camelCase words
 
