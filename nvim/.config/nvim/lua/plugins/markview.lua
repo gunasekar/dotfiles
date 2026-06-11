@@ -1,16 +1,14 @@
 -- Markview.nvim — alternative Markdown renderer, used instead of
 -- render-markdown.nvim (which is disabled in markdown.lua).
--- Repo: https://github.com/gunasekar/markview.nvim (fork of OXY2DEV/markview.nvim)
+-- Repo: https://github.com/gunasekar/markview.nvim
 --
 -- Requires Neovim >= 0.10.3 and the `markdown` + `markdown_inline`
 -- treesitter parsers (already installed via lsp/treesitter.lua).
 
 return {
   {
-    -- Personal fork: adds intelligent table wrapping (`tables.text_wrap`),
-    -- currently on the `feat/table-text-wrap` branch (PR pending upstream).
-    -- Once it merges into OXY2DEV, switch back to "OXY2DEV/markview.nvim" and
-    -- drop the `branch` line.
+    -- Adds smart tables (`tables.smart_wrap`, see below). Pinned to the
+    -- `feat/table-text-wrap` branch.
     "gunasekar/markview.nvim",
     branch = "feat/table-text-wrap",
     -- Only one Markdown renderer should be active at a time. To switch:
@@ -56,12 +54,12 @@ return {
             heading_6 = plain_heading(6),
           },
           tables = {
-            -- Intelligent table wrapping (local fork feature). Oversized tables
-            -- shrink columns (widest first) to `wrap_width`, then word-wrap any
-            -- cell that still does not fit. Works WITH your global `wrap = true`:
-            -- the table is drawn as virtual lines over the (hidden) source rows,
-            -- and hybrid mode (above) reveals the raw row for editing.
-            text_wrap = true,
+            -- Smart tables. Oversized tables shrink columns
+            -- (widest first) to `wrap_width`, then word-wrap any cell that still
+            -- does not fit. Works WITH your global `wrap = true`: the table is
+            -- drawn as virtual lines over the (hidden) source rows. Enter insert
+            -- mode to edit the raw source (hybrid mode is off; see `preview`).
+            smart_wrap = true,
             -- Cap the rendered table at 90% of the window width (0<n<=1 = a
             -- fraction; n>1 = an absolute column count).
             wrap_width = 0.9,
