@@ -25,11 +25,30 @@ return {
             winhighlight = "Normal:Normal,NormalFloat:Normal", -- Match editor background
           },
           keys = {
-            -- Single <Esc> passes through to Claude (interrupt/cancel last prompt).
-            -- This buffer-local mapping overrides the global "t" <Esc> mapping
-            -- (keymaps.lua) that would otherwise exit terminal mode.
-            term_interrupt = {
+            -- Override Snacks' built-in "term_normal" key (its default makes a
+            -- single <Esc> pass through to the terminal and only exits on a
+            -- double <Esc>). Reusing the same key name replaces that default so a
+            -- single <Esc> immediately leaves terminal mode like normal Neovim,
+            -- WITHOUT reaching Claude.
+            term_normal = {
               "<Esc>",
+              function()
+                -- Leave terminal mode (mode "t"); stopinsert only handles Insert
+                -- mode, so feed <C-\><C-n> instead.
+                vim.api.nvim_feedkeys(
+                  vim.api.nvim_replace_termcodes("<C-\\><C-n>", true, false, true),
+                  "n",
+                  false
+                )
+              end,
+              mode = "t",
+              desc = "Esc to Neovim normal mode",
+            },
+            -- <C-Esc> passes through to Claude (interrupt/cancel last prompt).
+            -- Requires a terminal that distinguishes <C-Esc> from <Esc> via the
+            -- kitty keyboard protocol (Ghostty + Neovim 0.11 do, by default).
+            term_interrupt = {
+              "<C-Esc>",
               function()
                 local chan = vim.bo.channel
                 if chan and chan > 0 then
@@ -37,16 +56,7 @@ return {
                 end
               end,
               mode = "t",
-              desc = "Single Esc to Claude (interrupt)",
-            },
-            -- Double <Esc> exits terminal mode into Neovim normal mode.
-            term_normal = {
-              "<Esc><Esc>",
-              function()
-                vim.cmd("stopinsert")
-              end,
-              mode = "t",
-              desc = "Double Esc to Neovim normal mode",
+              desc = "Ctrl-Esc to Claude (interrupt)",
             },
           },
         },
