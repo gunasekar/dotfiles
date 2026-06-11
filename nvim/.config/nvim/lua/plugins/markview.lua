@@ -67,6 +67,9 @@ return {
             wrap_width = 0.9,
             -- Smallest a column may shrink to before long words are hard-broken.
             wrap_minwidth = 6,
+            -- Thin rule between data rows (grid style). Colour comes from
+            -- `hl.row_separator` (defaults to `Comment` -> dimmer than the header).
+            row_separator = true,
           },
         },
       }
