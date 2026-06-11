@@ -150,6 +150,19 @@ api.nvim_create_autocmd({ "BufWinEnter", "BufWinLeave" }, {
   desc = "Maintain fixed window sizes",
 })
 
+-- Enable soft wrap for prose filetypes
+local prose_wrap_group = api.nvim_create_augroup("ProseWrap", { clear = true })
+api.nvim_create_autocmd("FileType", {
+  group = prose_wrap_group,
+  pattern = { "markdown", "text", "gitcommit", "tex" },
+  callback = function()
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    vim.opt_local.breakindent = true
+  end,
+  desc = "Enable soft wrap for prose filetypes",
+})
+
 -- Trim trailing whitespace on save (optional - uncomment if desired)
 -- local trim_whitespace_group = api.nvim_create_augroup("TrimWhitespace", { clear = true })
 -- api.nvim_create_autocmd("BufWritePre", {
