@@ -5,13 +5,14 @@
 --
 -- REQUIREMENTS (host-level, not managed by lazy.nvim):
 --   * A terminal speaking the KITTY GRAPHICS PROTOCOL.
---       Works:    WezTerm, Kitty, Ghostty.
---       Does NOT: iTerm2, Terminal.app, plain xterm.  <-- current default is iTerm2.
+--       Works:    WezTerm, Kitty, Ghostty.  <-- current default is Ghostty.
+--       Does NOT: iTerm2, Terminal.app, plain xterm.
 --   * ImageMagick CLI ........... `magick`  -> already installed (/opt/homebrew/bin/magick)
 --   * mermaid-cli ............... `mmdc`    -> already installed (/opt/homebrew/bin/mmdc)
 --   * (optional, PlantUML) ...... `plantuml` on PATH
 --
--- If you stay on iTerm2 these plugins load but render nothing — switch terminals first.
+-- On a non-graphics terminal (iTerm2, Terminal.app) these plugins load but render
+-- nothing — switch to Ghostty/Kitty/WezTerm first.
 -- tmux users: add `set -g allow-passthrough on` to ~/.tmux.conf or images won't pass through.
 
 return {

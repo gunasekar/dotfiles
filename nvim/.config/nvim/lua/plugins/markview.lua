@@ -1,16 +1,21 @@
 -- Markview.nvim — alternative Markdown renderer, used instead of
 -- render-markdown.nvim (which is disabled in markdown.lua).
--- Repo: https://github.com/gunasekar/markview.nvim
+-- Repo: https://github.com/OXY2DEV/markview.nvim
+--
+-- Smart tables (auto-fit + word-wrap of wide tables) come from the separate
+-- markview-smart-tables.nvim plugin below, wired in via markview's custom
+-- renderer hook — markview itself is stock.
 --
 -- Requires Neovim >= 0.10.3 and the `markdown` + `markdown_inline`
 -- treesitter parsers (already installed via lsp/treesitter.lua).
 
 return {
   {
-    -- Adds smart tables (`tables.smart_wrap`, see below). Pinned to the
-    -- `feat/table-text-wrap` branch.
-    "gunasekar/markview.nvim",
-    branch = "feat/table-text-wrap",
+    -- Stock upstream markview. Known cosmetic limitation until the
+    -- `fix/tostring-word-attached-code-span` PR (gunasekar fork) is merged
+    -- upstream: word-attached code spans like call(`x`) show raw backticks
+    -- inside smart tables and can drift table borders.
+    "OXY2DEV/markview.nvim",
     -- Only one Markdown renderer should be active at a time. To switch:
     -- set `enabled = false` here and `enabled = true` in markdown.lua.
     enabled = true,
@@ -43,6 +48,14 @@ return {
           -- previewed. To edit a wrapped table, enter insert mode.
           hybrid_modes = {},
         },
+        -- Route table rendering through markview-smart-tables.nvim. It fits
+        -- oversized tables to the window (works WITH your global `wrap = true`)
+        -- and falls back to markview's stock table renderer otherwise.
+        renderers = {
+          markdown_table = function(buffer, item)
+            require("markview-smart-tables").render(buffer, item)
+          end,
+        },
         markdown = {
           headings = {
             enable = true,
@@ -53,24 +66,24 @@ return {
             heading_5 = plain_heading(5),
             heading_6 = plain_heading(6),
           },
-          tables = {
-            -- Smart tables. Oversized tables shrink columns
-            -- (widest first) to `wrap_width`, then word-wrap any cell that still
-            -- does not fit. Works WITH your global `wrap = true`: the table is
-            -- drawn as virtual lines over the (hidden) source rows. Enter insert
-            -- mode to edit the raw source (hybrid mode is off; see `preview`).
-            smart_wrap = true,
-            -- Cap the rendered table at 90% of the window width (0<n<=1 = a
-            -- fraction; n>1 = an absolute column count).
-            wrap_width = 0.9,
-            -- Smallest a column may shrink to before long words are hard-broken.
-            wrap_minwidth = 6,
-            -- Thin rule between data rows (grid style). Colour comes from
-            -- `hl.row_separator` (defaults to the table border colour).
-            row_separator = true,
-          },
         },
       }
     end,
+  },
+
+  {
+    -- Smart tables for markview: oversized tables shrink columns (widest
+    -- first) to `wrap_width`, word-wrap overflowing cells, and re-fit on
+    -- window resize.
+    -- Repo: https://github.com/gunasekar/markview-smart-tables.nvim
+    "gunasekar/markview-smart-tables.nvim",
+    lazy = false,
+    opts = {
+      -- Cap rendered tables at 90% of the window width (0<n<=1 = fraction;
+      -- n>1 = absolute column count).
+      wrap_width = 0.9,
+      -- Smallest a column may shrink to before long words are hard-broken.
+      wrap_minwidth = 6,
+    },
   },
 }
