@@ -245,13 +245,6 @@ N               Previous match (centers screen)
 #               Search word under cursor backward
 Esc             Clear search highlight
 
-REPLACE (GRUG-FAR)
-------------------
-<Space>Sr       Search and replace in files
-<Space>Sw       Replace current word
-<Space>Sf       Replace in current file
-<Space>Sv       Replace visual selection (visual mode)
-
 REPLACE (COMMAND MODE)
 ----------------------
 :%s/old/new/g       Replace all in file
@@ -393,7 +386,7 @@ TERMINAL LAYOUTS
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                         🐛 DIAGNOSTICS & TROUBLE                             ║
+║                            🐛 DIAGNOSTICS                                     ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 DIAGNOSTICS (CORE)
@@ -403,15 +396,6 @@ DIAGNOSTICS (CORE)
 <Space>de       Show diagnostic error (floating window)
 <Space>dl       Open diagnostic list (location list)
 <Space>td       Toggle inline diagnostic text (virtual text)
-
-TROUBLE (DIAGNOSTICS UI)
-------------------------
-<Space>xx       Diagnostics (Trouble)
-<Space>xX       Buffer Diagnostics (Trouble)
-<Space>cs       Symbols (Trouble)
-<Space>cl       LSP Definitions/References (Trouble)
-<Space>xL       Location List (Trouble)
-<Space>xQ       Quickfix List (Trouble)
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗

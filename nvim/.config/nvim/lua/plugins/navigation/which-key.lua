@@ -30,11 +30,9 @@ return {
       { "<leader>l", group = "LSP/Lint" },
       { "<leader>n", group = "Notifications" },
       { "<leader>s", group = "Search" },
-      { "<leader>S", group = "Search & Replace" },
       { "<leader>t", group = "Toggle/Terminal" },
       { "<leader>T", group = "TypeScript Tools" },
       { "<leader>u", group = "UI/Toggle" },
-      { "<leader>x", group = "Trouble/Quickfix" },
     })
   end,
 }

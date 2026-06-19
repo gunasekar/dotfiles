@@ -71,7 +71,6 @@ function M.check_all()
     { name = "mason", module = "mason" },
     { name = "conform", module = "conform" },
     { name = "lint", module = "lint" },
-    { name = "trouble", module = "trouble" },
     { name = "dap", module = "dap" },
     { name = "treesitter", module = "nvim-treesitter" },
     { name = "telescope", module = "telescope" },
