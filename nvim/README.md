@@ -58,19 +58,13 @@ Ctrl-r      Redo
 <Space>fr   Recent files
 
 Ctrl-h/j/k/l    Navigate between windows
-Tab / Shift-Tab Next/previous buffer (bufferline)
-<Space>1-9      Jump to buffer 1-9
+Tab / Shift-Tab Next/previous buffer
 [b / ]b         Previous/next buffer
+<Space>1-9      Jump to buffer 1-9 (numbers shown in Neo-tree and the winbar)
+<Space>,        Fuzzy buffer switcher (Telescope)
 <Space>bd       Delete buffer
+<Space>bo       Close other buffers
 ```
-
-### Harpoon (Working Set Navigation)
-```
-<Space>a    Mark current file (add to working set)
-Ctrl-e      Toggle Harpoon menu
-<Space>1-4  Jump to marked files 1-4
-```
-**Workflow:** Mark 2-4 files you're actively editing for instant switching.
 
 ### Editing
 ```
@@ -106,14 +100,15 @@ K           Show documentation
 <Space>gb   Blame line
 ```
 
-### AI Assistant (Avante)
+### AI Assistant (Claude Code)
 ```
-<Space>aa   Open Claude chat
+<C-\>       Toggle Claude Code terminal (normal/insert/visual/terminal)
+<Space>ac   Toggle Claude Code terminal
+<Space>as   Send selection/buffer to Claude (normal/visual)
 ```
-In chat:
-- Select code → `<Space>aa` → Ask questions
-- `a` Apply suggestion
-- `A` Apply all suggestions
+In the Claude terminal:
+- `<Esc>` leaves terminal mode (back to Neovim normal)
+- `<C-Esc>` interrupts Claude (cancels the current prompt)
 
 ## Git Workflow with Lazygit
 
@@ -237,25 +232,25 @@ Add more in `lua/plugins/lsp.lua`
 
 - **LSP**: Code completion, diagnostics, formatting (15 language servers)
 - **Treesitter**: Advanced syntax highlighting
-- **Bufferline**: Visual tab bar showing all open buffers with safe deletion (mini.bufremove)
+- **Buffers**: Numbered buffers shown in Neo-tree and the winbar; jump with `<Space>1-9`, cycle with `Tab`/`[b`/`]b`
 - **Git**: Visual indicators, staging, blame, diff (Lazygit + Gitsigns)
-- **AI**: Claude integration for code assistance (Avante)
-- **Harpoon**: Fast navigation between working files (2-4 files)
+- **AI**: Claude Code integration in a terminal split (claudecode.nvim)
 - **Telescope**: Fuzzy finder for files, buffers, and text search
 - **Which-key**: Press `<Space>` to see available commands
-- **Neo-tree**: Modern file explorer with Filesystem/Buffers/Git views (nvim-tree available as backup)
+- **Neo-tree**: Modern file explorer with Filesystem/Buffers/Git views
 
 ## Buffer Navigation Philosophy
 
-This setup provides **multiple navigation methods**:
+There is no tab bar. Each buffer gets a stable number (shown next to open files
+in Neo-tree and centered in the window's winbar), and you navigate by number or
+by cycling:
 
-- **Bufferline** (top tabs): Visual overview of all open buffers
-  - Navigate with `Tab`/`Shift-Tab` or `<Space>1-9`
-  - Pin frequently used buffers with `<Space>bp`
-- **Harpoon** (2-4 files): Your active working set - instant jumps with `<Space>1-4`
-- **Telescope** (all buffers): Fuzzy search with `<Space>,`
+- **By number**: `<Space>1-9` jumps straight to that buffer.
+- **By cycling**: `Tab`/`Shift-Tab` or `[b`/`]b` move to the previous/next buffer.
+- **By search**: `<Space>,` opens a fuzzy buffer switcher (Telescope, MRU-sorted).
+- **Closing**: `<Space>bd` deletes the current buffer, `<Space>bo` closes all others.
 
-**Choose your style:** Visual tabs (bufferline), marked files (harpoon), or search (telescope).
+**Choose your style:** jump by number, cycle, or fuzzy-search.
 
 ## Customization
 
