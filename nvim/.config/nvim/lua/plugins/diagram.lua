@@ -1,7 +1,14 @@
--- Inline diagram rendering for Markdown (Mermaid / PlantUML / D2)
+-- Inline diagram + image rendering for Markdown (Mermaid / PlantUML / D2 / images)
 -- Repos:
 --   https://github.com/3rd/diagram.nvim   -- detects fenced diagram blocks, renders them
 --   https://github.com/3rd/image.nvim     -- draws the resulting image in the buffer
+--
+-- DEFAULT OFF, TOGGLE ON:
+--   The plugins are installed but rendering starts DISABLED. Nothing loads or
+--   renders until you press the toggle:
+--       <leader>ui   Toggle inline images/diagrams
+--   First press loads both plugins, enables rendering, and draws the current
+--   buffer. Press again to hide. (See <leader>u "UI/Toggle" in which-key.)
 --
 -- REQUIREMENTS (host-level, not managed by lazy.nvim):
 --   * A terminal speaking the KITTY GRAPHICS PROTOCOL.
@@ -11,8 +18,8 @@
 --   * mermaid-cli ............... `mmdc`    -> already installed (/opt/homebrew/bin/mmdc)
 --   * (optional, PlantUML) ...... `plantuml` on PATH
 --
--- On a non-graphics terminal (iTerm2, Terminal.app) these plugins load but render
--- nothing — switch to Ghostty/Kitty/WezTerm first.
+-- On a non-graphics terminal (iTerm2, Terminal.app) the toggle enables rendering
+-- but nothing draws — switch to Ghostty/Kitty/WezTerm first.
 -- tmux users: add `set -g allow-passthrough on` to ~/.tmux.conf or images won't pass through.
 
 return {
@@ -21,6 +28,15 @@ return {
     -- No build step: the `magick_cli` processor uses the ImageMagick CLI directly,
     -- so the `magick` LuaRock (and luarocks/hererocks) is not needed.
     build = false,
+    -- Lazy: only loaded when diagram.nvim (which depends on this) is loaded by
+    -- the toggle key below. Not tied to a filetype, so opening Markdown alone
+    -- does nothing until you toggle.
+    lazy = true,
+    config = function(_, opts)
+      require("image").setup(opts)
+      -- Start with rendering OFF; <leader>ui flips it on.
+      require("image").disable()
+    end,
     opts = {
       backend = "kitty",
       processor = "magick_cli",
@@ -52,7 +68,28 @@ return {
   {
     "3rd/diagram.nvim",
     dependencies = { "3rd/image.nvim" },
-    ft = { "markdown" },
+    -- Loaded on first toggle press (not on filetype), keeping Markdown buffers
+    -- render-free until you ask for it. Pressing the key loads diagram.nvim,
+    -- which pulls in image.nvim (disabled), then the callback enables + renders.
+    keys = {
+      {
+        "<leader>ui",
+        function()
+          local image = require("image")
+          if image.is_enabled() then
+            image.disable()
+            vim.notify("Inline images/diagrams: off", vim.log.levels.INFO)
+          else
+            image.enable()
+            -- diagram.nvim renders on render_buffer events (incl. BufWinEnter);
+            -- fire one so the current buffer draws immediately on enable.
+            vim.api.nvim_exec_autocmds("BufWinEnter", { buffer = 0 })
+            vim.notify("Inline images/diagrams: on", vim.log.levels.INFO)
+          end
+        end,
+        desc = "Toggle inline images/diagrams",
+      },
+    },
     -- `opts` must be a function: `require("diagram.integrations.markdown")` can only
     -- succeed once diagram.nvim is on the runtimepath. Evaluating it inside the spec
     -- table (at config-load time) runs before lazy.nvim loads the plugin and fails.
