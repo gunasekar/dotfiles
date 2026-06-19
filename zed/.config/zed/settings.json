@@ -24,7 +24,7 @@
     },
   },
   "icon_theme": "Zed (Default)",
-  "theme": "Ayu Dark",
+  "theme": "One Dark",
   "theme_overrides": {
     "One Dark": {
       "border": "#333333FF",
@@ -77,9 +77,9 @@
   "vertical_scroll_margin": 5,
   "scroll_sensitivity": 1.5,
   // Vim settings
-  "vim_mode": false,
+  "vim_mode": true,
   "vim": {
-    "toggle_relative_line_numbers": true,
+    "toggle_relative_line_numbers": false,
   },
   // Autosave
   "autosave": {
@@ -163,7 +163,8 @@
   },
   // AI Agent
   "agent": {
-    "dock": "left",
+    "flexible": false,
+    "dock": "right",
     "sidebar_side": "right",
     "tool_permissions": {
       "default": "allow",
