@@ -164,6 +164,7 @@ return {
         ["c"] = "copy",
         ["m"] = "move",
         ["q"] = "close_window",
+        ["O"] = "system_open",
         ["R"] = "refresh",
         ["?"] = "show_help",
         ["i"] = "show_file_details",
@@ -172,6 +173,17 @@ return {
     nesting_rules = {},
     -- Custom commands
     commands = {
+      -- Open the selected directory in Finder (no-op for files)
+      system_open = function(state)
+        local node = state.tree:get_node()
+        local path = node:get_id()
+        if node.type ~= "directory" then
+          vim.notify("Not a directory: " .. path, vim.log.levels.WARN)
+          return
+        end
+        -- macOS: reveal the directory in Finder in the background
+        vim.fn.jobstart({ "open", "-g", path }, { detach = true })
+      end,
       -- Copy absolute file path
       copy_absolute_path = function(state)
         local node = state.tree:get_node()
