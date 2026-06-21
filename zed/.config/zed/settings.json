@@ -11,6 +11,9 @@
   "diff_view_style": "split",
   "cli_default_open_behavior": "new_window",
   "agent_servers": {
+    "cursor": {
+      "type": "registry"
+    },
     "claude-acp": {
       "default_config_options": {
         "mode": "bypassPermissions"
