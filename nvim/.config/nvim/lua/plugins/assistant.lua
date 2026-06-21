@@ -35,7 +35,7 @@ end
 
 -- Hide the right-side Snacks terminal if it is currently visible.
 local function hide_right_term()
-  local t = Snacks.terminal.get(nil, vim.tbl_deep_extend("force", {}, RIGHT_TERM_OPTS, { create = false }))
+  local t = Snacks.terminal.get("cursor-agent", vim.tbl_deep_extend("force", {}, RIGHT_TERM_OPTS, { create = false }))
   if t and t:valid() then
     t:hide()
   end
@@ -44,7 +44,7 @@ end
 -- Toggle the right-side Snacks terminal, hiding Claude first for exclusivity.
 local function toggle_right_term()
   hide_claude_if_visible()
-  Snacks.terminal.toggle(nil, RIGHT_TERM_OPTS)
+  Snacks.terminal.toggle("cursor-agent", RIGHT_TERM_OPTS)
 end
 
 -- Toggle Claude Code, hiding the right-side terminal first for exclusivity.
