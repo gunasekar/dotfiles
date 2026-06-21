@@ -1,4 +1,58 @@
 -- AI Assistant integrations
+
+-- A Snacks shell terminal pinned to the right side that shares its slot with
+-- the Claude Code panel: opening one hides the other (mutually exclusive). The
+-- bottom toggleterm (<C-`>) is unrelated and untouched.
+local RIGHT_TERM_OPTS = {
+  win = {
+    position = "right",
+    width = 0.4, -- match Claude's split_width_percentage
+    wo = {
+      winhighlight = "Normal:Normal,NormalFloat:Normal",
+    },
+  },
+}
+
+-- Hide the Claude Code panel if it is currently visible, WITHOUT killing the
+-- session. :ClaudeCode runs simple_toggle, which hides a visible panel (and
+-- preserves the buffer/process) rather than destroying it like ClaudeCodeClose.
+local function hide_claude_if_visible()
+  local ok, ct = pcall(require, "claudecode.terminal")
+  if not ok then
+    return
+  end
+  local bufnr = ct.get_active_terminal_bufnr and ct.get_active_terminal_bufnr()
+  if not bufnr then
+    return
+  end
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
+      pcall(vim.cmd, "ClaudeCode")
+      return
+    end
+  end
+end
+
+-- Hide the right-side Snacks terminal if it is currently visible.
+local function hide_right_term()
+  local t = Snacks.terminal.get(nil, vim.tbl_deep_extend("force", {}, RIGHT_TERM_OPTS, { create = false }))
+  if t and t:valid() then
+    t:hide()
+  end
+end
+
+-- Toggle the right-side Snacks terminal, hiding Claude first for exclusivity.
+local function toggle_right_term()
+  hide_claude_if_visible()
+  Snacks.terminal.toggle(nil, RIGHT_TERM_OPTS)
+end
+
+-- Toggle Claude Code, hiding the right-side terminal first for exclusivity.
+local function toggle_claude()
+  hide_right_term()
+  vim.cmd("ClaudeCode")
+end
+
 return {
   -- Claude Code integration
   {
@@ -77,9 +131,11 @@ return {
       focus_after_send = false,
     },
     keys = {
-      { "<C-\\>", "<cmd>ClaudeCode<cr>", mode = { "n", "i", "v", "t" }, desc = "Toggle Claude Code" },
-      { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
+      { "<C-\\>", toggle_claude, mode = { "n", "i", "v", "t" }, desc = "Toggle Claude Code" },
+      { "<leader>ac", toggle_claude, desc = "Toggle Claude Code" },
       { "<leader>as", "<cmd>ClaudeCodeSend<cr>", mode = { "n", "v" }, desc = "Send to Claude" },
+      -- Right-side shell terminal, mutually exclusive with Claude Code.
+      { "<C-S-\\>", toggle_right_term, mode = { "n", "i", "v", "t" }, desc = "Toggle right-side terminal (exclusive with Claude)" },
     },
   },
 
