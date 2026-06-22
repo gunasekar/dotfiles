@@ -42,11 +42,34 @@ return {
 
       return {
         preview = {
-          -- Show rendered preview in normal mode (no raw on the cursor line);
-          -- raw markdown is revealed only in insert/edit mode. `hybrid_modes`
-          -- is left empty (markview default) so normal mode stays fully
-          -- previewed. To edit a wrapped table, enter insert mode.
-          hybrid_modes = {},
+          -- Reveal the raw markdown of the node under the cursor in these
+          -- modes, so a NORMAL, visible cursor moves through the table the
+          -- usual Vim way (the fitted render is virtual text over zero-height
+          -- rows, where the cursor would otherwise be invisible).
+          --
+          -- `raw_previews` (below) scopes markview's OWN extmark decorations
+          -- to tables, so headings/links/inline-code stay rendered under the
+          -- cursor. But note a SECOND, separate mechanism: markview derives
+          -- `concealcursor` as (preview.modes MINUS hybrid_modes). Listing "n"
+          -- here drops it from concealcursor, so Neovim natively un-conceals
+          -- treesitter-concealed markup (bold `**`, italic `_`) on the cursor's
+          -- line in normal mode. That is inherent to wanting a visible cursor
+          -- on the table — raw_previews cannot suppress it (it is conceallevel,
+          -- not an extmark). Accepted as the cost of the visible-cursor feature.
+          --
+          -- Trade-off: a wide table shows raw (briefly unfitted) while the
+          -- cursor is on it. Modes: "n" normal, "v"/"V" visual, "i" insert.
+          hybrid_modes = { "n", "v", "V", "i" },
+          raw_previews = {
+            markdown = { "tables" },
+            -- markview reveals every node of any language it is NOT told
+            -- to filter, so listing only `markdown` leaves the inline
+            -- language wide open — inline `code`, links, highlights, etc.
+            -- still flip to raw under the cursor. `{ "none" }` is a
+            -- no-match inclusion(reveal nothing inline), so only tables
+            -- ever drop to raw.
+            markdown_inline = { "none" },
+          },
         },
         -- Route table rendering through markview-smart-tables.nvim. It fits
         -- oversized tables to the window (works WITH your global `wrap = true`)
