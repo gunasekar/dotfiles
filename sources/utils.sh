@@ -72,12 +72,25 @@ function _brew_diff {
     _brew_extract "$BREW_DIFF_BREWFILE" os > "$BREW_DIFF_DIR/curated_entries"
     unset -f _brew_extract
 
+    # Load machine-local ignore list (~/.Brewfile.ignore) — packages to exclude from EXTRA
+    local ignore_file="$HOME/.Brewfile.ignore"
+    local ignore_entries=""
+    if [ -f "$ignore_file" ]; then
+        ignore_entries=$(grep -v '^\s*#' "$ignore_file" | grep -v '^\s*$' | sort -u)
+    fi
+
     local type
     for type in tap brew cask mas; do
         grep "^${type}	" "$BREW_DIFF_DIR/dump_entries" | cut -f2 > "$BREW_DIFF_DIR/dump_${type}" 2>/dev/null || true
         grep "^${type}	" "$BREW_DIFF_DIR/curated_entries" | cut -f2 > "$BREW_DIFF_DIR/curated_${type}" 2>/dev/null || true
-        comm -23 "$BREW_DIFF_DIR/dump_${type}" "$BREW_DIFF_DIR/curated_${type}" > "$BREW_DIFF_DIR/new_${type}" 2>/dev/null || true
+        comm -23 "$BREW_DIFF_DIR/dump_${type}" "$BREW_DIFF_DIR/curated_${type}" > "$BREW_DIFF_DIR/new_${type}_raw" 2>/dev/null || true
         comm -13 "$BREW_DIFF_DIR/dump_${type}" "$BREW_DIFF_DIR/curated_${type}" > "$BREW_DIFF_DIR/missing_${type}" 2>/dev/null || true
+        # Filter ignored packages from EXTRA list
+        if [ -n "$ignore_entries" ]; then
+            grep -vxFf <(printf '%s\n' "$ignore_entries") "$BREW_DIFF_DIR/new_${type}_raw" > "$BREW_DIFF_DIR/new_${type}" 2>/dev/null || true
+        else
+            cp "$BREW_DIFF_DIR/new_${type}_raw" "$BREW_DIFF_DIR/new_${type}" 2>/dev/null || true
+        fi
     done
 }
 
@@ -150,7 +163,7 @@ function brew-sync {
             echo ""
             for type in tap brew cask mas; do
                 [ -s "$BREW_DIFF_DIR/missing_${type}" ] || continue
-                while IFS= read -r pkg; do
+                while IFS= read -r pkg <&3; do
                     printf "Install %s %s? [y/N] " "$type" "$pkg"
                     read -r confirm
                     if [[ "$confirm" == [yY] ]]; then
@@ -161,7 +174,7 @@ function brew-sync {
                             mas)  mas install "$pkg" ;;
                         esac
                     fi
-                done < "$BREW_DIFF_DIR/missing_${type}"
+                done 3< "$BREW_DIFF_DIR/missing_${type}"
             done
             ;;
         c)
@@ -172,7 +185,7 @@ function brew-sync {
             echo ""
             for type in tap brew cask mas; do
                 [ -s "$BREW_DIFF_DIR/new_${type}" ] || continue
-                while IFS= read -r pkg; do
+                while IFS= read -r pkg <&3; do
                     printf "Remove %s %s? [y/N] " "$type" "$pkg"
                     read -r confirm
                     if [[ "$confirm" == [yY] ]]; then
@@ -183,7 +196,7 @@ function brew-sync {
                             mas)  mas uninstall "$pkg" ;;
                         esac
                     fi
-                done < "$BREW_DIFF_DIR/new_${type}"
+                done 3< "$BREW_DIFF_DIR/new_${type}"
             done
             ;;
         *)

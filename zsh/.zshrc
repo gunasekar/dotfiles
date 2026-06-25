@@ -2,8 +2,19 @@
 # they're available to scripts and non-interactive shells too — not just here.
 # This file is interactive-only: oh-my-zsh, prompt, keybindings, function libs.
 
-# Default user — prompt hides user@host when logged in as this user locally
-DEFAULT_USER="guna"
+# DEFAULT_USER is set in private dotfiles (sources/dev.sh) to hide user@host
+# in the prompt when logged in as the primary user locally.
+
+# ─── History ────────────────────────────────────────────────────────────────
+# Set before Oh My Zsh loads so these values take precedence over its defaults.
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt HIST_IGNORE_DUPS       # don't store consecutive duplicates
+setopt HIST_IGNORE_SPACE      # don't store commands prefixed with a space
+setopt HIST_VERIFY            # expand history before executing
+setopt SHARE_HISTORY          # share history across all open shells
+setopt EXTENDED_HISTORY       # save timestamp + duration with each entry
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -21,12 +32,6 @@ ZSH_THEME="robbyrussell"
 plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
-
-# Show user@host when in SSH session or running as different user
-if [[ -n "$SSH_CONNECTION" || "$USER" != "$DEFAULT_USER" ]]; then
-  PROMPT="%{$fg_bold[green]%}%n@%m %(?:%{$fg_bold[green]%}%1{➜%} :%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%c%{$reset_color%}"
-  PROMPT+=' $(git_prompt_info)'
-fi
 
 # Emacs-style line editing + Option-arrow word jumps (interactive only).
 # Moved here from .zshenv — bindkey is meaningless in non-interactive shells.
@@ -57,6 +62,13 @@ source_all_in_directory "$HOME/.dotfiles/sources"
 # It does not exist by default — nothing here depends on it.
 source_all_in_directory "${ZSH_LOCAL_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh/local.d}"
 
+# Show user@host when in SSH session or running as different user.
+# Runs after sources so DEFAULT_USER (set in private dotfiles) is available.
+if [[ -n "$SSH_CONNECTION" || "$USER" != "$DEFAULT_USER" ]]; then
+  PROMPT="%{$fg_bold[green]%}%n@%m %(?:%{$fg_bold[green]%}%1{➜%} :%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%c%{$reset_color%}"
+  PROMPT+=' $(git_prompt_info)'
+fi
+
 export GPG_TTY=$(tty)
 gpgconf --launch gpg-agent
 
@@ -70,7 +82,3 @@ if command -v brew &>/dev/null; then
   [[ -f "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 fi
 
-# OpenClaw Completion
-if [[ -f "$HOME/.openclaw/completions/openclaw.zsh" ]]; then
-    source "$HOME/.openclaw/completions/openclaw.zsh"
-fi

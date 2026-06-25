@@ -1,6 +1,5 @@
 # ─── Common Taps ──────────────────────────────────────────────────────────────
 tap "jenkins-zh/jcli"
-tap "lusingander/tap"
 
 # ─── Common Brews (cross-platform) ───────────────────────────────────────────
 brew "actionlint"
@@ -70,6 +69,7 @@ brew "ranger"
 brew "ripgrep"
 brew "shellcheck"
 brew "stow"
+brew "stylua"
 brew "syft"
 brew "tig"
 brew "tmux"
@@ -77,6 +77,7 @@ brew "topgrade"
 brew "tree"
 brew "tree-sitter"
 brew "tree-sitter-cli"
+brew "typst"
 brew "unbound"
 brew "uv"
 brew "w3m"
@@ -90,7 +91,6 @@ brew "zsh-autosuggestions"
 brew "zsh-completions"
 brew "zsh-syntax-highlighting"
 brew "jenkins-zh/jcli/jcli"
-brew "lusingander/tap/stu"
 
 # ─── Go Packages (cross-platform) ────────────────────────────────────────────
 go "github.com/Clever/csvlint/cmd/csvlint"
@@ -109,9 +109,6 @@ go "honnef.co/go/tools/cmd/staticcheck"
 # ─── macOS Only ───────────────────────────────────────────────────────────────
 if OS.mac?
   tap "jorgelbg/tap"
-  tap "steipete/tap"
-  tap "teamookla/speedtest"
-  tap "yakitrak/yakitrak"
 
   brew "hadolint"
   brew "kubernetes-cli"
@@ -131,13 +128,9 @@ if OS.mac?
   brew "yarn"
   brew "yt-dlp"
   brew "jorgelbg/tap/pinentry-touchid"
-  brew "steipete/tap/remindctl"
-  brew "yakitrak/yakitrak/obsidian-cli"
-  brew "teamookla/speedtest/speedtest"
 
-  cask "claude"
-  cask "codex"
-  cask "cursor"
+
+  cask "cursor-cli"
   cask "dbeaver-community"
   cask "font-fira-code-nerd-font"
   cask "font-hack-nerd-font"
@@ -149,7 +142,6 @@ if OS.mac?
   cask "iterm2"
   cask "itsycal"
   cask "mitmproxy"
-  cask "ngrok"
   cask "obsidian"
   cask "openemu"
   cask "postman"

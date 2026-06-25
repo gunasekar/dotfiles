@@ -1,0 +1,14 @@
+# Machine-local package ignore list for `brew-sync` (see sources/utils.sh).
+#
+# Packages listed here are installed on THIS machine but intentionally kept out
+# of the shared Brewfile — brew-sync will not report them as EXTRA.
+#
+# This file is the COMMITTED TEMPLATE. install.sh copies it to
+# brew/.Brewfile.ignore (gitignored, per-machine) which stow then symlinks to
+# ~/.Brewfile.ignore. Edit your local copy, never this template.
+#
+# One package name per line; blank lines and # comments are ignored.
+#
+# Example:
+# android-studio
+# google-drive

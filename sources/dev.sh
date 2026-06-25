@@ -1,16 +1,5 @@
 #!/usr/bin/env bash
 
-function c {
-    if command -v cursor &>/dev/null; then
-        cursor "${@:-.}"
-    elif command -v code &>/dev/null; then
-        code "${@:-.}"
-    elif command -v nvim &>/dev/null; then
-        nvim "${@:-.}"
-    else
-        echo "no editors found. please install cursor, vscode, or nvim"
-    fi
-}
 
 function n {
     if ! command -v nvim &>/dev/null; then
@@ -21,8 +10,12 @@ function n {
 }
 
 ##### Go
-if [ -d "$(brew --prefix go)" ]; then
-    export GOROOT="$(brew --prefix go)/libexec"
+if command -v brew &>/dev/null; then
+    _GO_PREFIX="$(brew --prefix go 2>/dev/null)"
+    if [[ -n "$_GO_PREFIX" && -d "$_GO_PREFIX" ]]; then
+        export GOROOT="$_GO_PREFIX/libexec"
+    fi
+    unset _GO_PREFIX
 fi
 export GOPATH="$HOME/workspace/.go"
 export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
@@ -43,7 +36,7 @@ function _go_build_linux {
         name="main"
     fi
 
-    env GOOS=linux GOARCH=$arch go build -o $name-linux-$arch
+    env GOOS=linux GOARCH="$arch" go build -o "$name-linux-$arch"
 }
 
 function go-build-linux-arm64 {
@@ -89,28 +82,57 @@ jdk() {
       java -version
 }
 
-### Python
+### Python — shims on PATH at startup; shell hooks load on first use
 export PYENV_ROOT="$HOME/.pyenv"
-# Add pyenv to PATH
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-# Initialize pyenv (handles both PATH setup and shell integration in v2.x+)
-eval "$(pyenv init -)"
-# Enable pyenv virtualenv if installed
-if command -v pyenv-virtualenv-init > /dev/null; then
-  eval "$(pyenv virtualenv-init -)"
-fi
-# Aliases for convenience
-alias python=python3
-alias pip=pip3
-alias pipx=pipx3
+if command -v pyenv &>/dev/null; then
+    # shellcheck disable=SC2218  # pyenv binary, not the lazy-load function defined below
+    eval "$(pyenv init --path)"
 
-# nvm - Load if installed (supports both ARM and Intel Macs)
+    _pyenv_lazy_load() {
+        unset -f _pyenv_lazy_load pyenv python python3 pip pip3 pipx pipx3 2>/dev/null
+        unalias python pip pipx 2>/dev/null
+        eval "$(pyenv init -)"
+        command -v pyenv-virtualenv-init &>/dev/null && eval "$(pyenv virtualenv-init -)"
+        alias python=python3
+        alias pip=pip3
+        alias pipx=pipx3
+    }
+
+    # Unalias before defining wrappers — required when re-sourced and for zsh alias precedence.
+    unalias python pip pipx 2>/dev/null
+    unset -f pyenv python python3 pip pip3 pipx pipx3 2>/dev/null
+
+    pyenv()  { _pyenv_lazy_load; pyenv "$@"; }
+    python() { _pyenv_lazy_load; command python "$@"; }
+    python3() { _pyenv_lazy_load; command python3 "$@"; }
+    pip()    { _pyenv_lazy_load; command pip "$@"; }
+    pip3()   { _pyenv_lazy_load; command pip3 "$@"; }
+    pipx()   { _pyenv_lazy_load; command pipx "$@"; }
+    pipx3()  { _pyenv_lazy_load; command pipx3 "$@"; }
+else
+    # No pyenv — fall back to system python3/pip3 with the documented aliases.
+    command -v python3 &>/dev/null && alias python=python3
+    command -v pip3 &>/dev/null && alias pip=pip3
+fi
+
+# nvm — lazy load on first node/npm/nvm use (supports ARM and Intel Macs)
 if command -v brew &>/dev/null; then
     NVM_BREW_PREFIX="$(brew --prefix nvm 2>/dev/null)"
-    if [ -n "$NVM_BREW_PREFIX" ]; then
+    if [[ -n "$NVM_BREW_PREFIX" && -s "$NVM_BREW_PREFIX/nvm.sh" ]]; then
         export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_BREW_PREFIX/nvm.sh" ] && \. "$NVM_BREW_PREFIX/nvm.sh"  # This loads nvm
-        [ -s "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm" ] && \. "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+        _nvm_lazy_load() {
+            unset -f _nvm_lazy_load nvm node npm npx 2>/dev/null
+            \. "$NVM_BREW_PREFIX/nvm.sh"
+            [[ -s "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm" ]] && \
+                \. "$NVM_BREW_PREFIX/etc/bash_completion.d/nvm"
+        }
+
+        nvm()  { _nvm_lazy_load; nvm "$@"; }
+        node() { _nvm_lazy_load; node "$@"; }
+        npm()  { _nvm_lazy_load; npm "$@"; }
+        npx()  { _nvm_lazy_load; npx "$@"; }
     fi
 fi
 

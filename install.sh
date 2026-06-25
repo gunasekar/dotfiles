@@ -33,12 +33,19 @@ echo ""
 # --- Files-only packages (no folding concerns) ---
 
 echo "  • Zsh → ~/.zshrc, ~/.zshenv"
+# Oh My Zsh's installer writes a plain ~/.zshrc from its template. Remove it
+# if it's not already our symlink so stow can link the dotfiles version.
+[[ -f "$HOME/.zshrc" && ! -L "$HOME/.zshrc" ]] && rm "$HOME/.zshrc"
 stow -v zsh
 
 echo "  • Git → ~/.gitconfig.public, ~/.global.gitignore"
 stow -v git
 
-echo "  • Homebrew → ~/.Brewfile"
+# Seed the machine-local brew ignore list (gitignored) from the committed
+# template so stow has a real file to symlink. Edit ~/.Brewfile.ignore per machine.
+[ -f "$DOTFILES/brew/.Brewfile.ignore" ] || \
+    cp "$DOTFILES/brew/.Brewfile.ignore.example" "$DOTFILES/brew/.Brewfile.ignore"
+echo "  • Homebrew → ~/.Brewfile, ~/.Brewfile.ignore"
 stow -v brew
 
 # --- ~/.config packages (mkdir prevents ~/.config itself from becoming a symlink) ---
@@ -71,9 +78,8 @@ stow -v --no-folding zed
 # --- macOS-only packages ---
 
 if [[ "$(uname)" == "Darwin" ]]; then
-    # SwiftBar — --no-folding: ~/.config/swiftbar/plugins is a real dir shared with the
-    # private dotfiles' LattIQ Connect plugin. Point SwiftBar at it explicitly
-    # since its default plugin folder is elsewhere.
+    # SwiftBar — --no-folding: ~/.config/swiftbar/plugins must stay a real dir.
+    # Point SwiftBar at it explicitly since its default plugin folder is elsewhere.
     echo "  • SwiftBar plugins → ~/.config/swiftbar/plugins/"
     mkdir -p "$HOME/.config/swiftbar/plugins"
     stow -v --no-folding swiftbar
@@ -83,12 +89,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
     echo "  • Colima → ~/.config/colima/default/colima.yaml"
     mkdir -p "$HOME/.config/colima/default"
     stow -v --no-folding colima
-
-    # Load the autostart LaunchAgent so Colima boots at login. The plist pins
-    # COLIMA_HOME, which launchd would otherwise not inherit from the shell.
-    echo "  • Colima autostart → ~/Library/LaunchAgents/com.guna.colima.plist"
-    launchctl bootstrap "gui/$(id -u)" \
-        "$HOME/Library/LaunchAgents/com.guna.colima.plist" 2>/dev/null || true
 fi
 
 # --- Linux-only packages ---
