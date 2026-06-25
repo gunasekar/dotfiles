@@ -21,6 +21,9 @@ return {
           silent = true,
         },
       },
+      highlight = {
+        enabled = false, -- treesitter "substitute" node removed in newer vim grammar; ranges OOB errors
+      },
       presets = {
         bottom_search = true,
         command_palette = false, -- Use classic bottom cmdline instead of popup

@@ -173,16 +173,21 @@ return {
     nesting_rules = {},
     -- Custom commands
     commands = {
-      -- Open the selected directory in Finder (no-op for files)
+      -- Open the selected node with the system default opener.
+      -- macOS: directories reveal in Finder in the background (open -g), files
+      -- open in their default app. Linux: xdg-open handles both.
       system_open = function(state)
         local node = state.tree:get_node()
         local path = node:get_id()
-        if node.type ~= "directory" then
-          vim.notify("Not a directory: " .. path, vim.log.levels.WARN)
-          return
+        local is_dir = node.type == "directory"
+        if vim.fn.has("mac") == 1 then
+          local cmd = is_dir and { "open", "-g", path } or { "open", path }
+          vim.fn.jobstart(cmd, { detach = true })
+        elseif vim.fn.has("unix") == 1 then
+          vim.fn.jobstart({ "xdg-open", path }, { detach = true })
+        else
+          vim.notify("system_open: unsupported platform", vim.log.levels.WARN)
         end
-        -- macOS: reveal the directory in Finder in the background
-        vim.fn.jobstart({ "open", "-g", path }, { detach = true })
       end,
       -- Copy absolute file path
       copy_absolute_path = function(state)
