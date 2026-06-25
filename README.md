@@ -8,7 +8,6 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/) fo
 - **Cross-Platform**: Supports both macOS (ARM/Intel) and Linux
 - **Shell Configuration**: Zsh with Oh My Zsh, custom functions, and environment setup
 - **Developer Tools**: Pre-configured for Go, Python, Java, Node.js, and more
-- **AWS Utilities**: 90+ functions for ECS, S3, SSM, CloudWatch, and more
 - **Security-First**: Credentials managed via environment variables or `pass`, never committed to git
 
 ## Quick Start
@@ -35,9 +34,9 @@ sudo dnf install git stow      # Fedora/RHEL
    cd ~/.dotfiles
    ```
 
-2. **Install packages via Homebrew**
+2. **Bootstrap prerequisites** (Homebrew, Stow, Zsh, Oh My Zsh)
    ```bash
-   brew bundle --file=brew/.Brewfile
+   ./bootstrap.sh
    ```
 
 3. **Deploy configurations**
@@ -45,12 +44,14 @@ sudo dnf install git stow      # Fedora/RHEL
    # Recommended: run the installer — stows the curated package set and
    # handles --no-folding plus the macOS/Linux-specific packages
    ./install.sh
-
-   # Or deploy individual packages manually
-   stow zsh git brew
    ```
 
-4. **Reload your shell**
+4. **Install Homebrew packages**
+   ```bash
+   brew bundle --global
+   ```
+
+5. **Reload your shell**
    ```bash
    exec $SHELL -l
    # Or use the alias: refreSH
@@ -64,7 +65,6 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── git/              # Git config with workspace-specific settings
 ├── sources/          # Shell function libraries (sourced by .zshrc)
 │   ├── dev.sh       # Development tools (Go, Python, Java, NVM)
-│   ├── aws.sh       # AWS CLI utilities (90+ functions)
 │   ├── docker.sh    # Docker helpers
 │   ├── file.sh      # File operations
 │   ├── ssh.sh       # SSH key management
@@ -73,7 +73,6 @@ sudo dnf install git stow      # Fedora/RHEL
 │   └── linux.sh     # Linux-specific utilities
 ├── brew/             # Homebrew packages (see brew/README.md)
 ├── python/           # Python dev tools (see python/README.md)
-├── nodejs/           # Node.js guidelines (see nodejs/README.md)
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
 ├── ghostty/          # Ghostty terminal (see ghostty/README.md)
 ├── colima/           # Colima container runtime config (see colima/README.md)
@@ -134,8 +133,7 @@ cd python && ./install.sh
 See: [python/README.md](python/README.md)
 
 ### Node.js Tools
-JavaScript/TypeScript tools (installed per-project).
-See: [nodejs/README.md](nodejs/README.md)
+JavaScript/TypeScript tools (installed per-project). NVM is configured in `sources/dev.sh` and lazy-loads on first `node`/`npm`/`nvm` use.
 
 ### Neovim Integration
 All linters are integrated with Neovim's LSP and lint plugin.
@@ -149,7 +147,7 @@ See: [nvim/README.md](nvim/README.md)
 - Linter: `golangci-lint` (via brew)
 
 ### Python
-- Uses pyenv for version management
+- Uses pyenv for version management; lazy-loads shell hooks on first `python`/`pyenv` use
 - Aliases: `python` → `python3`, `pip` → `pip3`
 - Linters: `pylint`, `flake8`, `bandit` (via pip)
 
@@ -157,33 +155,8 @@ See: [nvim/README.md](nvim/README.md)
 - Switch versions with `jdk <version>` (e.g., `jdk 17`)
 
 ### Node.js
-- NVM configured (works on both ARM and Intel Macs)
-- Auto-loads completion
+- NVM configured (works on both ARM and Intel Macs); lazy-loads on first `node`/`npm`/`nvm` use
 - Linters: `eslint_d` (per-project)
-
-## AWS Utilities
-
-90+ functions for AWS operations:
-
-```bash
-# ECS
-ecs-clusters                                  # List clusters
-ecs-services <cluster>                        # List services
-ecs-tasks <cluster> <service>                 # List running tasks
-ecs-logs <cluster> <service> [since]          # Tail logs (live, or e.g. 15m)
-ecs-metrics <cluster> <service> all -120M -0S 60  # Get metrics
-
-# S3
-s3-buckets                                    # List buckets
-s3-cat <bucket> <key>                         # View file
-s3-dl <bucket> <key> [local_path]            # Download
-
-# SSM
-ssm-params <name_filter>                      # List parameters
-ssm-get-param <name>                          # Get value
-```
-
-See `sources/aws.sh` for the complete list.
 
 ## Docker Helpers
 
@@ -237,9 +210,7 @@ Each workspace can have its own email, signing key, etc.
 
 Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
 run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
-Plugins use native
-`<swiftbar.*>` metadata. The private dotfiles' LattIQ Connect plugin shares the
-same folder.
+Plugins use native `<swiftbar.*>` metadata.
 
 - **worldclock.1m.sh**: World clock with multiple timezones
 - **mmi.30m.sh**: Market Mood Index tracker
@@ -309,15 +280,6 @@ brew install nvm
 
 # Reload shell
 refreSH
-```
-
-### AWS functions not working
-```bash
-# Install AWS CLI
-brew install awscli
-
-# Configure AWS
-aws configure sso
 ```
 
 ## Security Notes
