@@ -8,14 +8,17 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   // Theme
+  "proxy": "",
   "diff_view_style": "split",
   "cli_default_open_behavior": "new_window",
+  "default_open_behavior": "new_window",
   "agent_servers": {
     "cursor": {
       "type": "registry"
     },
     "claude-acp": {
       "default_config_options": {
+        "model": "opus[1m]",
         "mode": "bypassPermissions"
       },
       "favorite_config_option_values": {
@@ -27,7 +30,7 @@
     },
   },
   "icon_theme": "Zed (Default)",
-  "theme": "One Dark",
+  "theme": "Ayu Dark",
   "theme_overrides": {
     "One Dark": {
       "border": "#333333FF",
@@ -114,7 +117,7 @@
   "git_panel": {
     "dock": "left",
     "sort_by_path": true,
-    "tree_view": true,
+    "tree_view": false,
   },
   // Toolbar
   "toolbar": {
@@ -154,10 +157,11 @@
   },
   // Outline panel
   "outline_panel": {
-    "dock": "right",
+    "dock": "left",
   },
   // Terminal
   "terminal": {
+    "dock": "bottom",
     "font_size": 12.0,
     "copy_on_select": true,
     "env": {
@@ -166,9 +170,13 @@
   },
   // AI Agent
   "agent": {
+    "enabled": true,
+    "button": false,
     "flexible": false,
     "dock": "right",
+    "default_width": 750,
     "sidebar_side": "right",
+    "terminal_init_command": "agent=$(printf 'claude\\ncursor-agent' | fzf --prompt='Agent: ' --height=4 --reverse --no-info) && exec $agent",
     "tool_permissions": {
       "default": "allow",
     },
@@ -236,11 +244,19 @@
       },
     },
     "Python": {
-      "language_servers": ["pyright", "ruff"],
+      "language_servers": [
+        "pyright",
+        "ruff"
+      ],
       "formatter": {
         "external": {
           "command": "ruff",
-          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"],
+          "arguments": [
+            "format",
+            "--stdin-filename",
+            "{buffer_path}",
+            "-"
+          ],
         },
       },
     },
@@ -248,7 +264,10 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--stdin-filepath", "{buffer_path}"],
+          "arguments": [
+            "--stdin-filepath",
+            "{buffer_path}"
+          ],
         },
       },
     },
@@ -256,7 +275,10 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--stdin-filepath", "{buffer_path}"],
+          "arguments": [
+            "--stdin-filepath",
+            "{buffer_path}"
+          ],
         },
       },
     },
@@ -264,23 +286,26 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--stdin-filepath", "{buffer_path}"],
+          "arguments": [
+            "--stdin-filepath",
+            "{buffer_path}"
+          ],
         },
       },
     },
     "JSON": {
-      "formatter": {
-        "external": {
-          "command": "prettier",
-          "arguments": ["--stdin-filepath", "{buffer_path}"]
-        }
-      }
+      "formatter": "language_server"
     },
     "JSONC": {
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": ["--parser", "json", "--stdin-filepath", "{buffer_path}"]
+          "arguments": [
+            "--parser",
+            "json",
+            "--stdin-filepath",
+            "{buffer_path}"
+          ]
         }
       }
     },

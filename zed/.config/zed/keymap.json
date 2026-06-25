@@ -7,20 +7,22 @@
 // from the command palette.
 [
   {
+    "context": "Workspace",
     "bindings": {
-      "cmd-shift-m": "workspace::ToggleZoom",
-      "cmd-shift-l": [
-        "action::Sequence",
-        [
-          ["task::Spawn", { "task_name": "LazyGit", "reveal_target": "center" }]
-        ]
-      ]
+      "ctrl-\\": "agent::Toggle"
     }
   },
   {
     "context": "Editor",
     "bindings": {
-      "cmd-shift-d": "editor::DiffClipboardWithSelection"
+      "ctrl-shift-c": "editor::DiffClipboardWithSelection"
+    }
+  },
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "cmd-left": "project_panel::CollapseAllEntries",
+      "z": "project_panel::CollapseAllEntries"
     }
   }
 ]
