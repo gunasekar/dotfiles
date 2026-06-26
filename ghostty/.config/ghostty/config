@@ -25,6 +25,11 @@ tab-inherit-working-directory = false
 split-inherit-working-directory = false
 working-directory = home
 
+# Native floating terminal, toggled globally with Control+Option+T.
+keybind = global:ctrl+alt+t=toggle_quick_terminal
+quick-terminal-position = center
+quick-terminal-autohide = true
+
 # =============================================================================
 # SPLITS & PANES - Claude Code Workflow Keybindings
 # =============================================================================
