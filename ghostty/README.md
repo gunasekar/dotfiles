@@ -134,4 +134,3 @@ stow -R ghostty
 - [Daniel Miessler's Article](https://danielmiessler.com/blog/replacing-cursor-with-neovim-claude-code)
 - [Claude Code Documentation](https://github.com/anthropics/claude-code)
 - [GNU Stow Manual](https://www.gnu.org/software/stow/manual/stow.html)
-
