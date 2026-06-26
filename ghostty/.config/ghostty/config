@@ -28,6 +28,7 @@ working-directory = home
 # =============================================================================
 # SPLITS & PANES - Claude Code Workflow Keybindings
 # =============================================================================
+split-divider-color = #555555
 # Defaults use cmd+d (split right) and cmd+w (close); only overrides listed.
 
 # Split down on cmd+shift+t (default: cmd+shift+d)

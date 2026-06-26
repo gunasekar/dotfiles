@@ -150,7 +150,6 @@ if OS.mac?
   cask "slack"
   cask "steam"
   cask "swiftbar"
-  cask "visual-studio-code"
   cask "zed"
   cask "zoom"
 
