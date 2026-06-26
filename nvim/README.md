@@ -2,6 +2,11 @@
 
 A modern Neovim configuration for programming with LSP, Git integration, and AI assistance.
 
+## Review Docs
+
+- [Review flow](REVIEW_FLOW.md): forum-ready checklist for auditing and sharing the configuration.
+- [Quick reference](QUICK_REFERENCE.md): setup, health checks, plugin map, and troubleshooting.
+
 ## Quick Setup
 
 ### Prerequisites
@@ -28,7 +33,8 @@ nvim
 ```
 
 ### Optional: Claude AI Setup
-Add to your `~/.zshrc`:
+Add your API key through a private local shell file or password-manager-backed
+loader, not directly in this repo:
 ```bash
 export ANTHROPIC_API_KEY="your-api-key-here"
 ```
@@ -95,9 +101,9 @@ K           Show documentation
 <Space>gg   Open Lazygit (visual Git UI)
 ]c          Next change
 [c          Previous change
-<Space>gp   Preview change
-<Space>gs   Stage hunk
-<Space>gb   Blame line
+<Space>hp   Preview hunk
+<Space>hs   Stage hunk
+<Space>hb   Blame line
 ```
 
 ### AI Assistant (Claude Code)
@@ -152,8 +158,8 @@ q               Quit
 **Quick inline review:**
 ```
 ]c              Jump to next change
-<Space>gp       Preview what changed
-<Space>gs       Stage this change
+<Space>hp       Preview what changed
+<Space>hs       Stage this change
 ```
 
 ## Neovim Basics
@@ -226,8 +232,15 @@ Configured language servers (auto-install via Mason):
 - **Bash** (bashls)
 - **JSON** (jsonls)
 - **YAML** (yamlls)
+- **Java** (jdtls)
+- **Terraform/HCL** (terraformls)
+- **SQL** (sqlls)
+- **Dockerfile** (dockerls)
+- **Docker Compose** (docker_compose_language_service)
+- **GraphQL** (graphql)
+- **XML** (lemminx)
 
-Add more in `lua/plugins/lsp.lua`
+Add more in `lua/plugins/lsp/lsp.lua`
 
 ## Features
 
@@ -259,7 +272,9 @@ by cycling:
 lua/config/options.lua       Editor settings
 lua/config/keymaps.lua       Custom keybindings
 lua/plugins/colorscheme.lua  Theme (OneDark Pro/Gruvbox)
-lua/plugins/lsp.lua          Language servers
+lua/plugins/lsp/lsp.lua      Language servers
+lua/plugins/quality/lint.lua Linters
+lua/plugins/quality/formatters.lua Formatters
 ```
 
 ## Troubleshooting
@@ -292,7 +307,7 @@ lua/plugins/lsp.lua          Language servers
 2. Use `<Space>gg` for all Git operations - it's the easiest way
 3. Use `<Space>ff` to quickly jump to any file
 4. Press `K` over any function to see its documentation
-5. Select code and use `<Space>aa` to ask Claude about it
+5. Select code and use `<Space>as` to send it to Claude
 
 ## Learn More
 

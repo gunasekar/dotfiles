@@ -137,7 +137,9 @@ JavaScript/TypeScript tools (installed per-project). NVM is configured in `sourc
 
 ### Neovim Integration
 All linters are integrated with Neovim's LSP and lint plugin.
-See: [nvim/README.md](nvim/README.md)
+See: [nvim/README.md](nvim/README.md),
+[nvim/REVIEW_FLOW.md](nvim/REVIEW_FLOW.md), and
+[nvim/QUICK_REFERENCE.md](nvim/QUICK_REFERENCE.md).
 
 ## Language & Tool Setup
 
@@ -156,7 +158,8 @@ See: [nvim/README.md](nvim/README.md)
 
 ### Node.js
 - NVM configured (works on both ARM and Intel Macs); lazy-loads on first `node`/`npm`/`nvm` use
-- Linters: `eslint_d` (per-project)
+- Global Neovim tools: `eslint_d` and `prettier` (via Brewfile)
+- Project-specific ESLint/Prettier plugins still belong in each project
 
 ## Docker Helpers
 
@@ -294,7 +297,8 @@ refreSH
 
 ## For AI Assistants
 
-If you're Claude or another AI assistant working on this repository, please read **[CLAUDE.md](CLAUDE.md)** for:
+If you're an AI assistant working on this repository, please read
+**[AGENTS.md](AGENTS.md)** for:
 - Project structure and philosophy
 - Guidelines for using official documentation
 - Configuration best practices
