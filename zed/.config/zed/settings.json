@@ -30,7 +30,7 @@
     },
   },
   "icon_theme": "Zed (Default)",
-  "theme": "Ayu Dark",
+  "theme": "One Dark",
   "theme_overrides": {
     "One Dark": {
       "border": "#333333FF",
