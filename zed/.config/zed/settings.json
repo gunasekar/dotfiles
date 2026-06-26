@@ -116,6 +116,9 @@
   // Bottom: terminal
   //
   // Classic layout: swap all "left" ↔ "right" dock values below.
+  // Panel startup: project_panel.starts_open / git_panel.starts_open apply to
+  // new workspaces; agent and terminal have no starts_open yet (zed #51542).
+  // Per-workspace persisted dock state can still override on revisit.
   "agent": {
     "dock": "left",
     "sidebar_side": "left",
@@ -137,6 +140,7 @@
   },
   "project_panel": {
     "dock": "right",
+    "starts_open": true,
     "file_icons": true,
     "folder_icons": true,
     "git_status": true,
@@ -146,6 +150,7 @@
   },
   "git_panel": {
     "dock": "right",
+    "starts_open": false,
     "sort_by_path": true,
     "tree_view": false,
   },

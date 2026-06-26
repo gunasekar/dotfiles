@@ -26,5 +26,10 @@ defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
 defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true         # Use all F1, F2, etc. keys as standard function keys
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 2                    # Enable full keyboard access for all controls. e.g. enable Tab in modal dialogs
 
+# Set Quick Note shortcut to Control+Option+Q (default is Globe/Fn+Q). 113=q, 12=key code, 786432=Control+Option
+osascript -e 'quit app "System Settings"' 2>/dev/null || true
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 190 '{ enabled = 1; value = { parameters = (113, 12, 786432); type = standard; }; }'
+swift "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apply-symbolic-hotkey.swift" 190 113 12 786432
+
 # TextEdit
 defaults write com.apple.TextEdit RichText -int 0           # Use plain text mode for new TextEdit documents
