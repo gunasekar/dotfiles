@@ -72,8 +72,13 @@ return {
 
     local function toggle_main_terminal()
       if is_valid_window(main_terminal.winid) then
-        vim.api.nvim_win_close(main_terminal.winid, false)
-        main_terminal.winid = nil
+        if vim.api.nvim_get_current_win() == main_terminal.winid then
+          vim.api.nvim_win_close(main_terminal.winid, false)
+          main_terminal.winid = nil
+        else
+          vim.api.nvim_set_current_win(main_terminal.winid)
+          configure_main_terminal_window()
+        end
         return
       end
 

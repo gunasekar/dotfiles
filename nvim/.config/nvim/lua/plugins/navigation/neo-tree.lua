@@ -66,6 +66,7 @@ return {
         handler = function(args)
           if args.position == "left" and vim.api.nvim_win_is_valid(args.winid) then
             vim.wo[args.winid].winfixwidth = true
+            pcall(vim.api.nvim_win_set_width, args.winid, 30)
           end
         end,
       },

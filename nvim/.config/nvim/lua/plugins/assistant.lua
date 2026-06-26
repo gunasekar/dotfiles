@@ -3,6 +3,8 @@
 -- A Snacks shell terminal pinned to the right side that shares its slot with
 -- the Claude Code panel: opening one hides the other (mutually exclusive). The
 -- bottom toggleterm (<C-`>) is unrelated and untouched.
+local NEO_TREE_WIDTH = 30
+
 local function assistant_terminal_keys(name)
   return {
     -- Override Snacks' built-in "term_normal" key (its default makes a
@@ -52,23 +54,56 @@ local RIGHT_TERM_OPTS = {
   },
 }
 
+local function focus_terminal_window()
+  if vim.bo.buftype == "terminal" then
+    vim.cmd("startinsert")
+  end
+end
+
+local function restore_neo_tree_width()
+  local function restore()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_is_valid(win) then
+        local ok, buf = pcall(vim.api.nvim_win_get_buf, win)
+        if ok and vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == "neo-tree" then
+          vim.wo[win].winfixwidth = true
+          pcall(vim.api.nvim_win_set_width, win, NEO_TREE_WIDTH)
+        end
+      end
+    end
+  end
+
+  -- Snacks and claudecode both schedule split equalization after open/close.
+  -- Restore the explorer width after those layout callbacks have run.
+  vim.schedule(function()
+    restore()
+    vim.defer_fn(restore, 20)
+  end)
+end
+
+local function find_claude_win()
+  local ok, ct = pcall(require, "claudecode.terminal")
+  if not ok then
+    return nil
+  end
+  local bufnr = ct.get_active_terminal_bufnr and ct.get_active_terminal_bufnr()
+  if not bufnr then
+    return nil
+  end
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
+      return win
+    end
+  end
+  return nil
+end
+
 -- Hide the Claude Code panel if it is currently visible, WITHOUT killing the
 -- session. :ClaudeCode runs simple_toggle, which hides a visible panel (and
 -- preserves the buffer/process) rather than destroying it like ClaudeCodeClose.
 local function hide_claude_if_visible()
-  local ok, ct = pcall(require, "claudecode.terminal")
-  if not ok then
-    return
-  end
-  local bufnr = ct.get_active_terminal_bufnr and ct.get_active_terminal_bufnr()
-  if not bufnr then
-    return
-  end
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == bufnr then
-      pcall(vim.cmd, "ClaudeCode")
-      return
-    end
+  if find_claude_win() then
+    pcall(vim.cmd, "ClaudeCode")
   end
 end
 
@@ -80,16 +115,43 @@ local function hide_right_term()
   end
 end
 
--- Toggle the right-side Snacks terminal, hiding Claude first for exclusivity.
+-- Focus-aware Cursor terminal toggle, hiding Claude first only when opening
+-- Cursor from a hidden/closed state.
 local function toggle_right_term()
+  local t = Snacks.terminal.get("cursor-agent", vim.tbl_deep_extend("force", {}, RIGHT_TERM_OPTS, { create = false }))
+  if t then
+    if t:valid() then
+      if t.win == vim.api.nvim_get_current_win() then
+        t:hide()
+      else
+        t:focus()
+        focus_terminal_window()
+      end
+      restore_neo_tree_width()
+      return
+    elseif t:buf_valid() then
+      hide_claude_if_visible()
+      t:show()
+      t:focus()
+      focus_terminal_window()
+      restore_neo_tree_width()
+      return
+    end
+  end
+
   hide_claude_if_visible()
   Snacks.terminal.toggle("cursor-agent", RIGHT_TERM_OPTS)
+  restore_neo_tree_width()
 end
 
--- Toggle Claude Code, hiding the right-side terminal first for exclusivity.
+-- Focus-aware Claude toggle, hiding Cursor first only when opening Claude from
+-- a hidden/closed state.
 local function toggle_claude()
-  hide_right_term()
-  vim.cmd("ClaudeCode")
+  if not find_claude_win() then
+    hide_right_term()
+  end
+  vim.cmd("ClaudeCodeFocus")
+  restore_neo_tree_width()
 end
 
 return {

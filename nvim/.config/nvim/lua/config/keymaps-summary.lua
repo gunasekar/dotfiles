@@ -371,13 +371,13 @@ Look for these on the left side of your files:
 
 TERMINAL TOGGLE
 ---------------
-Ctrl-`          Toggle main-column terminal - works in all modes
+Ctrl-`          Focus/toggle main-column terminal - works in all modes
 Esc             Exit terminal mode (to normal mode)
 Ctrl-h/j/k/l    Navigate windows from terminal
 
 TERMINAL LAYOUTS
 ----------------
-<Space>th       Toggle main-column terminal (30% height)
+<Space>th       Focus/toggle main-column terminal (30% height)
 <Space>tv       Toggle vertical terminal (40% width)
 <Space>tf       Toggle floating terminal
 <Space>tn       Toggle Node REPL
@@ -416,9 +416,9 @@ BASIC TOGGLES
 
 CLAUDE CODE
 -----------
-Ctrl-\          Toggle Claude Code (all modes)
-Ctrl-Shift-\    Toggle Cursor agent terminal (all modes)
-<Space>ac       Toggle Claude Code
+Ctrl-\          Focus/toggle Claude Code (all modes)
+Ctrl-Shift-\    Focus/toggle Cursor agent terminal (all modes)
+<Space>ac       Focus/toggle Claude Code
 <Space>as       Send to Claude (normal/visual)
 Esc             Leave assistant terminal mode
 Ctrl-Esc        Interrupt assistant prompt

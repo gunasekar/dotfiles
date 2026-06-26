@@ -102,9 +102,9 @@ K           Show documentation
 
 ### AI Assistant (Claude Code)
 ```
-<C-\>       Toggle Claude Code terminal (normal/insert/visual/terminal)
-<C-S-\>     Toggle Cursor agent terminal (normal/insert/visual/terminal)
-<Space>ac   Toggle Claude Code terminal
+<C-\>       Focus/toggle Claude Code terminal (normal/insert/visual/terminal)
+<C-S-\>     Focus/toggle Cursor agent terminal (normal/insert/visual/terminal)
+<Space>ac   Focus/toggle Claude Code terminal
 <Space>as   Send selection/buffer to Claude (normal/visual)
 ```
 In the Claude or Cursor terminal:
