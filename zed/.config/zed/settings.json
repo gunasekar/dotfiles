@@ -84,10 +84,7 @@
     "show_parameter_hints": true,
     "show_other_hints": true,
   },
-  "vim_mode": true,
-  "vim": {
-    "toggle_relative_line_numbers": false,
-  },
+  "vim_mode": false,
 
   // ── UI Chrome ───────────────────────────────────────────────────────────
   "toolbar": {
