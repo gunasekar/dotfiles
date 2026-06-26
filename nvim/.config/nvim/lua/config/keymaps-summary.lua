@@ -209,8 +209,8 @@ SNACKS PICKER (ALTERNATIVE)
 
 BUFFER NAVIGATION
 -----------------
-Tab             Next buffer (bufferline)
-Shift-Tab       Previous buffer (bufferline)
+Tab             Next buffer
+Shift-Tab       Previous buffer
 Shift-h         Previous buffer (alternative)
 Shift-l         Next buffer (alternative)
 [b              Previous buffer (alternative)
@@ -224,10 +224,6 @@ BUFFER MANAGEMENT
 <Space>bd       Delete buffer (keeps window)
 <Space>bD       Delete all buffers
 <Space>bo       Close other buffers
-<Space>bl       Close buffers to left
-<Space>br       Close buffers to right
-<Space>bp       Toggle pin buffer
-<Space>bP       Delete non-pinned buffers
 :bd             Delete buffer (safer version, mapped to :Bd)
 
 
