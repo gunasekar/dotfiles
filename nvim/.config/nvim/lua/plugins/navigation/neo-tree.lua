@@ -57,7 +57,16 @@ return {
           vim.opt_local.number = false
           vim.opt_local.relativenumber = false
           vim.opt_local.signcolumn = "no"
+          vim.opt_local.winfixwidth = true
           vim.opt_local.buflisted = false
+        end,
+      },
+      {
+        event = "neo_tree_window_after_open",
+        handler = function(args)
+          if args.position == "left" and vim.api.nvim_win_is_valid(args.winid) then
+            vim.wo[args.winid].winfixwidth = true
+          end
         end,
       },
     },

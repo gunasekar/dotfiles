@@ -4,12 +4,105 @@ return {
   "akinsho/toggleterm.nvim",
   version = "*",
   config = function()
+    local main_terminal = {
+      bufnr = nil,
+      winid = nil,
+    }
+
+    local function terminal_height()
+      return math.floor(vim.o.lines * 0.3)
+    end
+
+    local function is_valid_window(win)
+      return win and vim.api.nvim_win_is_valid(win)
+    end
+
+    local function is_valid_buffer(buf)
+      return buf and vim.api.nvim_buf_is_valid(buf)
+    end
+
+    local function is_main_editor_window(win)
+      if not is_valid_window(win) then
+        return false
+      end
+
+      local ok, buf = pcall(vim.api.nvim_win_get_buf, win)
+      if not ok or not is_valid_buffer(buf) then
+        return false
+      end
+
+      local filetype = vim.bo[buf].filetype
+      local buftype = vim.bo[buf].buftype
+      return buftype == ""
+        and filetype ~= "neo-tree"
+        and filetype ~= "snacks_terminal"
+        and filetype ~= "toggleterm"
+    end
+
+    local function find_main_editor_window()
+      local current = vim.api.nvim_get_current_win()
+      if is_main_editor_window(current) then
+        return current
+      end
+
+      local best_win = nil
+      local best_width = 0
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if is_main_editor_window(win) then
+          local width = vim.api.nvim_win_get_width(win)
+          if width > best_width then
+            best_win = win
+            best_width = width
+          end
+        end
+      end
+
+      return best_win
+    end
+
+    local function configure_main_terminal_window()
+      vim.wo.winfixheight = true
+      vim.wo.number = false
+      vim.wo.relativenumber = false
+      vim.wo.signcolumn = "no"
+      vim.bo.buflisted = false
+      vim.bo.bufhidden = "hide"
+      vim.cmd("startinsert")
+    end
+
+    local function toggle_main_terminal()
+      if is_valid_window(main_terminal.winid) then
+        vim.api.nvim_win_close(main_terminal.winid, false)
+        main_terminal.winid = nil
+        return
+      end
+
+      local target_win = find_main_editor_window()
+      if not target_win then
+        vim.notify("No main editor window available for terminal", vim.log.levels.WARN)
+        return
+      end
+
+      vim.api.nvim_set_current_win(target_win)
+      vim.cmd("rightbelow " .. terminal_height() .. "split")
+      main_terminal.winid = vim.api.nvim_get_current_win()
+
+      if is_valid_buffer(main_terminal.bufnr) then
+        vim.api.nvim_win_set_buf(main_terminal.winid, main_terminal.bufnr)
+      else
+        vim.cmd("terminal")
+        main_terminal.bufnr = vim.api.nvim_get_current_buf()
+      end
+
+      configure_main_terminal_window()
+    end
+
     require("toggleterm").setup({
       -- Size of terminal (relative sizes that adapt to screen)
       size = function(term)
         if term.direction == "horizontal" then
           -- 30% of screen height (adapts to any screen size)
-          return math.floor(vim.o.lines * 0.3)
+          return terminal_height()
         elseif term.direction == "vertical" then
           -- 40% of screen width (adapts to any screen size)
           return math.floor(vim.o.columns * 0.4)
@@ -84,13 +177,12 @@ return {
     local keymap = vim.keymap
 
     -- Global toggle mapping that works in all modes
-    keymap.set({ "n", "i", "v", "t" }, "<C-`>", "<cmd>ToggleTerm<cr>", { desc = "Toggle terminal" })
+    keymap.set({ "n", "i", "v", "t" }, "<C-`>", toggle_main_terminal, { desc = "Toggle main-column terminal" })
 
     -- Toggle terminals with different layouts (using relative sizes)
     keymap.set("n", "<leader>th", function()
-      local size = math.floor(vim.o.lines * 0.3)
-      vim.cmd("ToggleTerm size=" .. size .. " direction=horizontal")
-    end, { desc = "Toggle horizontal terminal (30% height)" })
+      toggle_main_terminal()
+    end, { desc = "Toggle main-column terminal (30% height)" })
     keymap.set("n", "<leader>tv", function()
       local size = math.floor(vim.o.columns * 0.4)
       vim.cmd("ToggleTerm size=" .. size .. " direction=vertical")

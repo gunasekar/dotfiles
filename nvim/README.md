@@ -103,12 +103,13 @@ K           Show documentation
 ### AI Assistant (Claude Code)
 ```
 <C-\>       Toggle Claude Code terminal (normal/insert/visual/terminal)
+<C-S-\>     Toggle Cursor agent terminal (normal/insert/visual/terminal)
 <Space>ac   Toggle Claude Code terminal
 <Space>as   Send selection/buffer to Claude (normal/visual)
 ```
-In the Claude terminal:
+In the Claude or Cursor terminal:
 - `<Esc>` leaves terminal mode (back to Neovim normal)
-- `<C-Esc>` interrupts Claude (cancels the current prompt)
+- `<C-Esc>` interrupts the assistant (cancels the current prompt)
 
 ## Git Workflow with Lazygit
 
