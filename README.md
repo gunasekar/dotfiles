@@ -314,7 +314,7 @@ This is a personal dotfiles repository, but feel free to:
 
 ## License
 
-MIT License - Feel free to use and modify as needed.
+This repository is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
