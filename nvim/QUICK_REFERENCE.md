@@ -110,6 +110,8 @@ Leader key: `Space`
 | `<leader>tt` | New terminal session |
 | `<leader>t]` | Next terminal session |
 | `<leader>t[` | Prev terminal session |
+| `<leader>up` | Pick any panel or session by name |
+| `<leader>uP` | Focus main editor window |
 | `<leader>ui` | Toggle inline images/diagrams |
 | `<C-\>` | Toggle right panel (current agent session) |
 | `<C-S-\>` | Open new agent session |

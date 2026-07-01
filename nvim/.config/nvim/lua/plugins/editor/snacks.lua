@@ -16,6 +16,7 @@ local function bottom_win_opts(count)
 end
 
 local bottom = require("util.term_sessions").new({
+  name = "Terminal",
   cmd = nil, -- default shell
   win_opts = bottom_win_opts,
   start = 1,

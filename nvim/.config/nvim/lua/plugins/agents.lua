@@ -52,15 +52,6 @@ local function right_win_opts(count)
   }
 end
 
--- ── Session state ──────────────────────────────────────────────────────────
--- Each session is identified by a unique `count` (snacks terminal ID).
--- Counts start at 100 to avoid collision with bottom-panel terminals.
-local sessions = require("util.term_sessions").new({
-  cmd = AGENT_CMD,
-  win_opts = right_win_opts,
-  start = 100,
-})
-
 -- ── Context sender ─────────────────────────────────────────────────────────
 -- After `exec $agent` the shell is replaced in-place, so jobpid(chan) IS the
 -- agent's PID. We ps it to decide which send path to take.
@@ -73,6 +64,21 @@ local function detect_agent(chan)
   if args:find("cursor-agent", 1, true) then return "cursor-agent" end
   return nil
 end
+
+-- ── Session state ──────────────────────────────────────────────────────────
+-- Each session is identified by a unique `count` (snacks terminal ID).
+-- Counts start at 100 to avoid collision with bottom-panel terminals.
+local sessions = require("util.term_sessions").new({
+  name = "Agent",
+  cmd = AGENT_CMD,
+  win_opts = right_win_opts,
+  start = 100,
+  label = function(t, i)
+    local chan = vim.bo[t.buf].channel
+    local agent = chan and chan > 0 and detect_agent(chan) or nil
+    return "Session " .. i .. (agent and (" (" .. agent .. ")") or "")
+  end,
+})
 
 local function send_context_to_agent()
   local t = sessions.current()

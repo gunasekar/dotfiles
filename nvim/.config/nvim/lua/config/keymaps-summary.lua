@@ -381,6 +381,12 @@ Ctrl-Shift-H    Prev terminal session - all modes
 <Space>t[       Prev terminal session
 <Space>H        Toggle htop/btop monitor (float)
 
+PANEL / SESSION PICKER
+----------------------
+<Space>up       Pick any panel or session (explorer, every terminal
+                and agent session by name) - jumps straight to it
+<Space>uP       Focus the main editor window
+
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                            🐛 DIAGNOSTICS                                     ║

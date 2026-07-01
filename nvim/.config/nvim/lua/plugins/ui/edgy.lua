@@ -71,7 +71,16 @@ return {
   },
 
   keys = {
-    { "<leader>up", function() require("edgy").select() end,    desc = "Pick panel (Edgy)" },
+    {
+      "<leader>up",
+      function()
+        -- agents.lua is key-lazy-loaded, so force it in before listing
+        -- sessions or its manager may not have registered yet.
+        require("lazy").load({ plugins = { "claudecode.nvim" } })
+        require("util.term_sessions").picker()
+      end,
+      desc = "Pick panel/session",
+    },
     { "<leader>uP", function() require("edgy").goto_main() end, desc = "Focus editor (Edgy)" },
   },
 }
