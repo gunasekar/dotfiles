@@ -45,28 +45,16 @@ return {
 		popup_border_style = "rounded",
 		enable_git_status = true,
 		enable_diagnostics = true,
-		open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Trouble" },
+		open_files_do_not_replace_types = { "terminal", "trouble", "qf", "Trouble", "edgy" },
 		sort_case_insensitive = false,
 		-- Neo-tree specific behavior
 		event_handlers = {
 			{
 				event = "neo_tree_buffer_enter",
 				handler = function()
-					-- Keep the explorer clean: no numbers or sign column, not in buffer list
-					vim.opt_local.number = false
-					vim.opt_local.relativenumber = false
-					vim.opt_local.signcolumn = "no"
-					vim.opt_local.winfixwidth = true
+					-- Keep the explorer out of the buffer list; edgy handles the rest
+					-- (winfixwidth, number, signcolumn) via its global wo options.
 					vim.opt_local.buflisted = false
-				end,
-			},
-			{
-				event = "neo_tree_window_after_open",
-				handler = function(args)
-					if args.position == "left" and vim.api.nvim_win_is_valid(args.winid) then
-						vim.wo[args.winid].winfixwidth = true
-						pcall(vim.api.nvim_win_set_width, args.winid, 30)
-					end
 				end,
 			},
 		},

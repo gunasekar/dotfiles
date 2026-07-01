@@ -41,7 +41,7 @@ return {
           "lazy",
           "mason",
           "notify",
-          "toggleterm",
+          "snacks_terminal",
           "lazyterm",
         },
       },
