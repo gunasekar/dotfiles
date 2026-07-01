@@ -70,5 +70,12 @@ return {
       bash = { "shfmt" },
       zsh = { "shfmt" },
     },
+    -- shfmt options: 2-space indent, indent `case` branches (matches Zed's
+    -- Shell Script formatter config so both editors format identically)
+    formatters = {
+      shfmt = {
+        prepend_args = { "-i", "2", "-ci" },
+      },
+    },
   },
 }
