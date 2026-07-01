@@ -60,18 +60,34 @@ gnupg/.gnupg/pubring.kbx~
 .password-store/
 
 ### Temporary Files ###
+tmp/
+temp/
+.tmp/
+.temp/
 *.tmp
 *.bak
 *.swp
 *.swo
 *~
 
+### Development Scratch Spaces ###
+.scratch/
+scratch/
+.dev/
+.sandbox/
+.experiments/
+.playground/
+
 ### Logs ###
+logs/
 *.log
+debug.log
+debug.txt
 
 ### IDEs and Editors ###
 .idea/
 .vscode/
+.zed/
 
 ### Environment Files ###
 .env
@@ -96,6 +112,7 @@ service-account.json
 .aider*
 .codeium/
 .copilot/
+.bolt/
 *.anthropic
 *.openai
 .ai-cache/
