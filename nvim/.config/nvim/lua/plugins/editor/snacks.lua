@@ -1,23 +1,34 @@
 -- Snacks.nvim - Collection of small QoL plugins
 
--- CWD is pinned on first open so snacks.terminal.tid() always returns the
--- same ID regardless of which window has focus when the key is pressed.
+-- ── Bottom panel: multiple shell terminal sessions ──────────────────────────
+-- Same toggle/new/next/prev session manager the right-panel agent picker
+-- uses (see util/term_sessions.lua), so both panels support multiple
+-- terminals the same way. CWD is pinned on first open so every session
+-- shares the same cwd regardless of which window has focus when opened.
 local shell_cwd = nil
 
+local function bottom_win_opts(count)
+  return {
+    win = { position = "bottom", height = 20 },
+    count = count,
+    cwd = shell_cwd,
+  }
+end
+
+local bottom = require("util.term_sessions").new({
+  cmd = nil, -- default shell
+  win_opts = bottom_win_opts,
+  start = 1,
+})
+
+local function new_bottom_session()
+  if not shell_cwd then shell_cwd = vim.fn.getcwd() end
+  bottom.new()
+end
+
 local function toggle_bottom_panel()
-  local shell_t = shell_cwd and Snacks.terminal.get(nil, {
-    count = 1, cwd = shell_cwd, create = false,
-  })
-  if shell_t and shell_t:valid() then
-    shell_t:hide()
-  else
-    if not shell_cwd then shell_cwd = vim.fn.getcwd() end
-    Snacks.terminal.toggle(nil, {
-      win = { position = "bottom", height = 20 },
-      count = 1,
-      cwd = shell_cwd,
-    })
-  end
+  if not shell_cwd then shell_cwd = vim.fn.getcwd() end
+  bottom.toggle()
 end
 
 -- Native float for a process monitor: btop if installed, htop otherwise.
@@ -233,8 +244,15 @@ return {
       desc = "Lazygit Log (cwd)",
     },
 
-    -- Bottom panel — single key toggles shell + any project terminals together
-    { "<C-`>", toggle_bottom_panel, desc = "Toggle bottom panel", mode = { "n", "i", "v", "t" } },
+    -- Bottom panel — supports multiple terminal sessions, same as the
+    -- right-panel agent picker (toggle current / new / cycle sessions)
+    { "<C-`>",     toggle_bottom_panel, desc = "Toggle bottom panel", mode = { "n", "i", "v", "t" } },
+    { "<C-S-`>",   new_bottom_session,  desc = "New terminal", mode = { "n", "i", "v", "t" } },
+    { "<C-S-L>",   bottom.next,         desc = "Next terminal", mode = { "n", "i", "v", "t" } },
+    { "<C-S-H>",   bottom.prev,         desc = "Prev terminal", mode = { "n", "i", "v", "t" } },
+    { "<leader>tt", new_bottom_session, desc = "New terminal" },
+    { "<leader>t]", bottom.next,        desc = "Next terminal" },
+    { "<leader>t[", bottom.prev,        desc = "Prev terminal" },
     { "<leader>H", toggle_htop, desc = "Toggle htop" },
   },
 

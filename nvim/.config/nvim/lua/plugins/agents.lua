@@ -54,55 +54,12 @@ end
 
 -- ── Session state ──────────────────────────────────────────────────────────
 -- Each session is identified by a unique `count` (snacks terminal ID).
--- Counts start at 100 to avoid collision with bottom-panel terminals (1, 2).
-local right = { counts = {}, idx = 0, next = 100 }
-
-local function get_term(count)
-  return Snacks.terminal.get(
-    AGENT_CMD,
-    vim.tbl_extend("force", right_win_opts(count), { create = false })
-  )
-end
-
-local function focus_term()
-  local buf = vim.api.nvim_win_get_buf(vim.api.nvim_get_current_win())
-  if vim.bo[buf].buftype == "terminal" then
-    vim.cmd("startinsert")
-  end
-end
-
-local function hide_all()
-  for _, c in ipairs(right.counts) do
-    local t = get_term(c)
-    if t and t:valid() then t:hide() end
-  end
-end
-
--- Remove sessions whose buffers have been closed/killed
-local function prune()
-  local alive, shift = {}, 0
-  for i, c in ipairs(right.counts) do
-    local t = get_term(c)
-    if t and t:buf_valid() then
-      table.insert(alive, c)
-    elseif i <= right.idx then
-      shift = shift + 1
-    end
-  end
-  right.counts = alive
-  right.idx = math.max(0, math.min(right.idx - shift, #right.counts))
-end
-
-local function show_session(idx)
-  hide_all()
-  right.idx = idx
-  local t = get_term(right.counts[idx])
-  if t and t:buf_valid() then
-    if not t:valid() then t:show() end
-    t:focus()
-    focus_term()
-  end
-end
+-- Counts start at 100 to avoid collision with bottom-panel terminals.
+local sessions = require("util.term_sessions").new({
+  cmd = AGENT_CMD,
+  win_opts = right_win_opts,
+  start = 100,
+})
 
 -- ── Context sender ─────────────────────────────────────────────────────────
 -- After `exec $agent` the shell is replaced in-place, so jobpid(chan) IS the
@@ -118,14 +75,9 @@ local function detect_agent(chan)
 end
 
 local function send_context_to_agent()
-  prune()
-  if #right.counts == 0 or right.idx == 0 then
+  local t = sessions.current()
+  if not t then
     vim.notify("Open an agent session first (<C-\\>)", vim.log.levels.WARN)
-    return
-  end
-  local t = get_term(right.counts[right.idx])
-  if not t or not t:buf_valid() then
-    vim.notify("No active agent session", vim.log.levels.WARN)
     return
   end
   local path = vim.fn.expand("%:p")
@@ -157,7 +109,7 @@ local function send_context_to_agent()
   if not s or s <= 0 or not e or e <= 0 then
     -- No selection available: send file:line reference only
     vim.api.nvim_chan_send(chan, path .. ":" .. vim.fn.line(".") .. " ")
-    show_session(right.idx)
+    sessions.focus()
     return
   end
   if s > e then s, e = e, s end
@@ -171,52 +123,7 @@ local function send_context_to_agent()
   -- Bracketed paste tells cursor-agent's TUI this is pasted text so newlines
   -- inside the block don't trigger an accidental submit.
   vim.api.nvim_chan_send(chan, "\x1b[200~" .. text .. "\x1b[201~")
-  show_session(right.idx)
-end
-
--- ── Actions ────────────────────────────────────────────────────────────────
-local function new_right_session()
-  prune()
-  hide_all()
-  local count = right.next
-  right.next = right.next + 1
-  table.insert(right.counts, count)
-  right.idx = #right.counts
-  Snacks.terminal.toggle(AGENT_CMD, right_win_opts(count))
-end
-
-local function toggle_right_panel()
-  prune()
-  if #right.counts == 0 or right.idx == 0 then
-    new_right_session()
-    return
-  end
-  local t = get_term(right.counts[right.idx])
-  if not t then
-    new_right_session()
-    return
-  end
-  if t:valid() then
-    if vim.api.nvim_get_current_win() == t.win then
-      t:hide()
-    else
-      show_session(right.idx)
-    end
-  else
-    show_session(right.idx)
-  end
-end
-
-local function next_right_session()
-  prune()
-  if #right.counts < 2 then return end
-  show_session((right.idx % #right.counts) + 1)
-end
-
-local function prev_right_session()
-  prune()
-  if #right.counts < 2 then return end
-  show_session(((right.idx - 2) % #right.counts) + 1)
+  sessions.focus()
 end
 
 -- ── Plugin specs ───────────────────────────────────────────────────────────
@@ -245,13 +152,13 @@ return {
       focus_after_send = false,
     },
     keys = {
-      { "<C-\\>",     toggle_right_panel, mode = { "n", "i", "v", "t" }, desc = "Toggle right panel" },
-      { "<C-S-\\>",   new_right_session,  mode = { "n", "i", "v", "t" }, desc = "New agent session" },
-      { "<leader>ac", toggle_right_panel, desc = "Toggle right panel" },
-      { "<C-S-]>",    next_right_session,  mode = { "n", "i", "v", "t" }, desc = "Next agent session" },
-      { "<C-S-[>",    prev_right_session,  mode = { "n", "i", "v", "t" }, desc = "Prev agent session" },
-      { "<leader>a]", next_right_session, desc = "Next agent session" },
-      { "<leader>a[", prev_right_session, desc = "Prev agent session" },
+      { "<C-\\>",     sessions.toggle, mode = { "n", "i", "v", "t" }, desc = "Toggle right panel" },
+      { "<C-S-\\>",   sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session" },
+      { "<leader>ac", sessions.toggle, desc = "Toggle right panel" },
+      { "<C-S-]>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session" },
+      { "<C-S-[>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session" },
+      { "<leader>a]", sessions.next, desc = "Next agent session" },
+      { "<leader>a[", sessions.prev, desc = "Prev agent session" },
       { "<leader>as", send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
       { "<C-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
       { "<D-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },

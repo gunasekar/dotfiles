@@ -47,7 +47,7 @@ Inside Neovim, run:
 | Fuzzy finder | `nvim/.config/nvim/lua/plugins/navigation/telescope.lua` |
 | Which-key | `nvim/.config/nvim/lua/plugins/navigation/which-key.lua` |
 | Git | `nvim/.config/nvim/lua/plugins/git.lua` |
-| Terminals | `nvim/.config/nvim/lua/plugins/editor/toggleterm.lua` |
+| Terminals | `nvim/.config/nvim/lua/plugins/editor/snacks.lua`, `nvim/.config/nvim/lua/plugins/ui/edgy.lua` |
 | AI agent | `nvim/.config/nvim/lua/plugins/agents.lua` |
 | Markdown | `nvim/.config/nvim/lua/plugins/markdown.lua` |
 | Diagrams/images | `nvim/.config/nvim/lua/plugins/diagram.lua` |
@@ -103,7 +103,13 @@ Leader key: `Space`
 | `<leader>hr` | Reset hunk |
 | `<leader>hp` | Preview hunk |
 | `<leader>hb` | Blame line |
-| ``<C-`>`` | Toggle main terminal |
+| ``<C-`>`` | Toggle bottom panel (current terminal session) |
+| ``<C-S-`>`` | New terminal session (all modes) |
+| `<C-S-L>` | Next terminal session (all modes) |
+| `<C-S-H>` | Prev terminal session (all modes) |
+| `<leader>tt` | New terminal session |
+| `<leader>t]` | Next terminal session |
+| `<leader>t[` | Prev terminal session |
 | `<leader>ui` | Toggle inline images/diagrams |
 | `<C-\>` | Toggle right panel (current agent session) |
 | `<C-S-\>` | Open new agent session |

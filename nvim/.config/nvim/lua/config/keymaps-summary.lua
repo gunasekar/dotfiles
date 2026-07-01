@@ -367,18 +367,19 @@ Look for these on the left side of your files:
 
 TERMINAL TOGGLE
 ---------------
-Ctrl-`          Focus/toggle main-column terminal - works in all modes
+Ctrl-`          Toggle bottom panel (current terminal session) - all modes
 Esc             Exit terminal mode (to normal mode)
 Ctrl-h/j/k/l    Navigate windows from terminal
 
-TERMINAL LAYOUTS
-----------------
-<Space>th       Focus/toggle main-column terminal (30% height)
-<Space>tv       Toggle vertical terminal (40% width)
-<Space>tf       Toggle floating terminal
-<Space>tn       Toggle Node REPL
-<Space>tp       Toggle Python REPL
-<Space>tH       Toggle htop
+BOTTOM PANEL SESSIONS (supports multiple terminals, like the agent panel)
+--------------------------------------------------------------------------
+Ctrl-Shift-`    New terminal session - all modes
+Ctrl-Shift-L    Next terminal session - all modes
+Ctrl-Shift-H    Prev terminal session - all modes
+<Space>tt       New terminal session
+<Space>t]       Next terminal session
+<Space>t[       Prev terminal session
+<Space>H        Toggle htop/btop monitor (float)
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
