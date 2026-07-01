@@ -130,13 +130,14 @@
       "provider": "anthropic",
       "model": "claude-sonnet-4-6-latest",
     },
-    "terminal_init_command": "agent=$(printf 'claude\\ncursor-agent' | fzf --prompt='Agent: ' --height=4 --reverse --no-info) && exec $agent",
     "tool_permissions": {
       "default": "allow",
     },
     "play_sound_when_agent_done": "always",
     "expand_terminal_card": false,
     "expand_edit_card": false,
+    // Reuse the same fzf agent picker as the nvim right-panel terminal.
+    "terminal_init_command": "~/.config/nvim/scripts/agent-picker.sh",
   },
   "project_panel": {
     "dock": "right",
@@ -178,23 +179,6 @@
   },
 
   // ── AI ──────────────────────────────────────────────────────────────────
-  "agent_servers": {
-    "cursor": {
-      "type": "registry"
-    },
-    "claude-acp": {
-      "type": "registry",
-      "default_config_options": {
-        "model": "opus[1m]",
-        "mode": "bypassPermissions"
-      },
-      "favorite_config_option_values": {
-        "mode": [
-          "bypassPermissions"
-        ]
-      },
-    },
-  },
   "edit_predictions": {
     "provider": "zed",
     "ollama": {
@@ -248,19 +232,11 @@
       },
     },
     "Python": {
-      "language_servers": [
-        "pyright",
-        "ruff"
-      ],
+      "language_servers": ["pyright", "ruff"],
       "formatter": {
         "external": {
           "command": "ruff",
-          "arguments": [
-            "format",
-            "--stdin-filename",
-            "{buffer_path}",
-            "-"
-          ],
+          "arguments": ["format", "--stdin-filename", "{buffer_path}", "-"],
         },
       },
     },
@@ -268,10 +244,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
@@ -279,10 +252,7 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
@@ -290,31 +260,25 @@
       "formatter": {
         "external": {
           "command": "prettier",
-          "arguments": [
-            "--stdin-filepath",
-            "{buffer_path}"
-          ],
+          "arguments": ["--stdin-filepath", "{buffer_path}"],
         },
       },
     },
     "JSON": {
-      "formatter": "language_server"
-    },
-    "JSONC": {
-      "formatter": {
-        "external": {
-          "command": "prettier",
-          "arguments": [
-            "--parser",
-            "json",
-            "--stdin-filepath",
-            "{buffer_path}"
-          ]
-        }
-      }
+      "formatter": "language_server",
     },
     "Markdown": {
       "soft_wrap": "editor_width",
+    },
+    "Shell Script": {
+      "tab_size": 2,
+      "hard_tabs": false,
+      "formatter": {
+        "external": {
+          "command": "shfmt",
+          "arguments": ["--filename", "{buffer_path}", "-i", "2", "-ci"],
+        },
+      },
     },
   },
 }

@@ -32,13 +32,13 @@ nvim
 :Mason
 ```
 
-### Optional: Claude AI Setup
-Add your API key through a private local shell file or password-manager-backed
-loader, not directly in this repo:
-```bash
-export ANTHROPIC_API_KEY="your-api-key-here"
-```
-Get your API key from: https://console.anthropic.com/
+### Optional: HTTP AI Setup
+Claude Code CLI does not need an API key in this repo. If you later configure a
+direct HTTP adapter, keep credentials in a private local shell file or
+password-manager-backed loader, not directly in this repo.
+
+Claude Code CLI usage is managed through the terminal integration below, which
+keeps sessions compatible with the standalone `claude` CLI.
 
 ## Essential Keybindings
 
@@ -106,16 +106,21 @@ K           Show documentation
 <Space>hb   Blame line
 ```
 
-### AI Assistant (Claude Code)
+### AI Agent
 ```
-<C-\>       Focus/toggle Claude Code terminal (normal/insert/visual/terminal)
-<C-S-\>     Focus/toggle Cursor agent terminal (normal/insert/visual/terminal)
-<Space>ac   Focus/toggle Claude Code terminal
-<Space>as   Send selection/buffer to Claude (normal/visual)
+<C-\>       Toggle right panel (current agent session, normal/insert/visual/terminal)
+<C-S-\>     Open new agent session (fzf picker: claude, plan, explore, cursor-agent)
+<C-S-]>     Next agent session (all modes)
+<C-S-[>     Previous agent session (all modes)
+<Space>ac   Toggle right panel
+<Space>as   Send selection/buffer to the active agent (normal/visual)
+<Space>a]   Next agent session
+<Space>a[   Previous agent session
 ```
-In the Claude or Cursor terminal:
+
+In the agent terminal:
 - `<Esc>` leaves terminal mode (back to Neovim normal)
-- `<C-Esc>` interrupts the assistant (cancels the current prompt)
+- `<C-Esc>` interrupts the agent (cancels the current prompt)
 
 ## Git Workflow with Lazygit
 
@@ -248,7 +253,7 @@ Add more in `lua/plugins/lsp/lsp.lua`
 - **Treesitter**: Advanced syntax highlighting
 - **Buffers**: Numbered buffers shown in Neo-tree and the winbar; jump with `<Space>1-9`, cycle with `Tab`/`[b`/`]b`
 - **Git**: Visual indicators, staging, blame, diff (Lazygit + Gitsigns)
-- **AI**: Claude Code integration in a terminal split (claudecode.nvim)
+- **AI**: Claude Code terminal integration (right-panel agent session with fzf picker)
 - **Telescope**: Fuzzy finder for files, buffers, and text search
 - **Which-key**: Press `<Space>` to see available commands
 - **Neo-tree**: Modern file explorer with Filesystem/Buffers/Git views
@@ -307,7 +312,7 @@ lua/plugins/quality/formatters.lua Formatters
 2. Use `<Space>gg` for all Git operations - it's the easiest way
 3. Use `<Space>ff` to quickly jump to any file
 4. Press `K` over any function to see its documentation
-5. Select code and use `<Space>as` to send it to Claude
+5. Select code and use `<Space>as` to send it to the active Claude Code session
 
 ## Learn More
 

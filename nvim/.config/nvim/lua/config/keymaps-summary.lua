@@ -407,17 +407,21 @@ BASIC TOGGLES
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                         🤖 AI ASSISTANT                                      ║
+║                         🤖 AI AGENT                                          ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-CLAUDE CODE
------------
-Ctrl-\          Focus/toggle Claude Code (all modes)
-Ctrl-Shift-\    Focus/toggle Cursor agent terminal (all modes)
-<Space>ac       Focus/toggle Claude Code
-<Space>as       Send to Claude (normal/visual)
-Esc             Leave assistant terminal mode
-Ctrl-Esc        Interrupt assistant prompt
+CLAUDE CODE / CURSOR AGENT (right panel)
+-----------------------------------------
+Ctrl-\          Toggle right panel (current session)
+Ctrl-Shift-\    Open new agent session
+<Space>ac       Toggle right panel
+<Space>as       Send selection/buffer to active agent
+<Space>a]       Next agent session
+<Space>a[       Previous agent session
+Ctrl-Shift-]    Next agent session (all modes)
+Ctrl-Shift-[    Previous agent session (all modes)
+Esc             Leave terminal mode (back to Neovim normal)
+Ctrl-Esc        Interrupt agent (send ^C to process)
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗

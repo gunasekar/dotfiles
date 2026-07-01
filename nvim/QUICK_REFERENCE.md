@@ -48,7 +48,7 @@ Inside Neovim, run:
 | Which-key | `nvim/.config/nvim/lua/plugins/navigation/which-key.lua` |
 | Git | `nvim/.config/nvim/lua/plugins/git.lua` |
 | Terminals | `nvim/.config/nvim/lua/plugins/editor/toggleterm.lua` |
-| AI assistant | `nvim/.config/nvim/lua/plugins/assistant.lua` |
+| AI agent | `nvim/.config/nvim/lua/plugins/agents.lua` |
 | Markdown | `nvim/.config/nvim/lua/plugins/markdown.lua` |
 | Diagrams/images | `nvim/.config/nvim/lua/plugins/diagram.lua` |
 | UI | `nvim/.config/nvim/lua/plugins/ui/` |
@@ -105,8 +105,13 @@ Leader key: `Space`
 | `<leader>hb` | Blame line |
 | ``<C-`>`` | Toggle main terminal |
 | `<leader>ui` | Toggle inline images/diagrams |
-| `<C-\>` | Toggle Claude Code terminal |
-| `<C-S-\>` | Toggle Cursor agent terminal |
+| `<C-\>` | Toggle right panel (current agent session) |
+| `<C-S-\>` | Open new agent session |
+| `<C-S-]>` | Next agent session (all modes) |
+| `<C-S-[>` | Prev agent session (all modes) |
+| `<leader>as` | Send context to active agent |
+| `<leader>a]` | Next agent session |
+| `<leader>a[` | Prev agent session |
 
 ## Configured Language Servers
 

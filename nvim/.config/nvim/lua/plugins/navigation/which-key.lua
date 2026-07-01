@@ -20,7 +20,7 @@ return {
 
     -- Document existing key chains using v3 API
     wk.add({
-      { "<leader>a", group = "AI Assistant" },
+      { "<leader>a", group = "AI Agent" },
       { "<leader>b", group = "Buffer" },
       { "<leader>c", group = "Code" },
       { "<leader>d", group = "Debug" },

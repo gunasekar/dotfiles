@@ -30,7 +30,7 @@ nvim/.config/nvim/
     |   |-- health-check.lua
     |   `-- mason-verify.lua
     `-- plugins/
-        |-- assistant.lua
+        |-- agents.lua
         |-- colorscheme.lua
         |-- csv.lua
         |-- diagram.lua
@@ -95,7 +95,7 @@ Plugin loading is centralized in `lua/config/lazy.lua` and imports these groups:
 - Markdown and data: `lua/plugins/markdown.lua`, `lua/plugins/diagram.lua`,
   `lua/plugins/csv.lua`.
   Review renderer trade-offs, terminal graphics requirements, and CSV behavior.
-- AI assistant: `lua/plugins/assistant.lua`.
+- AI agent: `lua/plugins/agents.lua`.
   Review local commands, terminal layout, and private workflow assumptions.
 
 ## LSP Review
@@ -210,7 +210,7 @@ Use the lazy.nvim plugin spec as the reference point.
 
 Intentional eager or special cases in this config include:
 
-- `snacks.nvim`: broad utility layer used by keymaps and assistant terminals.
+- `snacks.nvim`: broad utility layer used by keymaps and agent terminals.
 - `neo-tree.nvim`: primary explorer and buffer-number workflow.
 - `nvim-treesitter`: parser install/start behavior.
 - Markdown renderer plugins: renderer behavior is intentionally documented in
@@ -222,7 +222,7 @@ Primary prefixes:
 
 | Prefix | Group |
 | --- | --- |
-| `<leader>a` | AI assistant |
+| `<leader>a` | AI agent |
 | `<leader>b` | Buffer |
 | `<leader>c` | Code |
 | `<leader>f` | Find/File |
@@ -249,7 +249,7 @@ Before sharing in forums, call out these assumptions:
 - The setup expects a Nerd Font for the best icon rendering.
 - The terminal graphics feature for inline images/diagrams expects Ghostty,
   Kitty, or WezTerm and the Kitty graphics protocol.
-- AI assistant integrations are personal workflow pieces. The command
+- AI agent integrations are personal workflow pieces. The command
   `claude --dangerously-skip-permissions` is intentionally local and should not
   be copied without understanding the security trade-off.
 - `gunasekar/markview-smart-tables.nvim` is an open-source companion plugin for

@@ -9,6 +9,10 @@ function n {
     nvim "${@:-.}"
 }
 
+# Same fzf agent picker used by nvim's right panel and Zed's
+# agent.terminal_init_command — exposed here for manual use from any shell.
+alias ai="$HOME/.config/nvim/scripts/agent-picker.sh"
+
 ##### Go
 if command -v brew &>/dev/null; then
     _GO_PREFIX="$(brew --prefix go 2>/dev/null)"

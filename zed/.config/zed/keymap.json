@@ -19,6 +19,24 @@
     }
   },
   {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "ctrl->": "agent::AddSelectionToThread"
+    }
+  },
+  {
+    "context": "AcpThread",
+    "bindings": {
+      "ctrl->": "agent::AddSelectionToThread"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl->": "agent::AddSelectionToThread"
+    }
+  },
+  {
     "context": "ProjectPanel && not_editing",
     "bindings": {
       "cmd-left": "project_panel::CollapseAllEntries",
