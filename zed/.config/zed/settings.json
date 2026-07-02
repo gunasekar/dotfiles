@@ -137,7 +137,7 @@
     "expand_terminal_card": false,
     "expand_edit_card": false,
     // Reuse the same fzf agent picker as the nvim right-panel terminal.
-    "terminal_init_command": "~/.config/nvim/scripts/agent-picker.sh",
+    "terminal_init_command": "~/.dotfiles/bin/.local/bin/agent",
   },
   "project_panel": {
     "dock": "right",

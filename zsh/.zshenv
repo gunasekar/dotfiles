@@ -23,7 +23,7 @@ fi
 # NOTE: deliberately no `else echo` — .zshenv must never print.
 
 # ─── PATH: personal bins (prepend so they win over system) ──────────────────
-export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 # ─── XDG (used by COLIMA_HOME below and many tools, incl. non-interactive) ───
 export XDG_CONFIG_HOME="$HOME/.config"

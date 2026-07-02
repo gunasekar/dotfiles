@@ -1,13 +1,9 @@
 #!/bin/bash
 
 ##### general
-mkdir -p "$HOME/.binaries"
-export PATH="$PATH:$HOME/.binaries"
-
 function binplace {
-    mkdir -p "$HOME/.binaries/"
-    cp "$1" "$HOME/.binaries/"
-    chmod 755 "$HOME/.binaries/"*
+    mkdir -p "$HOME/.local/bin/"
+    ln -sf "$(realpath "$1")" "$HOME/.local/bin/$(basename "$1")"
 }
 
 alias uts="date +%s"

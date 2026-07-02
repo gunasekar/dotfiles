@@ -41,6 +41,9 @@ stow -v zsh
 echo "  • Git → ~/.gitconfig.public, ~/.global.gitignore"
 stow -v git
 
+echo "  • bin → ~/.local/bin/agent"
+stow -v bin
+
 # Seed the machine-local brew ignore list (gitignored) from the committed
 # template so stow has a real file to symlink. Edit ~/.Brewfile.ignore per machine.
 [ -f "$DOTFILES/brew/.Brewfile.ignore" ] || \

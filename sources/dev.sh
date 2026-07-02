@@ -9,9 +9,13 @@ function n {
     nvim "${@:-.}"
 }
 
-# Same fzf agent picker used by nvim's right panel and Zed's
-# agent.terminal_init_command — exposed here for manual use from any shell.
-alias ai="$HOME/.config/nvim/scripts/agent-picker.sh"
+# `agent` (~/.local/bin/agent, see bin/ package) is the same fzf picker used
+# by nvim's right panel and Zed's agent.terminal_init_command — a real
+# command rather than an alias so it also works from scripts and
+# non-interactive shells. CLI installers (cursor-agent, grok, ...) also
+# write to ~/.local/bin/agent and may clobber this symlink on install/update
+# — if `agent` stops launching the picker, re-run install.sh (or `stow bin`
+# from ~/.dotfiles) to restore it.
 
 ##### Go
 if command -v brew &>/dev/null; then
