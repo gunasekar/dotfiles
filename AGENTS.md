@@ -60,9 +60,8 @@ configurations using GNU Stow.
 
 ## Neovim Review Gate
 
-The `nvim-review-flow` skill is staged at
-`agent-skills/nvim-review-flow/SKILL.md` until it moves to the separate
-`agent-skills` repository.
+The `nvim-review-flow` skill lives at `.agents/skills/nvim-review-flow/SKILL.md`
+— scoped to this repo only, not installed globally to `~/.agents/skills/`.
 
 Before finishing any Neovim-related change, use that skill when it is available,
 or explicitly apply the same review flow:
