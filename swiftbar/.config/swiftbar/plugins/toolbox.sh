@@ -195,7 +195,7 @@ function csv2json() {
     END {
         if (NR > 1) printf "\n"
         printf "]\n"
-    }' <<< "$content" | pbcopy
+    }' <<<"$content" | pbcopy
 }
 
 # ============================================

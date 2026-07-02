@@ -10,11 +10,11 @@
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
 SAVEHIST=100000
-setopt HIST_IGNORE_DUPS       # don't store consecutive duplicates
-setopt HIST_IGNORE_SPACE      # don't store commands prefixed with a space
-setopt HIST_VERIFY            # expand history before executing
-setopt SHARE_HISTORY          # share history across all open shells
-setopt EXTENDED_HISTORY       # save timestamp + duration with each entry
+setopt HIST_IGNORE_DUPS  # don't store consecutive duplicates
+setopt HIST_IGNORE_SPACE # don't store commands prefixed with a space
+setopt HIST_VERIFY       # expand history before executing
+setopt SHARE_HISTORY     # share history across all open shells
+setopt EXTENDED_HISTORY  # save timestamp + duration with each entry
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -37,21 +37,21 @@ source $ZSH/oh-my-zsh.sh
 # Moved here from .zshenv — bindkey is meaningless in non-interactive shells.
 if [[ "$OSTYPE" == darwin* ]]; then
   bindkey -e
-  bindkey "^[[1;3C" forward-word    # Option + Right Arrow
-  bindkey "^[[1;3D" backward-word   # Option + Left Arrow
+  bindkey "^[[1;3C" forward-word  # Option + Right Arrow
+  bindkey "^[[1;3D" backward-word # Option + Left Arrow
 fi
 
 # Source every *.sh in a directory. Missing dir → silently skip (so optional
 # drop-in locations are safe and stay quiet in non-interactive shells).
 source_all_in_directory() {
-    local dir="$1"
-    [ -d "$dir" ] || return 0
+  local dir="$1"
+  [ -d "$dir" ] || return 0
 
-    for file in "$dir"/*.sh; do
-        if [ -f "$file" ] && [ -r "$file" ]; then
-            source "$file"
-        fi
-    done
+  for file in "$dir"/*.sh; do
+    if [ -f "$file" ] && [ -r "$file" ]; then
+      source "$file"
+    fi
+  done
 }
 
 # This repo's own function library.

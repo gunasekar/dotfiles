@@ -44,11 +44,11 @@ if [[ -z "${value}" ]] || [[ "${value}" == "null" ]]; then
   exit 0
 fi
 
-echo "${value}" > "${CACHE_FILE}"
+echo "${value}" >"${CACHE_FILE}"
 
 int_val=${value%.*}
-segment=$(( int_val / 25 ))
-(( segment > 3 )) && segment=3
+segment=$((int_val / 25))
+((segment > 3)) && segment=3
 
 label="${SENTIMENT_LABELS[$segment]}"
 color="${SENTIMENT_COLORS[$segment]}"

@@ -9,16 +9,16 @@
 
 # ─── Homebrew: detect location, set PATH/MANPATH/INFOPATH ───────────────────
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS — ARM (/opt/homebrew) or Intel (/usr/local)
-    if [ -x "/opt/homebrew/bin/brew" ]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [ -x "/usr/local/bin/brew" ]; then
-        eval "$(/usr/local/bin/brew shellenv)"
-    fi
+  # macOS — ARM (/opt/homebrew) or Intel (/usr/local)
+  if [ -x "/opt/homebrew/bin/brew" ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x "/usr/local/bin/brew" ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
+  if [ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  fi
 fi
 # NOTE: deliberately no `else echo` — .zshenv must never print.
 
@@ -44,7 +44,7 @@ export LESS="-R"
 # DOCKER_HOST only on macOS — on Linux, native docker uses its own default socket.
 export COLIMA_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/colima"
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export DOCKER_HOST="unix://${COLIMA_HOME}/default/docker.sock"
+  export DOCKER_HOST="unix://${COLIMA_HOME}/default/docker.sock"
 fi
 
 # ─── oh-my-zsh: must be set before .zshrc runs compinit ─────────────────────

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-
 function n {
-    if ! command -v nvim &>/dev/null; then
-        echo "nvim not found. please install neovim"
-        return 1
-    fi
-    nvim "${@:-.}"
+  if ! command -v nvim &>/dev/null; then
+    echo "nvim not found. please install neovim"
+    return 1
+  fi
+  nvim "${@:-.}"
 }
 
 # `agent` (~/.local/bin/agent, see bin/ package) is the same fzf picker used
