@@ -152,7 +152,7 @@
   "git_panel": {
     "dock": "right",
     "starts_open": false,
-    "sort_by_path": true,
+    "sort_by": "path",
     "tree_view": false,
   },
   "outline_panel": {
