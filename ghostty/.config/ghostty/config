@@ -6,6 +6,7 @@
 # FONT & THEME
 # =============================================================================
 font-family = "Hack Nerd Font Mono"
+font-size = 12
 # List all themes: ghostty +list-themes
 theme = Tomorrow Night Bright
 
