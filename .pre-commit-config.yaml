@@ -2,6 +2,17 @@
 # See https://pre-commit.com for more information
 
 repos:
+  # shfmt - Shell script formatter. Matches the shfmt config nvim/Zed already
+  # run on save (formatters.lua, Zed settings.json's "Shell Script" formatter)
+  # so files get the same 2-space/case-indent style whether saved in an
+  # editor or committed from the CLI. `types: [shell]` auto-detects by
+  # shebang too, so it also covers extension-less scripts like bin/.local/bin/agent.
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      - id: shfmt
+        args: [--write, '-i', '2', '-ci']
+
   # Shellcheck - Shell script linter
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
