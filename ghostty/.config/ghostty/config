@@ -8,7 +8,9 @@
 font-family = "Hack Nerd Font Mono"
 font-size = 12
 # List all themes: ghostty +list-themes
-theme = Tomorrow Night Bright
+theme = Ayu
+# Override Ayu's default #0b0e14 background with true black
+background = #000000
 
 # =============================================================================
 # WINDOW SETTINGS
