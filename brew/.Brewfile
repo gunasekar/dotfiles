@@ -149,6 +149,7 @@ if OS.mac?
   cask "mitmproxy"
   cask "obsidian"
   cask "openemu"
+  cask "opensuperwhisper"
   cask "postman"
   cask "redis-insight"
   cask "session-manager-plugin"
