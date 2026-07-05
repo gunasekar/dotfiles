@@ -83,4 +83,4 @@ if command -v brew &>/dev/null; then
 fi
 
 # opencode
-export PATH=/Users/guna/.opencode/bin:$PATH
+[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"

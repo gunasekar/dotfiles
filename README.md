@@ -80,7 +80,6 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── mpv/              # mpv player configuration
 ├── ranger/           # Ranger file manager configuration
 ├── topgrade/         # Topgrade (upgrade-all-tools) configuration
-├── zed/              # Zed editor configuration
 ├── swiftbar/         # SwiftBar menu bar plugins (macOS)
 ├── xfce4/            # XFCE4 desktop configuration (Linux)
 └── setup/            # One-off setup scripts (run by hand, not stowed)
