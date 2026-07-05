@@ -129,6 +129,7 @@ if OS.mac?
   brew "telnet"
   brew "terraform-docs"
   brew "tesseract"
+  brew "tailscale"
   brew "tflint"
   brew "yarn"
   brew "yt-dlp"
