@@ -51,6 +51,7 @@ brew "nss"
 brew "nvm"
 brew "oath-toolkit"
 brew "ollama", restart_service: :changed
+brew "opencode"
 brew "openapi-generator"
 brew "opentofu"
 brew "pandoc"
