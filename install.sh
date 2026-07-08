@@ -96,6 +96,18 @@ if [[ "$(uname)" == "Darwin" ]]; then
   echo "  • Colima → ~/.config/colima/default/colima.yaml"
   mkdir -p "$HOME/.config/colima/default"
   stow -v --no-folding colima
+
+  # Tailscale MagicDNS: the Homebrew CLI daemon (see brew/.Brewfile) lacks the
+  # macOS Network Extension entitlement the GUI app has, so it can't register a
+  # nameserver for *.ts.net queries — only a search domain. Fill the gap with a
+  # standard /etc/resolver file, if tailscale is already up and it's not there yet.
+  if command -v tailscale &>/dev/null; then
+    tailscale_suffix=$(tailscale dns status 2>/dev/null | sed -n 's/.*suffix = \([^)]*\)).*/\1/p')
+    if [[ -n "$tailscale_suffix" && ! -f "/etc/resolver/$tailscale_suffix" ]]; then
+      echo "  • Tailscale MagicDNS → /etc/resolver/$tailscale_suffix"
+      echo "nameserver 100.100.100.100" | sudo tee "/etc/resolver/$tailscale_suffix" >/dev/null
+    fi
+  fi
 fi
 
 # --- Linux-only packages ---
