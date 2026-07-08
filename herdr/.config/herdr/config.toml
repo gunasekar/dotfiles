@@ -1,0 +1,22 @@
+# herdr configuration — see https://herdr.dev/docs/configuration/
+# Full default with every documented key: `herdr --default-config`
+#
+# Session layout (set up via `herdr --session <name>`, not this file):
+#   - `local`  session — one workspace per local project.
+#   - `remote` session — one workspace per remote host/project, each pane
+#     just `ssh`-ing into the box (aliases live in dotfiles-private's
+#     ssh/.ssh/config, kept out of this public repo).
+# See sources/herdr.sh for the `hl`/`hr` shortcuts.
+
+[ui]
+# Both sessions end up with several workspaces open at once (per project,
+# per remote host) — show which agent a pane is running on its border
+# instead of having to focus it to find out.
+show_agent_labels_on_pane_borders = true
+
+[session]
+# Reconnect Claude Code/Codex/etc. to their own conversation history after
+# the herdr server restarts (e.g. `herdr update`), instead of a blank pane.
+# This is already the default — pinned explicitly since both sessions rely
+# on it to survive server restarts unattended.
+resume_agents_on_restore = true
