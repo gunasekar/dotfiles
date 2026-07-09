@@ -1,0 +1,75 @@
+#!/bin/sh
+# Pre-connect hook for ssh(1), driven from ~/.ssh/config `Match exec`.
+#
+# Ghostty sends TERM=xterm-ghostty. A host with no matching terminfo entry
+# gives zsh a line editor with no cuu1/cub1/el, so every redraw reprints
+# instead of moving the cursor and typing `ls` echoes as `llsls`. This script
+# makes sure the entry is there, and its exit status tells ssh_config which
+# TERM to send:
+#
+#   exit 0 -> remote has xterm-ghostty  -> SetEnv TERM=xterm-ghostty
+#   exit 1 -> it does not               -> SetEnv TERM=xterm-256color
+#
+# Ghostty ships its own `ssh-terminfo` shell integration that does roughly
+# this, but it is disabled (see ghostty/.config/ghostty/config) because it is
+# wrong twice over: it probes with `infocmp` and installs with a bare
+# `tic -x -`, and both consult whichever ncurses leads PATH on the remote.
+# Where a user-local ncurses (Homebrew, nix) shadows the system one, that is a
+# terminfo database the login shell never reads — so the probe reports success
+# while /usr/bin/zsh still sees nothing. Hence: never probe, and always compile
+# into ~/.terminfo, which every ncurses searches and no package manager shadows.
+#
+# Living in ssh_config rather than in a shell `ssh()` function means scp, rsync,
+# git-over-ssh, ansible and VS Code Remote are covered too — they exec the ssh
+# binary and would sail straight past a zsh function.
+#
+# Usage:
+#   ssh-terminfo-sync user@host   sync, exit 0 when the remote entry is present
+#   ssh-terminfo-sync --ghostty   exit 0 when the local terminal is Ghostty
+set -u
+
+[ "${TERM:-}" = "xterm-ghostty" ] || exit 1
+
+# The ssh_config fallback block asks only "am I in Ghostty?" — it must not sync.
+[ "${1:-}" = "--ghostty" ] && exit 0
+
+target="${1:-}"
+[ -n "$target" ] || exit 1
+
+# We are the install hop below, invoked by our own ssh. Do not recurse.
+[ -z "${SSH_TERMINFO_SYNC:-}" ] || exit 1
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
+ok_cache="$cache_dir/ghostty-ssh-terminfo"
+no_cache="$cache_dir/ghostty-ssh-terminfo.skip"
+
+# This hook runs on every ssh, scp and git push. Remember both answers so a
+# host is probed exactly once — a bare git remote has no tic and never will.
+# Forget a host with: sed -i '' /target/d ~/.cache/ghostty-ssh-terminfo.skip
+grep -qxF "$target" "$ok_cache" 2>/dev/null && exit 0
+grep -qxF "$target" "$no_cache" 2>/dev/null && exit 1
+
+remember() {
+  mkdir -p "$cache_dir" && printf '%s\n' "$target" >>"$1"
+}
+
+terminfo="$(infocmp -0 -x xterm-ghostty 2>/dev/null)" || terminfo=""
+if [ -z "$terminfo" ]; then
+  # No local source to copy from — say so once rather than on every connect.
+  remember "$no_cache"
+  exit 1
+fi
+
+# BatchMode: a hook must never block on a password prompt. Hosts needing one
+# fall back to xterm-256color, which is correct everywhere.
+if printf '%s\n' "$terminfo" |
+  SSH_TERMINFO_SYNC=1 ssh -o BatchMode=yes -o ConnectTimeout=10 "$target" '
+    command -v tic >/dev/null 2>&1 || exit 1
+    mkdir -p "$HOME/.terminfo" && tic -x -o "$HOME/.terminfo" - 2>/dev/null
+  ' >/dev/null 2>&1; then
+  remember "$ok_cache"
+  exit 0
+fi
+
+remember "$no_cache"
+exit 1

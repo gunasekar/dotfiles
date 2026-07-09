@@ -72,8 +72,10 @@ scrollback-limit = 10000
 
 # Enable sudo shell integration (default disables it).
 # ssh-env and ssh-terminfo are deliberately absent: both are unreliable on
-# hosts where a user-local ncurses shadows the system one. `ssh()` in
-# ~/.dotfiles/sources/ssh.sh replaces them — see the comment there.
+# hosts where a user-local ncurses shadows the system one, and enabling
+# ssh-env alone would pin every remote to TERM=xterm-256color. The
+# `Match exec` hook in ~/.ssh/config replaces them, calling
+# ~/.local/bin/ssh-terminfo-sync — see the comment there.
 shell-integration-features = cursor,sudo,title
 
 auto-update = check
