@@ -70,8 +70,11 @@ copy-on-select = false
 # Smaller scrollback than default (10MB)
 scrollback-limit = 10000
 
-# Enable sudo/ssh shell integration (default disables sudo, ssh-env, ssh-terminfo)
-shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo
+# Enable sudo shell integration (default disables it).
+# ssh-env and ssh-terminfo are deliberately absent: both are unreliable on
+# hosts where a user-local ncurses shadows the system one. `ssh()` in
+# ~/.dotfiles/sources/ssh.sh replaces them — see the comment there.
+shell-integration-features = cursor,sudo,title
 
 auto-update = check
 auto-update-channel = stable
