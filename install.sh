@@ -68,6 +68,9 @@ stow -v mpv
 echo "  • Ranger → ~/.config/ranger/"
 stow -v ranger
 
+echo "  • tmux → ~/.config/tmux/tmux.conf"
+stow -v tmux
+
 echo "  • Topgrade → ~/.config/topgrade.toml"
 stow -v topgrade
 

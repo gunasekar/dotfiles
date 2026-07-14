@@ -79,6 +79,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── lazygit/          # Lazygit Git TUI configuration
 ├── mpv/              # mpv player configuration
 ├── ranger/           # Ranger file manager configuration
+├── tmux/             # tmux session persistence (see tmux/README.md)
 ├── topgrade/         # Topgrade (upgrade-all-tools) configuration
 ├── swiftbar/         # SwiftBar menu bar plugins (macOS)
 ├── xfce4/            # XFCE4 desktop configuration (Linux)
