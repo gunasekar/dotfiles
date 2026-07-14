@@ -35,8 +35,15 @@ local function agent_terminal_keys(name)
 end
 
 -- ── Agent picker ───────────────────────────────────────────────────────────
--- fzf runs inside the terminal on first open; exec replaces the shell so the
--- buffer stays live after the agent starts.
+-- fzf runs inside the terminal on first open, and the agent it picks runs in its
+-- own tmux session, so it outlives this panel (and nvim itself) — reattach from
+-- here, a Zed thread or a plain shell.
+--
+-- No `exec` needed here, unlike Zed's terminal_init_command: Snacks runs this
+-- through `$SHELL -c`, which exits on its own when the agent quits. Zed runs its
+-- command inside an *interactive* shell that would otherwise outlive the agent
+-- and leave you at a stray prompt.
+--
 -- To add/remove agents, edit ~/.dotfiles/bin/.local/bin/aigent (the bin package).
 local AGENT_CMD = vim.env.HOME .. "/.dotfiles/bin/.local/bin/aigent"
 

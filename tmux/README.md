@@ -69,7 +69,142 @@ were elsewhere. Off by default — it's noisy on windows holding an idle shell.
 
 **Seeing what's running.** `pane-border-status` labels every pane with its
 running command, so a grid of panes tells you which is `claude` and which is a
-shell, without clicking through them.
+shell, without clicking through them. Agent sessions never show it: they hold
+exactly one pane, and tmux draws no border row for a lone pane.
+
+**Agent sessions survive their frontend.** `aigent` (see `bin/.local/bin/aigent`)
+runs the chosen agent inside a tmux session named `aigent-<project>`, so the agent
+process outlives the terminal that started it.
+
+This is what makes Zed's remote mode usable. Zed runs `aigent` on the ssh host as
+its `terminal_init_command`, and when Zed disconnects or quits, the terminal —
+and the agent process with it — dies. `claude --resume` was the only way back,
+which replays the transcript into a *new* process. Held in tmux, the process
+just keeps running: reconnecting re-attaches to the live conversation, so there
+is nothing to resume. The same session is reachable from Ghostty with
+`tmux a -t aigent-<project>`.
+
+The picker lists what's already running for this project alongside the agents you
+can start, so a new Zed thread can rejoin a session or open a fresh one — your
+choice, rather than the script guessing:
+
+```
+[claude/plan]     Rework the retry budget
+[cursor · #2]     Fix the flaky auth test
+[claude · #3]     Migrate the schema
+new     claude
+new     claude/plan
+…
+```
+
+- `aigent` — pick a running session to rejoin, or an agent to start
+- `aigent new` — skip the running sessions and start a fresh one
+- `aigent commit` — one-shot, never touches tmux
+- `ctrl-x` in the picker — kill the highlighted session
+
+`ctrl-x` is there because sessions outlive the terminal that started them, which
+is the entire point — so nothing else ever reaps the ones you're done with, and
+they hold their scrollback until something does.
+
+**What is running: `@agent`, recorded rather than detected.** `aigent` stamps the
+entry you picked onto the session as an `@agent` user option. Working it out from
+the process afterwards is not possible — `claude` reports `claude.exe` (it's a Bun
+single-file executable), `cursor-agent` reports bare `node` (a Node wrapper). Only
+what launched it knows.
+
+**What it's working on: the agent's own session name, free.** Agents publish it as
+the terminal title (OSC 2), and tmux hands it back as `#{pane_title}` — Claude Code
+puts its summary there, the same name `/resume` lists. Nothing has to be parsed,
+hooked or scraped; it's already in tmux. Two `claude` sessions in one project would
+otherwise be tellable apart only by opening them.
+
+Two guards on that format, both load-bearing:
+
+- tmux **seeds `pane_title` with the hostname**, so "has a title" is not "is
+  non-empty" — a program that never set one reads back `airbochs`. That case falls
+  back to the project directory (tab) or shows nothing (picker).
+- Claude Code leads with an **animated spinner glyph** (`⠐ Set up tmux…`, a new
+  frame every tick), so the first word is stripped. A glyph-less title (opencode's
+  constant `OpenCode`) has no space to match and passes through whole.
+
+Together they drive Ghostty's tab title — `claude · Set up tmux with Ghostty
+terminal` — instead of the default `#S:#W · #{pane_current_command}`, which for an
+agent is wrong three times over: `aigent-_dotfiles` is internal bookkeeping, the
+window name is whatever tmux last auto-renamed it to, and the command is the binary.
+The title reads `@agent` directly, so the window name never enters into it; every
+other session keeps the default form.
+
+The tmux **session** name is deliberately *not* renamed to the task. It's the
+identity the picker matches on (`aigent-<project>`, `-2`, `-3`…), the thing
+`tmux a -t aigent-myapi` addresses, and tmux forbids `.` and `:` in it — a name that
+changes every time the agent re-summarises is a name nothing can rely on.
+
+**One agent, one pane.** A session here *is* an agent: Zed and nvim each treat it as
+a single view, the picker gives it a single row, and `@agent` labels it as one thing.
+A second pane or window would make all three lie.
+
+The split and new-window keys are guarded, so nothing is ever created:
+
+```tmux
+bind | if -F '#{@agent_locked}' 'display "agent session: one agent, one pane"' \
+                                'split-window -h -c "#{pane_current_path}"'
+```
+
+`aigent` sets `@agent_locked` on the sessions it creates; the binding reads it from
+whichever session the key was pressed in. The binding is server-global — every tmux
+binding is — but the *behaviour* is per-session, so a tmux session you started
+yourself splits exactly as before. `|`, `-`, `"`, `%` and `c` are all guarded.
+
+A hook can't do this. **Every tmux hook is `after-*`** — there is no
+`before-split-window` — so a hook could only create the pane and then kill it.
+Refusing the key is strictly better: no pane is born, nothing is destroyed.
+
+Deliberate routes stay open, by choice: `tmux split-window -t aigent-api` from
+another terminal, `join-pane` (which fires no hook at all and is uncatchable), and
+the split entries inside the `prefix + <` / `>` context menus. Each one names the
+session as a target or takes real navigation to reach — none is the accidental
+keypress this guards against. It's accident-prevention, not a boundary.
+
+**No chrome either.** `aigent` sets `status off` on the sessions it creates: the
+status bar would spend the bottom row on a session name you already know, a clock,
+and a window list of exactly one window. The agent gets the full 24 rows of a
+24-row terminal instead of 23.
+
+It's session-scoped (`set-option -t <session>`), so a tmux session you start yourself
+keeps its status bar. Verify with `tmux show-options -t <session> status`; a bare
+`tmux show-options` reports whatever session you're *currently* in, which is a good
+way to scare yourself into thinking it went global.
+
+Sessions are matched by exact name or an `-N` suffix, never by prefix, so
+`aigent-api` never swallows `aigent-api-worker` — a different project.
+
+One tmux session per agent, rather than one session per project with agents as
+windows. That's forced, not preferred: tmux's *current window* is session state,
+not client state, so two clients attached to one session mirror each other. Zed
+threads are independent clients, so under a shared session, switching to your agent
+in one thread would yank another thread's view onto the same window.
+
+**Every frontend behaves the same.** A Zed thread, an nvim agent panel and a
+plain shell all run the same `aigent` script and all get the same tmux session —
+nothing special-cases the caller, so an agent started from an nvim panel outlives
+nvim just as a Zed one outlives Zed.
+
+The one exception isn't a frontend: already inside tmux (`$TMUX`), `aigent` runs
+the agent directly, since the process is persistent regardless and nesting would
+double every prefix key.
+
+**`n` is not a tmux thing.** `n` (see `sources/dev.sh`) just opens Neovim on a
+project, in the current pane. Wrapping the editor in its own tmux session would only
+buy persistence for the editor — cheap to reopen — while putting a tmux prefix key
+underneath every nvim binding. Persistence is `aigent`'s job, and `aigent` does it
+wherever it's run, so the editor doesn't need a session to keep its agents alive.
+
+`tmux ls` is therefore all agents, one per session:
+
+```
+aigent-api     an agent for ~/src/api
+aigent-api-2   a second one, running alongside it
+```
 
 **Scripting agents.** The reason tmux beats a plain ssh session for this work:
 panes are addressable from outside.
