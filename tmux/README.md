@@ -27,7 +27,8 @@ or `tmux kill-server` for a clean slate.
 
 ## Daily Commands
 
-Prefix is the default `Ctrl+b` — press it, release, then the key.
+Prefix is `Ctrl+b` **or** `Alt+Space` — press either, release, then the key.
+Both are always live; the tables below show `Ctrl+b`.
 
 | Action | Command |
 |--------|---------|
@@ -82,8 +83,11 @@ tmux new-session -d -s agents 'claude'  # launch one detached
 This is exactly how the agent-monitoring tools out there work, and you can drive
 it directly without installing any of them.
 
-**Scrollback** is 50k lines — agent runs are verbose enough to bury their own
-starting point at tmux's 2k default.
+**Scrollback** is 20k lines. tmux's 2k default buries the start of an agent run,
+but scrollback is the one part of tmux that costs real memory: measured at
+~3.9KB per line of wide truecolor output, so a pane holding tmux-sensible's
+50k lines of agent output reaches ~190MB. 20k is ~78MB, and you only pay for
+lines actually produced — idle panes are free.
 
 ## Notes
 
@@ -122,24 +126,125 @@ set -as terminal-features ",xterm-ghostty:RGB"    # re-states what Tc already sa
 This relies on the `xterm-ghostty` terminfo entry existing on the remote, which
 the `Match exec` hook in `~/.ssh/config` handles (see `~/.local/bin/ssh-terminfo-sync`).
 
+### Extended keys, or half your Neovim bindings die
+
+`set -s extended-keys on` is not optional here. Legacy terminal input can only
+encode a couple of dozen control keys; anything outside that set has no byte
+representation at all and silently never reaches the application inside tmux.
+That covers much of the Neovim agent workflow:
+
+| Key | Binding | Works without extended-keys? |
+|---|---|---|
+| `<C-\>` | toggle right panel | yes — `0x1c` is a real control code |
+| `` <C-`> `` | toggle bottom panel | **no** |
+| `<C-S-\>` | new agent session | **no** |
+| `<C-S-]>` / `<C-S-[>` | cycle agent sessions | **no** |
+| `<C-S-.>` | send context to agent | **no** |
+| `<C-Esc>` | agent panel | **no** |
+
+`Ctrl+Shift+<punct>`, `Ctrl+backtick` and `Ctrl+Esc` exist only under CSI-u.
+Three settings are all required, and this is the one place Ghostty's terminfo
+is **not** enough (unlike `Tc` and `Smulx`):
+
+```tmux
+set -s extended-keys always
+set -s extended-keys-format csi-u
+set -as terminal-features "xterm-ghostty:extkeys"
+```
+
+- **`extkeys`** — tmux requests extended keys from the terminal only *if it
+  believes the terminal supports them*, and it decides that from terminfo.
+  `xterm-ghostty` doesn't advertise `extkeys`, so without this tmux never asks
+  Ghostty, and the keys never arrive at all.
+- **`always`** — with `on`, tmux forwards only to apps that ask via tmux's own
+  `modifyOtherKeys` handshake. Neovim asks via the **Kitty** protocol, which
+  tmux doesn't implement ([tmux#3335](https://github.com/tmux/tmux/issues/3335)),
+  so `on` forwards nothing to it.
+- **`csi-u`** — the default format is `xterm` (`^[[27;6;92~`); Neovim and Claude
+  Code expect `^[[92;6u`.
+
+**These take effect when a client attaches, so `prefix + r` is not enough** —
+run `tmux kill-server` and start a fresh session.
+
+#### Shifted punctuation arrives under a different name inside tmux
+
+Even wired up correctly, `Ctrl+Shift+<punctuation>` is reported *differently*
+inside tmux, and this is not fixable in config. Bare Ghostty speaks the **Kitty**
+keyboard protocol to Neovim, which reports the **base** key — `Ctrl+Shift+\` is
+`<C-S-\>`. tmux doesn't implement that protocol
+([tmux#3335](https://github.com/tmux/tmux/issues/3335), closed unimplemented) and
+negotiates xterm's older `modifyOtherKeys`, which reports the **shifted
+character** — so the same keypress arrives as `<C-S-|>`.
+
+| Key | Outside tmux | Inside tmux |
+|---|---|---|
+| `Ctrl+Shift+\` | `<C-S-\>` | `<C-S-\|>` |
+| `Ctrl+Shift+]` | `<C-S-]>` | `<C-S-}>` |
+| `Ctrl+Shift+[` | `<C-S-[>` | `<C-S-{>` |
+| `Ctrl+Shift+.` | `<C-S-.>` | `<C-S->>` |
+| ``Ctrl+Shift+` `` | ``<C-S-`>`` | `<C-S-~>` |
+| `Ctrl+Shift+L` | `<C-S-L>` | `<C-S-L>` — letters are fine |
+
+So `plugins/agents.lua` and `plugins/editor/snacks.lua` bind **both spellings**
+to the same action. Zellij is the only multiplexer that speaks the Kitty
+protocol natively, if this ever becomes worth switching for.
+
+To check the wiring: run `cat -v` in a pane and press `Ctrl+Shift+\`. You should
+see `^[[92;6u`. Nothing at all means the negotiation isn't happening.
+
 ### Images need allow-passthrough
 
 `set -g allow-passthrough on` is required by `image.nvim` / `diagram.nvim` —
 without it, tmux swallows the Kitty graphics escapes and diagrams render
 nothing. See `nvim/.config/nvim/lua/plugins/diagram.lua`.
 
-### Prefix stays Ctrl+b
+### Colours follow Ghostty's Ayu theme
 
-`Ctrl+a` (the classic Screen rebind) shadows readline **beginning-of-line** in
-zsh. `Ctrl+Space` shadows **blink.cmp's force-completion key**
-(`nvim/.config/nvim/lua/plugins/lsp/completion.lua`). `Ctrl+b`'s only casualty
-is readline backward-char, which the arrow keys already cover.
+tmux's defaults are green — nobody chose that, it's just the default. The style
+section instead borrows Ghostty's own palette so a tmux pane and a Ghostty split
+look like the same application:
 
-### Mouse mode is off
+| Element | Colour | Why |
+|---|---|---|
+| Inactive pane border | `#555555` | exactly Ghostty's `split-divider-color` |
+| Active pane border, current window | `#e6b450` | Ayu's accent — Ghostty's cursor colour |
+| Status bar | `bg=default`, `fg=#686868` | transparent, so it's the terminal's true black |
+| Window with a bell | `#f07178` | Ayu red — an agent wanting input should shout |
+| Copy-mode selection | `#409fff` | Ghostty's `selection-background` |
 
-`set -g mouse on` hands scroll and click-drag to tmux copy-mode, which breaks
-Ghostty's native scrollback and select-to-copy inside panes. Commented out in
-`tmux.conf` with the trade-off spelled out. Scroll with `Ctrl+b` `[`, then `q`.
+### Two prefixes: Ctrl+b and Alt+Space
+
+Both are live (`prefix` and `prefix2`). `Ctrl+b` stays primary so every
+cheatsheet, guide and remote host behaves as documented; `Alt+Space` is the
+comfortable one to actually reach for.
+
+The two prefixes people usually reach for are both taken here: `Ctrl+a` (the
+classic Screen rebind) shadows readline **beginning-of-line** in zsh, and
+`Ctrl+Space` shadows **blink.cmp's force-completion key**
+(`nvim/.config/nvim/lua/plugins/lsp/completion.lua`). `Alt+Space` is free across
+zsh, Neovim (only `<A-j>`/`<A-k>` are bound) and Ghostty.
+
+### Mouse mode is on
+
+Click a pane to focus it, wheel to scroll history, drag a border to resize,
+click a window name in the status line to switch.
+
+The usual warning against this doesn't apply. tmux runs on the **alternate
+screen** (it emits `smcup` on attach), so Ghostty's scrollback receives no pane
+output at all — there is no native scrollback to trade away, and with the mouse
+off the wheel does nothing whatsoever. Pane history lives only inside tmux.
+
+The one real trade is selection: a drag belongs to tmux now. That's mostly fine,
+because tmux's drag-select copies to the macOS clipboard anyway via
+`set-clipboard`. Mouse release uses `copy-selection-no-clear` rather than the
+default `copy-pipe-and-cancel`, so a selection copies **without** jumping back
+to the live cursor — you stay scrolled with the highlight still visible. A
+single click then exits copy mode (clears the highlight and returns to the live
+cursor). `Escape` clears the highlight without leaving if you want another
+selection; `q` or scrolling to the bottom also leave. When you want Ghostty's
+own selection — to span pane borders, say — hold **Shift** while dragging:
+Ghostty's `mouse-shift-capture` defaults to `false`, so Shift bypasses mouse
+reporting entirely.
 
 ### Ghostty splits vs. tmux panes
 
