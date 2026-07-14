@@ -142,11 +142,28 @@ if [[ "$(uname)" == "Darwin" ]]; then
   # macOS Network Extension entitlement the GUI app has, so it can't register a
   # nameserver for *.ts.net queries — only a search domain. Fill the gap with a
   # standard /etc/resolver file, if tailscale is already up and it's not there yet.
+  #
+  # This is the one step here that needs root, and it is the *least* important thing
+  # the script does — a missing resolver file costs you *.ts.net name resolution and
+  # nothing else. So it must never be able to take the run down with it, which is
+  # exactly what it used to do: over ssh there is no tty, sudo cannot prompt, it exits
+  # non-zero, and `set -e` kills the script — silently skipping the git hook and the
+  # version stamp at the bottom, so an otherwise-complete install reported failure and
+  # left no record of itself. Deploying to a remote box is the main way this script is
+  # run, so the one step that cannot work there had veto over all of it.
+  #
+  # `sudo -n` asks the question without ever prompting: if the answer is no, print the
+  # command and carry on.
   if command -v tailscale &>/dev/null; then
     tailscale_suffix=$(tailscale dns status 2>/dev/null | sed -n 's/.*suffix = \([^)]*\)).*/\1/p')
     if [[ -n "$tailscale_suffix" && ! -f "/etc/resolver/$tailscale_suffix" ]]; then
-      echo "  • Tailscale MagicDNS → /etc/resolver/$tailscale_suffix"
-      echo "nameserver 100.100.100.100" | sudo tee "/etc/resolver/$tailscale_suffix" >/dev/null
+      if sudo -n true 2>/dev/null; then
+        echo "  • Tailscale MagicDNS → /etc/resolver/$tailscale_suffix"
+        echo "nameserver 100.100.100.100" | sudo -n tee "/etc/resolver/$tailscale_suffix" >/dev/null
+      else
+        echo "  • Tailscale MagicDNS → skipped (needs sudo, and there's no tty to ask on)"
+        echo "      echo 'nameserver 100.100.100.100' | sudo tee /etc/resolver/$tailscale_suffix"
+      fi
     fi
   fi
 fi
