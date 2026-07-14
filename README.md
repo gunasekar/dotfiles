@@ -227,6 +227,33 @@ Plugins use native `<swiftbar.*>` metadata.
 
 ## Maintenance
 
+### Which version last ran here?
+
+Under Stow, "what version is deployed?" has no answer — every target is a symlink
+*into* this repo, so `~/.config` always mirrors the current checkout, and a `git pull`
+silently changes what's deployed without running anything. What *is* answerable is when
+the installer last ran on this machine, and against what. `install.sh` records it:
+
+```console
+$ cat ~/.local/state/dotfiles/install
+version=b7b71383-dirty
+commit=b7b71383a7b9cac73b272966d70752107a48edd1
+date=2026-07-14 20:23:18Z
+host=airbochs
+```
+
+The next run prints it back before it does anything:
+
+```
+  last install here: a4f018ae  (2026-05-02 09:14:07Z)
+  installing now:    b7b71383-dirty
+```
+
+`-dirty` means the working tree had uncommitted edits at install time, so the commit
+alone doesn't describe what actually landed — which is exactly the state a
+half-finished remote debugging session leaves behind. The stamp is written only after
+every package has stowed successfully, so a failed run never claims credit.
+
 ### Update Homebrew packages
 ```bash
 brew update

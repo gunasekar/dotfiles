@@ -21,6 +21,38 @@ fi
 # Change to dotfiles directory
 cd "$DOTFILES"
 
+# --- Version stamp ---
+#
+# "Which version is deployed here?" has no answer under stow: every target is a symlink
+# *into* this repo, so ~/.config always mirrors whatever the checkout happens to be
+# right now. Pulling changes silently changes what's deployed, without running anything.
+#
+# The question that does have an answer, and is the one you actually want on a box you
+# last touched months ago, is "when did the installer last run here, and against what?"
+# Nothing records that, so record it. Written at the end (so a failed run doesn't claim
+# success) and read back at the start.
+#
+# XDG_STATE_HOME, not cache: this must survive a cache purge to be worth anything.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
+STAMP="$STATE_DIR/install"
+
+# --dirty is the load-bearing flag. A bare commit would lie about a working tree with
+# uncommitted edits — which is exactly the state a half-finished remote debug leaves
+# behind, and exactly when you want to be told. Resolved once, here, so the banner and
+# the stamp can never disagree.
+VERSION=$(git -C "$DOTFILES" describe --always --dirty --abbrev=8 2>/dev/null || echo "unknown")
+
+# Read with sed, not `source`: the format is shell-shaped, but sourcing a file in order
+# to print it means a corrupted stamp gets *executed*, and there's no reason to hand a
+# state file that privilege just to render two lines.
+if [[ -r "$STAMP" ]]; then
+  prev_version=$(sed -n 's/^version=//p' "$STAMP")
+  prev_date=$(sed -n 's/^date=//p' "$STAMP")
+  echo "  last install here: ${prev_version:-unknown}  (${prev_date:-unknown})"
+  echo "  installing now:    $VERSION"
+  echo ""
+fi
+
 # Deploy the per-user stow ignore list before any stow runs. A global-ignore
 # file REPLACES stow's built-in defaults, so .stow-global-ignore reproduces them
 # and adds macOS junk (.DS_Store, ._*, .Spotlight-V100, …) — stow doesn't read
@@ -148,8 +180,20 @@ else
   echo "  • pre-commit not installed yet — after 'brew bundle --global', run 'pre-commit install'"
 fi
 
+# Only now, at the bottom: `set -e` means we can only get here if every stow above
+# succeeded, so the stamp records a real install rather than an attempted one.
+# Shell-sourceable (key=value), because the reader is the next run of this script.
+mkdir -p "$STATE_DIR"
+cat >"$STAMP" <<EOF
+version=$VERSION
+commit=$(git -C "$DOTFILES" rev-parse HEAD 2>/dev/null || echo unknown)
+date=$(date -u '+%Y-%m-%d %H:%M:%SZ')
+host=$(hostname -s)
+EOF
+
 echo ""
 echo "Public dotfiles installed successfully!"
+echo "  version: $VERSION   (recorded in $STAMP)"
 echo ""
 echo "Next steps:"
 echo "  1. Install Homebrew packages: brew bundle --global"
