@@ -58,19 +58,28 @@ Windows and panes number from 1 and renumber themselves when one closes.
 
 ## Agent Sessions
 
-**Notifications.** Claude Code rings the terminal bell when it finishes or wants
-input. `monitor-bell` + `bell-action any` + `visual-bell off` keep that a real
-bell, so it reaches Ghostty instead of being swallowed into a tmux status line.
+The first three below are plain tmux settings that apply to every session. The rest
+is `aigent`, which owns agent sessions specifically — and answers the same questions
+properly, which is why the tmux-native mechanisms are described here mostly so you
+know what *not* to trust.
 
-**Finding the idle agent.** `Ctrl+b` `m` arms a silence alert on the current
-window: if the pane produces no output for 60s, the window is flagged in the
-status bar. Useful for spotting an agent that finished (or stalled) while you
-were elsewhere. Off by default — it's noisy on windows holding an idle shell.
+**Bell notifications.** Claude Code rings the terminal bell when it finishes or
+wants input. `monitor-bell` + `bell-action any` + `visual-bell off` keep that a real
+bell, so it reaches Ghostty instead of being swallowed into a tmux status line. It's
+Claude-only, though — the other three agents never ring.
 
-**Seeing what's running.** `pane-border-status` labels every pane with its
-running command, so a grid of panes tells you which is `claude` and which is a
-shell, without clicking through them. Agent sessions never show it: they hold
-exactly one pane, and tmux draws no border row for a lone pane.
+**Silence alerts.** `Ctrl+b` `m` arms `monitor-silence` on the current window: no
+output for 60s and the window is flagged in the status bar. Off by default, and
+**not** the thing to reach for on an agent. `#{window_silence_flag}` is sticky alert
+bookkeeping rather than a live "is this pane producing output" bit — it stays set
+while a pane is actively painting, the same trap as `#{session_activity}` (see
+*Diff the screen*, below). It's a rough "did that build stop" flag for ordinary
+windows, nothing more.
+
+**Pane labels.** `pane-border-status` labels every pane with its running command, so
+a grid of panes tells you which is `claude` and which is a shell. Agent sessions
+never show it: they hold exactly one pane, and tmux draws no border row for a lone
+pane.
 
 **Agent sessions survive their frontend.** `aigent` (see `bin/.local/bin/aigent`)
 runs the chosen agent inside a tmux session named `aigent-<project>`, so the agent
@@ -89,9 +98,9 @@ can start, so a new Zed thread can rejoin a session or open a fresh one — your
 choice, rather than the script guessing:
 
 ```
-[claude/plan]     Rework the retry budget
-[cursor · #2]     Fix the flaky auth test
-[claude · #3]     Migrate the schema
+● [blocked · claude/plan]     Rework the retry budget   ← asking you something; sorts first
+● [waiting · cursor · #2]     Fix the flaky auth test   ← finished its turn, your move
+● [working · claude · #3]     Migrate the schema        ← getting on with it; leave it alone
 new     claude
 new     claude/plan
 …
@@ -99,6 +108,7 @@ new     claude/plan
 
 - `aigent` — pick a running session to rejoin, or an agent to start
 - `aigent new` — skip the running sessions and start a fresh one
+- `aigent status` — every agent session on the box, as TSV
 - `aigent commit` — one-shot, never touches tmux
 - `ctrl-x` in the picker — kill the highlighted session
 
@@ -138,6 +148,73 @@ The tmux **session** name is deliberately *not* renamed to the task. It's the
 identity the picker matches on (`aigent-<project>`, `-2`, `-3`…), the thing
 `tmux a -t aigent-myapi` addresses, and tmux forbids `.` and `:` in it — a name that
 changes every time the agent re-summarises is a name nothing can rely on.
+
+**Is it working, or does it want you? Diff the screen.** Knowing what an agent *is*
+and what it's *on* still doesn't say whether it needs you — and needing you is the
+only reason you opened the picker. tmux can tell you whether a *client* is attached
+(`session_attached`), but that's a fact about your terminal, not about the agent:
+three sessions here all read "attached" while one was mid-edit and two had been
+sitting on a finished turn for twenty minutes.
+
+The signal that *is* about the agent is the screen. Every one of these TUIs animates
+while it works — a spinner, a token count, an elapsed timer — so a working pane's
+visible screen differs 350ms later, and a stopped one's is byte-for-byte identical.
+A permission prompt doesn't animate; the cursor blinking in an empty input box is
+drawn by the terminal, not written to the pty. So `aigent` hashes each screen, waits
+once for the whole list, and hashes again.
+
+| | |
+|---|---|
+| `working` (dim) | the screen changed across the gap |
+| `blocked` (red) | still, and the bottom of it is asking you a question |
+| `waiting` (yellow) | still, and not asking — it finished its turn, your move |
+
+Rows sort by what they want from you, not by name, so the agent you have to go
+unblock lands under the cursor.
+
+**This is why there are no hooks.** Claude Code has `Stop` and `PermissionRequest`
+hooks that report exactly this — and *only* for Claude. `cursor-agent`, `opencode`
+and `antigravity` have nothing of the sort, so a hook-built status would light up one
+row of the picker and leave the rest permanently blank. Repainting a pty is the one
+thing all four already do, because it's what makes them agents in a terminal.
+
+Two things worth knowing before touching it:
+
+- **Don't swap this for a tmux timestamp.** `#{session_activity}` looks like exactly
+  the "last output" clock this wants and is not one: a *detached* pane printing every
+  200ms still had its activity age grow 0 → 3 → 5s. It tracks tmux's sticky alert
+  bookkeeping — same reason `monitor-silence`'s flag stays set while a pane is
+  actively producing — not bytes on the pty. Two captures is the honest way.
+- **The error is one-directional, by construction.** Guessing "working" needs both
+  samples to differ, so a still screen can never read as working — only a working one
+  can read as still. The bad case is a slow-painting agent shown as `waiting`: you
+  open it and find it busy. The case that would actually cost you — a stopped agent
+  hidden under `working` while it waits for you — cannot happen. `AGENT_SETTLE` is
+  the gap (0.35s, and the whole latency the picker pays); real agents spin at ~10Hz
+  and are caught 6 times out of 6 even at 0.15s, so there's room to spare.
+
+To see what a blocked agent is actually *asking*, attach: it's one keypress, and
+`prefix + d` gets you back out.
+
+`aigent status` is the same classification without the picker — every agent session
+on the box, one TSV line each (`state`, `session`, `agent`, `task`), sorted
+most-wants-you first. Deliberately not scoped to the project you're standing in:
+that's the one thing the picker can't be, and it's the "what did I leave running
+while I walked away" view a notifier needs.
+
+```console
+$ aigent status
+blocked   aigent-lattiq-api    claude/plan   Rework the retry budget
+waiting   aigent-augur         cursor        Fix the flaky auth test
+working   aigent-_dotfiles     claude        Set up tmux with Ghostty terminal
+```
+
+Two knobs, read by both:
+
+| env | default | what it does |
+| --- | --- | --- |
+| `AGENT_SETTLE` | `0.35` | gap between the two screen samples — raise it for an agent that repaints slower than once a second |
+| `AGENT_ASK_RE` | *(see script)* | regex that means "this agent is asking you something", i.e. `blocked` rather than `waiting` |
 
 **One agent, one pane.** A session here *is* an agent: Zed and nvim each treat it as
 a single view, the picker gives it a single row, and `@agent` labels it as one thing.
