@@ -97,7 +97,9 @@ if [[ "$(uname)" == "Darwin" ]]; then
   echo "  • SwiftBar plugins → ~/.config/swiftbar/plugins/"
   mkdir -p "$HOME/.config/swiftbar/plugins"
   stow -v --no-folding swiftbar
-  defaults write com.ambar.SwiftBar PluginDirectory "$HOME/.config/swiftbar/plugins" 2>/dev/null || true
+  # com.ameba, not com.ambar — `osascript -e 'id of app "SwiftBar"'`. The typo wrote the
+  # key into a domain no app reads, and `|| true` swallowed the fact that it did nothing.
+  defaults write com.ameba.SwiftBar PluginDirectory "$HOME/.config/swiftbar/plugins" 2>/dev/null || true
 
   # --no-folding — Colima writes VM state into this dir; only the yaml is ours
   echo "  • Colima → ~/.config/colima/default/colima.yaml"

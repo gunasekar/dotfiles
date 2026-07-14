@@ -215,6 +215,52 @@ Two knobs, read by both:
 | --- | --- | --- |
 | `AGENT_SETTLE` | `0.35` | gap between the two screen samples — raise it for an agent that repaints slower than once a second |
 | `AGENT_ASK_RE` | *(see script)* | regex that means "this agent is asking you something", i.e. `blocked` rather than `waiting` |
+| `AGENT_NOTIFY_AFTER` | `60` | how long an agent must sit wanting you before the SwiftBar plugin says so (see *Being told*) |
+
+### Being told, instead of going to look
+
+The picker only speaks when you open it. `aigent status` is what makes it speak
+without being asked, and the one caller today is a SwiftBar plugin,
+`swiftbar/.config/swiftbar/plugins/agents.10s.sh`. SwiftBar is already installed and
+already polls scripts on a schedule — the interval is just the filename — so "tell me
+when an agent needs me" cost one file and **no new daemon**.
+
+It shows a count in the menu bar, coloured by the worst state. The count updates
+immediately; the **notification deliberately does not**.
+
+**It doesn't announce "finished" — it announces "still waiting, a minute later."**
+Announcing the `working` → stopped edge is the obvious thing to do and it's wrong: an
+agent you're sitting in front of crosses that edge at the end of *every turn*, so you
+get a popup about the pane you're looking at, once per reply, forever. That's not a
+notification, it's a metronome.
+
+There's no way to ask tmux whether you're *looking* at a session. Every session has a
+client attached — a Ghostty window, a Zed thread, an nvim panel — so attachment says
+nothing. `#{client_activity}` is genuinely useful (it tracks your keystrokes, not pane
+output: verified frozen through 48s of an agent painting flat out), but it answers
+"when did you last type", and after a three-minute turn that reads identically whether
+you're staring at the pane or asleep.
+
+What separates the two is what you do *next*. Sitting there, you reply within seconds
+and it goes back to `working`. Walked away, it just sits. So the plugin waits
+`AGENT_NOTIFY_AFTER` seconds (default 60) and speaks only if it's *still* stopped.
+Being there silences it for free — no focus detection, nothing to get wrong — and
+walking away is the only thing that lets it through. It also means any future
+misclassification has to persist for a full minute before it can reach you.
+
+A session that was already idle when the plugin first saw it is never announced (that
+isn't news), and each stopped episode is announced at most once. `waiting` → `blocked`
+counts as a fresh episode, because a permission prompt is a new thing to say.
+
+It prints nothing when no agent is running, which is how SwiftBar is told to hide the
+item entirely — a dot that's always there is a dot you stop seeing.
+
+Rows are informational and don't attach on click. On macOS a terminal can only be
+launched with a command via `open -na Ghostty.app --args -e …`, and Ghostty raises an
+**"Allow Ghostty to Execute"** confirmation dialog every single time, with no opt-out —
+a button that pops a permission dialog on every use isn't worth having. It's also
+mostly redundant: when the notification fires, that session is already open in Zed or
+nvim, so you switch to it rather than spawning a terminal.
 
 **One agent, one pane.** A session here *is* an agent: Zed and nvim each treat it as
 a single view, the picker gives it a single row, and `@agent` labels it as one thing.
