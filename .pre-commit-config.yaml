@@ -6,7 +6,7 @@ repos:
   # run on save (formatters.lua, Zed settings.json's "Shell Script" formatter)
   # so files get the same 2-space/case-indent style whether saved in an
   # editor or committed from the CLI. `types: [shell]` auto-detects by
-  # shebang too, so it also covers extension-less scripts like bin/.local/bin/agent.
+  # shebang too, so it also covers extension-less scripts like bin/.local/bin/aigent.
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.13.1-1
     hooks:

@@ -1,13 +1,17 @@
 -- Panel layout manager: pins neo-tree (left), terminals (bottom/right) into
 -- stable slots so Neovim's window equalization never steals their dimensions.
 -- Both bottom and right slots share ft = "snacks_terminal", so filters on the
--- buffer name discriminate them: agent/claude/cursor-agent go right,
+-- buffer name discriminate them: aigent/claude/cursor-agent go right,
 -- plain shell goes bottom. Buffer names look like: term://...//<pid>:/path/to/cmd
+--
+-- The picker is spelled `aigent`, not `agent` (see bin/.local/bin/aigent) — and
+-- "agent" is not a substring of "aigent", so this match has to be spelled the
+-- same way or every agent panel silently lands in the *bottom* slot instead.
 local function is_right_terminal(buf)
   local name = vim.api.nvim_buf_get_name(buf)
   return name:find("claude", 1, true) ~= nil
       or name:find("cursor-agent", 1, true) ~= nil
-      or name:find(".local/bin/agent", 1, true) ~= nil
+      or name:find(".local/bin/aigent", 1, true) ~= nil
 end
 
 local function is_float_terminal(buf)

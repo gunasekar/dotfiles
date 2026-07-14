@@ -8,13 +8,15 @@ function n {
   nvim "${@:-.}"
 }
 
-# `agent` (~/.local/bin/agent, see bin/ package) is the same fzf picker used
+# `aigent` (~/.local/bin/aigent, see bin/ package) is the same fzf picker used
 # by nvim's right panel and Zed's agent.terminal_init_command — a real
 # command rather than an alias so it also works from scripts and
-# non-interactive shells. CLI installers (cursor-agent, grok, ...) also
-# write to ~/.local/bin/agent and may clobber this symlink on install/update
-# — if `agent` stops launching the picker, re-run install.sh (or `stow bin`
-# from ~/.dotfiles) to restore it.
+# non-interactive shells.
+#
+# It is `aigent` and not `agent` because ~/.local/bin is a shared namespace: every CLI
+# installer drops binaries there, and cursor-agent ships one called `agent` that
+# overwrote our symlink on install *and on every self-update*, silently turning
+# `agent` into Cursor's CLI. `agent` is a name vendors want; `aigent` is not.
 
 # Lazy tool aliases
 command -v lazygit &>/dev/null && alias gitl='lazygit'

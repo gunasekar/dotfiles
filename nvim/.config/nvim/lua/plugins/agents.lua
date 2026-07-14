@@ -37,8 +37,8 @@ end
 -- ── Agent picker ───────────────────────────────────────────────────────────
 -- fzf runs inside the terminal on first open; exec replaces the shell so the
 -- buffer stays live after the agent starts.
--- To add/remove agents, edit ~/.dotfiles/bin/.local/bin/agent (the bin package).
-local AGENT_CMD = vim.env.HOME .. "/.dotfiles/bin/.local/bin/agent"
+-- To add/remove agents, edit ~/.dotfiles/bin/.local/bin/aigent (the bin package).
+local AGENT_CMD = vim.env.HOME .. "/.dotfiles/bin/.local/bin/aigent"
 
 local function right_win_opts(count)
   return {
