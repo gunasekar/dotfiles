@@ -247,8 +247,14 @@ return {
 
     -- Bottom panel — supports multiple terminal sessions, same as the
     -- right-panel agent picker (toggle current / new / cycle sessions)
+    -- <C-S-`> is bound twice: inside tmux the same keypress arrives as <C-S-~>,
+    -- because tmux speaks xterm's modifyOtherKeys (which reports the shifted
+    -- character) rather than the Kitty protocol Ghostty uses directly. See the
+    -- comment in plugins/agents.lua. <C-S-L>/<C-S-H> need no alias — letters
+    -- resolve the same under both protocols.
     { "<C-`>",     toggle_bottom_panel, desc = "Toggle bottom panel", mode = { "n", "i", "v", "t" } },
     { "<C-S-`>",   new_bottom_session,  desc = "New terminal", mode = { "n", "i", "v", "t" } },
+    { "<C-S-~>",   new_bottom_session,  desc = "New terminal (tmux)", mode = { "n", "i", "v", "t" } },
     { "<C-S-L>",   bottom.next,         desc = "Next terminal", mode = { "n", "i", "v", "t" } },
     { "<C-S-H>",   bottom.prev,         desc = "Prev terminal", mode = { "n", "i", "v", "t" } },
     { "<leader>tt", new_bottom_session, desc = "New terminal" },

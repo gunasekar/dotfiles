@@ -164,16 +164,31 @@ return {
       },
       focus_after_send = false,
     },
+    -- Ctrl+Shift+<punctuation> arrives under two different names depending on
+    -- whether we're inside tmux, so each one is bound twice.
+    --
+    -- Bare Ghostty speaks the Kitty keyboard protocol to Neovim, which reports
+    -- the *base* key: Ctrl+Shift+\ is <C-S-\>. tmux does not implement that
+    -- protocol (tmux#3335, closed unimplemented) and negotiates xterm's older
+    -- modifyOtherKeys instead, which reports the *shifted* character — so the
+    -- same physical keypress arrives as <C-S-|>. Verified with vim.on_key.
+    --
+    -- Letters are unaffected (<C-S-L> resolves identically both ways); only
+    -- shifted punctuation splits:  \ →|   ] →}   [ →{   . →>
     keys = {
       { "<C-\\>",     sessions.toggle, mode = { "n", "i", "v", "t" }, desc = "Toggle right panel" },
       { "<C-S-\\>",   sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session" },
+      { "<C-S-|>",    sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session (tmux)" },
       { "<leader>ac", sessions.toggle, desc = "Toggle right panel" },
       { "<C-S-]>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session" },
+      { "<C-S-}>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session (tmux)" },
       { "<C-S-[>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session" },
+      { "<C-S-{>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session (tmux)" },
       { "<leader>a]", sessions.next, desc = "Next agent session" },
       { "<leader>a[", sessions.prev, desc = "Prev agent session" },
       { "<leader>as", send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
       { "<C-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
+      { "<C-S->>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent (tmux)" },
       { "<D-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
     },
   },
