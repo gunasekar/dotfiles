@@ -76,10 +76,11 @@ while a pane is actively painting, the same trap as `#{session_activity}` (see
 *Diff the screen*, below). It's a rough "did that build stop" flag for ordinary
 windows, nothing more.
 
-**Pane labels.** `pane-border-status` labels every pane with its running command, so
-a grid of panes tells you which is `claude` and which is a shell. Agent sessions
-never show it: they hold exactly one pane, and tmux draws no border row for a lone
-pane.
+**Pane labels.** `pane-border-status top` labels every pane with its running command,
+so a grid of panes tells you which is `claude` and which is a shell. It's set globally,
+and `top`/`bottom` draw the label even for a *single* pane — so `aigent` turns it back
+off per-session (see *No chrome*, below), because a lone agent pane doesn't need a
+` 1: claude.exe ` bar across the top.
 
 **Agent sessions survive their frontend.** `aigent` (see `bin/.local/bin/aigent`)
 runs the chosen agent inside a tmux session named `aigent-<project>`, so the agent
@@ -288,15 +289,18 @@ the split entries inside the `prefix + <` / `>` context menus. Each one names th
 session as a target or takes real navigation to reach — none is the accidental
 keypress this guards against. It's accident-prevention, not a boundary.
 
-**No chrome either.** `aigent` sets `status off` on the sessions it creates: the
-status bar would spend the bottom row on a session name you already know, a clock,
-and a window list of exactly one window. The agent gets the full 24 rows of a
-24-row terminal instead of 23.
+**No chrome either.** `aigent` sets two options on the sessions it creates. `status
+off` drops the status bar, which would spend the bottom row on a session name you
+already know, a clock, and a window list of exactly one window. `pane-border-status
+off` drops the ` 1: claude.exe ` label along the top — not because it's ugly but
+because the config turns it *on* globally (handy for a grid of panes), and an agent
+session is a single pane that doesn't need labelling. Between them the agent gets the
+full 24 rows of a 24-row terminal, where the two bars would have left it 22.
 
-It's session-scoped (`set-option -t <session>`), so a tmux session you start yourself
-keeps its status bar. Verify with `tmux show-options -t <session> status`; a bare
-`tmux show-options` reports whatever session you're *currently* in, which is a good
-way to scare yourself into thinking it went global.
+Both are session-scoped (`set-option -t <session>`), so a tmux session you start
+yourself keeps its status bar and its pane labels. Verify with `tmux show-options -t
+<session> status`; a bare `tmux show-options` reports whatever session you're
+*currently* in, which is a good way to scare yourself into thinking it went global.
 
 Sessions are matched by exact name or an `-N` suffix, never by prefix, so
 `aigent-api` never swallows `aigent-api-worker` — a different project.
