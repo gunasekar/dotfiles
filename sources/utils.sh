@@ -15,7 +15,7 @@ function set-permissions-for-brew {
 # Shared helper: dump current brew state, extract entries, compute diffs.
 # Sets BREW_DIFF_DIR to a temp directory containing:
 #   dump, dump_entries, curated_entries, {dump,curated}_{tap,brew,cask,mas}
-#   new_{tap,brew,cask,mas}, missing_{tap,brew,cask,mas}
+#   new_{tap,brew,cask,mas}, missing_{tap,brew,cask,mas}, untrusted_{brew,cask}
 # Caller is responsible for cleaning up BREW_DIFF_DIR.
 function _brew_diff {
   if ! command -v brew &>/dev/null; then
@@ -92,6 +92,30 @@ function _brew_diff {
       cp "$BREW_DIFF_DIR/new_${type}_raw" "$BREW_DIFF_DIR/new_${type}" 2>/dev/null || true
     fi
   done
+
+  # Homebrew refuses to load formulae from untrusted taps, and `brew bundle dump`
+  # drops them without a word — so an installed package looks uninstalled here,
+  # and the install we would offer is a silent no-op. Anything we are about to
+  # call missing gets cross-checked against what is really installed.
+  local installed_list
+  for type in brew cask; do
+    : >"$BREW_DIFF_DIR/untrusted_${type}"
+    [ -s "$BREW_DIFF_DIR/missing_${type}" ] || continue
+    case "$type" in
+      brew) installed_list=$(brew list --formula 2>/dev/null) ;;
+      cask) installed_list=$(brew list --cask 2>/dev/null) ;;
+    esac
+    : >"$BREW_DIFF_DIR/missing_${type}_checked"
+    while IFS= read -r pkg; do
+      # Brewfile names third-party packages tap/owner/name; brew list prints name
+      if printf '%s\n' "$installed_list" | grep -qxF "${pkg##*/}"; then
+        echo "$pkg" >>"$BREW_DIFF_DIR/untrusted_${type}"
+      else
+        echo "$pkg" >>"$BREW_DIFF_DIR/missing_${type}_checked"
+      fi
+    done <"$BREW_DIFF_DIR/missing_${type}"
+    mv "$BREW_DIFF_DIR/missing_${type}_checked" "$BREW_DIFF_DIR/missing_${type}"
+  done
 }
 
 function brew-sync {
@@ -100,11 +124,14 @@ function brew-sync {
 
   _brew_diff || return 1
 
-  local has_new=false has_missing=false
+  local has_new=false has_missing=false has_untrusted=false
   local type
   for type in tap brew cask mas; do
     [ -s "$BREW_DIFF_DIR/new_${type}" ] && has_new=true
     [ -s "$BREW_DIFF_DIR/missing_${type}" ] && has_missing=true
+  done
+  for type in brew cask; do
+    [ -s "$BREW_DIFF_DIR/untrusted_${type}" ] && has_untrusted=true
   done
 
   # Show diff
@@ -123,6 +150,32 @@ function brew-sync {
     done
   fi
 
+  if [ "$has_untrusted" = true ]; then
+    echo -e "${bold}=== UNTRUSTED taps (installed, but Homebrew won't load them) ===${reset}"
+    echo ""
+    for type in brew cask; do
+      if [ -s "$BREW_DIFF_DIR/untrusted_${type}" ]; then
+        echo -e "  ${bold}${type}:${reset}"
+        while IFS= read -r pkg; do
+          echo -e "    ${red}! ${pkg}${reset}"
+        done <"$BREW_DIFF_DIR/untrusted_${type}"
+        echo ""
+      fi
+    done
+    echo -e "${dim}These are already installed. Homebrew refuses to load them from"
+    echo -e "their taps, so 'brew bundle dump' omits them and they look missing."
+    echo -e "Installing will not help. Trust the taps instead:${reset}"
+    for type in brew cask; do
+      [ -s "$BREW_DIFF_DIR/untrusted_${type}" ] || continue
+      while IFS= read -r pkg; do
+        case "$pkg" in
+          */*/*) echo -e "  ${cyan}brew trust ${pkg%/*}${reset}" ;;
+        esac
+      done <"$BREW_DIFF_DIR/untrusted_${type}"
+    done | sort -u
+    echo ""
+  fi
+
   if [ "$has_new" = true ]; then
     echo -e "${bold}=== EXTRA packages (installed but not in Brewfile) ===${reset}"
     echo ""
@@ -138,7 +191,7 @@ function brew-sync {
   fi
 
   if [ "$has_new" = false ] && [ "$has_missing" = false ]; then
-    echo -e "${green}Everything is in sync.${reset}"
+    [ "$has_untrusted" = false ] && echo -e "${green}Everything is in sync.${reset}"
     rm -rf "$BREW_DIFF_DIR"
     return 0
   fi
