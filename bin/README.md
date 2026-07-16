@@ -50,6 +50,11 @@ new     claude/plan
 Add an agent by dropping one `name|command|args` line into the `AGENTS` table at
 the top of the script — it drives the menu, the PATH filter and the launch.
 
+`aigent` refuses to open an agent in `/` or `$HOME`: an agent treats the
+directory you start it in as the project, and neither of those is ever what you
+meant — but both are one stray `cd` away. Reporting is unaffected — `aigent
+status` answers for the whole box and works from anywhere.
+
 ### The status column
 
 Each row says whether the agent is `working`, `idle` (finished its turn) or
