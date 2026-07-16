@@ -31,11 +31,11 @@ Run with no argument and it shows what's already running for this project
 alongside the agents you can start, sorted by what wants your attention first:
 
 ```
-● [blocked · claude/plan]     Rework the retry budget   ← asking you something
+● [blocked · claude]          Rework the retry budget   ← asking you something
 ● [idle · cursor · #2]        Fix the flaky auth test   ← finished its turn, your move
 ● [working · claude · #3]     Migrate the schema        ← getting on with it
 new     claude
-new     claude/plan
+new     cursor
 …
 ```
 
