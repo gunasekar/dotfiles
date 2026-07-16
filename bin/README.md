@@ -43,7 +43,7 @@ new     claude/plan
 |---|---|
 | `aigent` | pick a running session to rejoin, or an agent to start |
 | `aigent new` | skip the running sessions, start a fresh one |
-| `aigent status` | every agent session on the box as TSV (state, session, agent, task) — for a notifier |
+| `aigent status` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent commit [ctx…]` | one-shot stage + commit via the `/commit` skill, no session |
 | `ctrl-x` (in picker) | kill the highlighted session |
 
