@@ -269,10 +269,20 @@ The one real trade is selection: a drag belongs to tmux now. That's mostly fine,
 because tmux's drag-select copies to the macOS clipboard anyway via
 `set-clipboard`. Mouse release uses `copy-selection-no-clear` rather than the
 default `copy-pipe-and-cancel`, so a selection copies **without** jumping back
-to the live cursor — you stay scrolled with the highlight still visible. A
-single click then exits copy mode (clears the highlight and returns to the live
-cursor). `Escape` clears the highlight without leaving if you want another
-selection; `q` or scrolling to the bottom also leave.
+to the live cursor — you stay scrolled with the highlight still visible.
+
+A single click then clears the highlight, and whether it also *leaves* copy mode
+depends on where you are — which is what keeps a stray click from throwing away
+your place in a long agent response:
+
+| Where | A click does | Why |
+| --- | --- | --- |
+| Scrolled up | Clears the highlight, stays put | Leaving would snap the viewport back down to the prompt. Leave with `q`, or scroll to the bottom — that exits on its own (`copy-mode -e`). |
+| At the bottom | Leaves copy mode | Nothing to lose, and it's how you dismiss a double-clicked word — that path enters with `copy-mode -H`, so staying would mean an *invisible* copy mode eating your keystrokes. |
+
+So while reading history, clicking around is inert: the first click drops the
+highlight and every one after it does nothing. `Escape` clears the highlight
+without leaving if you want another selection; `q` leaves.
 
 The **highlight looks different** from a native selection, and can't not. The
 terminal draws selection as a *translucent overlay* — `selection-background` with
