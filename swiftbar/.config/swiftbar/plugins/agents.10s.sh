@@ -134,16 +134,32 @@ while IFS=$'\t' read -r state name agent task; do
     # stops that is a real episode, and it has not been spoken about yet.
     since=$NOW seen=1 said=0
   else
-    if [ "$state" = "$p_state" ]; then
-      # Still in the same stopped state — keep counting from when it got here.
-      since=${p_since:-$NOW} seen=${p_seen:-0} said=${p_said:-0}
-    else
-      # Just arrived in this state. idle -> blocked is a new thing to say, so the
-      # clock and `said` both reset, but `seen` carries over.
-      since=$NOW said=0
-      seen=${p_seen:-0}
-      [ "$p_state" = working ] && seen=1
-    fi
+    case $p_state in
+      working)
+        # The edge this notifier exists for: it was working, now it is not.
+        since=$NOW seen=1 said=0
+        ;;
+      '')
+        # First sight, and already stopped. We never saw it finish, so there is no
+        # episode to announce — seen=0 keeps it quiet until it works and stops again.
+        since=$NOW seen=0 said=0
+        ;;
+      *)
+        # Stopped -> stopped, which includes idle <-> blocked. Carry the clock and the
+        # guard straight across it.
+        #
+        # Those two are not two events. They are one motionless screen read twice, and
+        # which name it gets is decided by grepping whatever text happens to occupy the
+        # bottom 15 lines — so a flip means the text moved, not that the agent did
+        # anything. It is a guess by construction (aigent's own comment calls it "the one
+        # heuristic"), and it is wrong often enough to matter: any agent that merely
+        # prints the words "Do you want" reads as blocked while it sits there idle.
+        #
+        # Resetting `said` here announced one stop twice — once as idle, again as
+        # blocked — for a screen that never changed. Only working re-arms.
+        since=${p_since:-$NOW} seen=${p_seen:-0} said=${p_said:-0}
+        ;;
+    esac
 
     if [ "$seen" = 1 ] && [ "$said" = 0 ] && [ $((NOW - since)) -ge "$GRACE" ]; then
       mins=$(((NOW - since) / 60))
