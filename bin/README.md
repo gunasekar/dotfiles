@@ -32,7 +32,7 @@ alongside the agents you can start, sorted by what wants your attention first:
 
 ```
 ● [blocked · claude/plan]     Rework the retry budget   ← asking you something
-● [waiting · cursor · #2]     Fix the flaky auth test   ← finished its turn, your move
+● [idle · cursor · #2]        Fix the flaky auth test   ← finished its turn, your move
 ● [working · claude · #3]     Migrate the schema        ← getting on with it
 new     claude
 new     claude/plan
@@ -52,18 +52,18 @@ the top of the script — it drives the menu, the PATH filter and the launch.
 
 ### The status column
 
-Each row says whether the agent is `working`, `waiting` (finished its turn) or
+Each row says whether the agent is `working`, `idle` (finished its turn) or
 `blocked` (asking you something). There are no per-agent hooks — the signal is
 the screen: every one of these TUIs animates while it works, so `aigent` hashes
 each pane, waits `AGENT_SETTLE`, and hashes again. A changed screen is `working`;
 an unchanged one whose bottom is asking a question is `blocked`; otherwise
-`waiting`. Screen-diffing is agent-agnostic, so Cursor, opencode and antigravity
+`idle`. Screen-diffing is agent-agnostic, so Cursor, opencode and antigravity
 get the same treatment Claude does.
 
 | env | default | what it does |
 |---|---|---|
 | `AGENT_SETTLE` | `0.35` | gap between the two screen samples — raise for an agent that repaints slower than once a second |
-| `AGENT_ASK_RE` | *(see script)* | regex meaning "this agent is asking you something" (`blocked` vs `waiting`) |
+| `AGENT_ASK_RE` | *(see script)* | regex meaning "this agent is asking you something" (`blocked` vs `idle`) |
 | `AGENT_NOTIFY_AFTER` | `60` | seconds an agent must sit wanting you before the SwiftBar plugin says so |
 
 `aigent status` feeds a SwiftBar plugin

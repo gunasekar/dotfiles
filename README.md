@@ -217,7 +217,7 @@ Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
 run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
 Plugins use native `<swiftbar.*>` metadata.
 
-- **agents.10s.sh**: Which coding agents are blocked, waiting, or working — reads
+- **agents.10s.sh**: Which coding agents are blocked, idle, or working — reads
   `aigent status`, and notifies when one stops needing the CPU and starts needing
   you (see [tmux/README.md](tmux/README.md))
 - **worldclock.1m.sh**: World clock with multiple timezones

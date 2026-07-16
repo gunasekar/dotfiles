@@ -4,7 +4,7 @@
 #
 # <swiftbar.title>Agents</swiftbar.title>
 # <swiftbar.version>v1.0</swiftbar.version>
-# <swiftbar.desc>Which tmux agent sessions are blocked, waiting, or working</swiftbar.desc>
+# <swiftbar.desc>Which tmux agent sessions are blocked, idle, or working</swiftbar.desc>
 # <swiftbar.dependencies>tmux,aigent</swiftbar.dependencies>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
@@ -16,14 +16,14 @@
 # The picker (`aigent`) only tells you when you go and look, and it is scoped to the
 # project you are standing in. This is the other half: every agent on the box, polled,
 # whether or not you are looking — the "what did I leave running while I walked away"
-# view. All the thinking lives in `aigent status`, which decides blocked/waiting/working
+# view. All the thinking lives in `aigent status`, which decides blocked/idle/working
 # by diffing each session's screen (see tmux/README.md); this file only renders it.
 #
 # It emits nothing at all when no agent is running, which is how SwiftBar is told to
 # hide the menu bar item entirely — a dot that is always there is a dot you stop seeing.
 #
 # ─── Why it waits before saying anything ─────────────────────────────────────
-# It does not announce "finished". It announces "*still* waiting, a minute later".
+# It does not announce "finished". It announces "*still* idle, a minute later".
 #
 # Announcing the working → stopped edge itself is what a notifier obviously wants to
 # do, and it is wrong: an agent you are sitting in front of crosses that edge at the
@@ -58,7 +58,7 @@ ROWS=$("$AIGENT" status 2>/dev/null)
 [ -n "$ROWS" ] || exit 0
 
 RED='#e06c75'    # blocked — it is asking you something
-YELLOW='#e5c07b' # waiting — it finished its turn, your move
+YELLOW='#e5c07b' # idle — it finished its turn, your move
 DIM='#5c6370'    # working — leave it alone
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
@@ -85,7 +85,7 @@ notify() {
     >/dev/null 2>&1 || true
 }
 
-blocked=0 waiting=0 working=0
+blocked=0 idle=0 working=0
 menu=''
 
 while IFS=$'\t' read -r state name agent task; do
@@ -100,14 +100,19 @@ while IFS=$'\t' read -r state name agent task; do
     badge=" #${BASH_REMATCH[2]}"
   fi
 
+  # `aigent status` owns these names, and *) means working — so a state it grows that this
+  # does not know lands in the "leave it alone" pile rather than raising a false alarm.
+  # The cost of that default is that renaming one there fails silently here: the arm stops
+  # matching, and every agent that wants you is counted as busy and left unannounced. The
+  # two files have to move together.
   case $state in
     blocked)
       colour=$RED
       ((blocked++))
       ;;
-    waiting)
+    idle)
       colour=$YELLOW
-      ((waiting++))
+      ((idle++))
       ;;
     *)
       colour=$DIM
@@ -133,7 +138,7 @@ while IFS=$'\t' read -r state name agent task; do
       # Still in the same stopped state — keep counting from when it got here.
       since=${p_since:-$NOW} seen=${p_seen:-0} said=${p_said:-0}
     else
-      # Just arrived in this state. waiting -> blocked is a new thing to say, so the
+      # Just arrived in this state. idle -> blocked is a new thing to say, so the
       # clock and `said` both reset, but `seen` carries over.
       since=$NOW said=0
       seen=${p_seen:-0}
@@ -158,10 +163,10 @@ mv -f "${STATE_FILE}.new" "$STATE_FILE"
 
 # Menu bar: how many want you, coloured by the worst of them. When they are all busy
 # there is nothing to act on, so it shows a dim count rather than an alarm.
-want=$((blocked + waiting))
+want=$((blocked + idle))
 if [ "$blocked" -gt 0 ]; then
   echo "●${want} | color=${RED}"
-elif [ "$waiting" -gt 0 ]; then
+elif [ "$idle" -gt 0 ]; then
   echo "●${want} | color=${YELLOW}"
 else
   echo "●${working} | color=${DIM}"
@@ -170,5 +175,5 @@ fi
 echo '---'
 printf '%s' "$menu"
 echo '---'
-echo "${blocked} blocked · ${waiting} waiting · ${working} working | color=${DIM} size=11"
+echo "${blocked} blocked · ${idle} idle · ${working} working | color=${DIM} size=11"
 echo "Refresh | refresh=true"

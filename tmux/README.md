@@ -60,7 +60,7 @@ Windows and panes number from 1 and renumber themselves when one closes.
 
 `tmux.conf` is tuned for long-running coding-agent panes (Claude Code and
 friends). The launcher that actually creates and manages those sessions — the
-fzf picker, the `working`/`waiting`/`blocked` status view, the one-agent-one-pane
+fzf picker, the `working`/`idle`/`blocked` status view, the one-agent-one-pane
 enforcement — is a separate script, `bin/.local/bin/aigent`, documented with its
 own source. This section covers only the settings that live here.
 
