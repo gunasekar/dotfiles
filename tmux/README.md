@@ -116,6 +116,36 @@ Both `@agent` and `@agent_locked` are user options that something else sets —
 `aigent`, here — so on a session you launched by hand neither is present, and
 every setting above falls back to its default form.
 
+**Nested clients.** `aigent cockpit` shows several agent sessions in one window by
+giving each pane a nested tmux client (`env -u TMUX tmux attach -t <session>` —
+tmux sets `$TMUX` in every pane it creates and refuses to nest while it is set).
+It needs nothing added here, but it makes four of the settings above load-bearing
+in a second way:
+
+- `set-titles-string` becomes a **pane border** as well as a Ghostty tab. The
+  inner client emits the title to its terminal — which *is* the cockpit's pane —
+  so the cockpit reads `claude · <task>` straight off `#{pane_title}` with nothing
+  polling. The hostname and spinner-glyph guards come along for free.
+- **Truecolor survives the nest** with no `terminal-features` entry for
+  `tmux-256color`, which declares neither `Tc` nor `RGB` in its terminfo. tmux
+  negotiates RGB with the outer tmux at runtime instead of trusting the entry, so
+  the nested agent keeps its colours. (Verified by diffing the escape a nested
+  pane emits: `38;2;255;0;0`, not a downsampled `38;5;196`.)
+- **CSI-u survives it too**, because `extended-keys` is a *server* option (`set -s`,
+  not `set -g`) — it is already true of the inner client, so Shift+Enter reaches
+  the agent through two tmuxes.
+- `window-size` stays at its default `latest`, which sizes a window to its most
+  recently *used* client — not the newest one. That is what makes an agent re-flow
+  to whichever client you last typed in, so the view you are working in is always
+  the right one. A window has one grid, so two clients of different shapes viewing
+  one session cannot both be right: the one you are not touching draws small with
+  `···` filler until you press a key in it, which re-elects it.
+- **Keys go to the outermost client first**, so `C-b` in a cockpit is the cockpit's
+  prefix and the inner client never sees it. `C-b C-b` is the way through — the
+  stock `bind-key -T prefix C-b send-prefix` passes a literal `C-b` into the pane,
+  where the inner client reads it as its own prefix. That is what makes
+  `C-b C-b s` (choose-tree) re-point a single cockpit pane at a different agent.
+
 ## Notes
 
 ### No plugins, deliberately
