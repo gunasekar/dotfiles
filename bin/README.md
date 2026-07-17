@@ -154,6 +154,14 @@ grid, or re-run `aigent cockpit` to build a new one over a different set. Quit a
 agent and its pane closes and the rest re-tile; quit the last one and the cockpit
 disposes of itself and drops you back where you came from.
 
+**There is only ever one.** The session is always named `cockpit`, so re-running
+`aigent cockpit` replaces the one you had rather than adding a second — and if
+another window was sitting in that cockpit, it drops back to a shell when the
+session goes. (Your agents don't notice; they never do.) That's deliberate. A
+cockpit holds no state, so there's nothing to accumulate and nothing worth
+naming, and one fixed name means `tmux a -t cockpit` always finds it. Scale the
+panes instead: eight agents is `aigent cockpit 8`, not two cockpits of four.
+
 **The cockpit owns nothing.** Every pane is a tmux client attached to a live
 `aigent-<project>` session, so it borrows the view rather than taking the pane:
 kill the cockpit, close the window, crash it, and every agent is exactly where it
