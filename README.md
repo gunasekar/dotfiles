@@ -72,7 +72,7 @@ sudo dnf install git stow      # Fedora/RHEL
 │   ├── utils.sh     # General utility functions
 │   └── linux.sh     # Linux-specific utilities
 ├── bin/              # ~/.local/bin scripts — `aigent`, the tmux agent-session
-│                     #   picker (see tmux/README.md)
+│                     #   picker, status view and cockpit (see bin/README.md)
 ├── brew/             # Homebrew packages (see brew/README.md)
 ├── python/           # Python dev tools (see python/README.md)
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
@@ -219,7 +219,7 @@ Plugins use native `<swiftbar.*>` metadata.
 
 - **agents.10s.sh**: Which coding agents are blocked, idle, or working — reads
   `aigent status`, and notifies when one stops needing the CPU and starts needing
-  you (see [tmux/README.md](tmux/README.md))
+  you (see [bin/README.md](bin/README.md))
 - **worldclock.1m.sh**: World clock with multiple timezones
 - **mmi.30m.sh**: Market Mood Index tracker
 - **toolbox.sh**: Developer utilities (UUID, hash generators, etc.)
