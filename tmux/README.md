@@ -27,7 +27,7 @@ or `tmux kill-server` for a clean slate.
 
 ## Daily Commands
 
-Prefix is `Ctrl+b` **or** `Alt+Space` — press either, release, then the key.
+Prefix is `Ctrl+b` **or** `Ctrl+Space` — press either, release, then the key.
 Both are always live; the tables below show `Ctrl+b`.
 
 | Action | Command |
@@ -273,17 +273,39 @@ and either way it's a solid fill — the terminal draws *its* selection as a tra
 overlay that tints the text underneath. For that exact look, bypass tmux's mouse
 capture with the terminal's own selection modifier (Shift-drag in Ghostty).
 
-### Two prefixes: Ctrl+b and Alt+Space
+### Two prefixes: Ctrl+b and Ctrl+Space
 
 Both are live (`prefix` and `prefix2`). `Ctrl+b` stays primary so every
-cheatsheet, guide and remote host behaves as documented; `Alt+Space` is the
-comfortable one to actually reach for.
+cheatsheet, guide and remote host behaves as documented; `Ctrl+Space` is the
+comfortable one to actually reach for. There is no distinct terminal code for it —
+it arrives as a raw NUL (`0x00`), which tmux reads as `C-Space` — and it is free
+across zsh and Ghostty.
 
-The two prefixes people usually reach for are both taken here: `Ctrl+a` (the
-classic Screen rebind) shadows readline **beginning-of-line** in zsh, and
-`Ctrl+Space` shadows **blink.cmp's force-completion key**
-(`nvim/.config/nvim/lua/plugins/lsp/completion.lua`). `Alt+Space` is free across
-zsh, Neovim (only `<A-j>`/`<A-k>` are bound) and Ghostty.
+Every candidate costs something and this is the cheapest one left. `Ctrl+a`, the
+classic Screen rebind, shadows readline **beginning-of-line** in zsh. `Alt+Space`
+held this job until Ghostty claimed it globally for the quick terminal
+(`global:opt+space`, see [ghostty/README.md](../ghostty/README.md)); a global grab
+wins everywhere, so tmux could not keep it. `Ctrl+Space` shadows **blink.cmp's
+force-completion key** (`nvim/.config/nvim/lua/plugins/lsp/completion.lua`) for
+panes inside tmux, and that is the price paid.
+
+**Doubling a prefix sends it through** to whatever runs inside the pane. That is
+the only way to reach a tmux nested in another tmux, which is what the `aigent`
+cockpit is (see [bin/README.md](../bin/README.md)): the outer client eats every
+prefix, so `C-b s` chooses a session for the *cockpit* while `C-b C-b s` chooses
+one for the single pane under the cursor.
+
+```tmux
+bind C-Space send-prefix -2
+```
+
+Only half of that is stock. `bind-key C-b send-prefix` is a tmux default, but it
+names the *default* prefix literally rather than tracking whatever `prefix` is set
+to — so `prefix2` never gets an equivalent, and `Ctrl+Space` `Ctrl+Space` did
+nothing at all. `-2` sends `C-Space` rather than `C-b`, so the rule reads the same
+whichever prefix you reached for. (A bare `send-prefix` works too, and is the
+sturdier byte into a tmux you don't own — `C-b` is the default prefix everywhere,
+`C-Space` only because this file says so. That case is what `C-b C-b` is for.)
 
 ### Mouse mode is on
 
