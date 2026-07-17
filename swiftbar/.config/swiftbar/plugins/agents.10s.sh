@@ -5,7 +5,7 @@
 # <swiftbar.title>Agents</swiftbar.title>
 # <swiftbar.version>v1.0</swiftbar.version>
 # <swiftbar.desc>Which tmux agent sessions are blocked, idle, or working</swiftbar.desc>
-# <swiftbar.dependencies>tmux,aigent</swiftbar.dependencies>
+# <swiftbar.dependencies>tmux,aigent,jq</swiftbar.dependencies>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
@@ -22,29 +22,28 @@
 # It emits nothing at all when no agent is running, which is how SwiftBar is told to
 # hide the menu bar item entirely — a dot that is always there is a dot you stop seeing.
 #
-# ─── Why it waits before saying anything ─────────────────────────────────────
-# It does not announce "finished". It announces "*still* idle, a minute later".
+# ─── When it speaks ──────────────────────────────────────────────────────────
+# It announces the working → stopped edge, on the poll that sees it.
 #
-# Announcing the working → stopped edge itself is what a notifier obviously wants to
-# do, and it is wrong: an agent you are sitting in front of crosses that edge at the
-# end of every single turn. You get a popup telling you the thing you are looking at
-# has stopped — once per reply, forever. That is not a notification, it is a metronome.
+# The cost is known and accepted: an agent you are sitting in front of crosses that
+# edge at the end of every single turn, so you hear about the one you are looking at —
+# once per reply. Nothing here can tell the difference. There is no way to ask tmux
+# whether you are *looking* at a session: every session has a client attached (a Ghostty
+# window, a Zed thread, an nvim panel), so attachment says nothing, and #{client_activity}
+# — which does track your keystrokes and not pane output, verified: it did not move once
+# through 48s of an agent painting flat out — answers "when did you last type", which
+# after a three-minute turn reads the same whether you are staring at the pane or asleep.
 #
-# There is no way to ask tmux whether you are *looking* at a session. Every session has
-# a client attached (a Ghostty window, a Zed thread, an nvim panel), so attachment says
-# nothing. #{client_activity} is genuinely useful — it tracks your keystrokes and not
-# pane output, verified: it did not move once through 48s of an agent painting flat out
-# — but it answers "when did you last type", and after a three-minute turn that reads
-# the same whether you are staring at the pane or asleep.
+# The lever that does work is time, and it is the only one. Sitting there, you reply in
+# seconds and it goes back to working; walked away, it just sits. So waiting before
+# speaking silences the session you are working with for free — no focus detection, no
+# heuristic, nothing to get wrong — and it makes any future misclassification persist
+# for the whole wait before it can reach you. What it costs is the wait itself, spent on
+# the one case this exists for. AGENT_NOTIFY_AFTER is that dial, in seconds; 60 was the
+# old default and is a reasonable place to put it back if the per-reply sound wears thin.
 #
-# What separates the two is what you do *next*. Sitting there, you reply in seconds and
-# it goes back to working. Walked away, it just sits there. So: wait GRACE seconds, and
-# only speak if it is still stopped. Being there silences it for free — no focus
-# detection, no heuristic, nothing to get wrong — and walking away is the only thing
-# that lets it through. It also means any future misclassification has to persist for a
-# full minute before it can reach you.
-#
-# The menu bar itself updates immediately; only the popup waits.
+# `said` bounds it either way: one banner per stop, however many times the screen is
+# re-read. Only a return to working re-arms it.
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 
@@ -62,9 +61,9 @@ YELLOW='#e5c07b' # idle — it finished its turn, your move
 DIM='#5c6370'    # working — leave it alone
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
-# Long enough that you never hear from one you are actually working with, short enough
-# to be useful the moment you are not.
-GRACE=${AGENT_NOTIFY_AFTER:-60}
+# Zero: the poll that sees it stop is the poll that says so. Set AGENT_NOTIFY_AFTER to
+# trade that latency back for quiet — see the note above.
+GRACE=${AGENT_NOTIFY_AFTER:-0}
 NOW=$(date +%s)
 
 # One line per session: name, state, when it entered that state, whether it has been
@@ -76,12 +75,40 @@ mkdir -p "$STATE_DIR"
 PREV=$(cat "$STATE_FILE" 2>/dev/null)
 : >"${STATE_FILE}.new"
 
-# The task text is written by the agent, not by us: it lands in an AppleScript string
-# literal, so quotes and backslashes have to go or the script fails to compile.
-clean() { printf '%s' "${1//[\"\\]/}"; }
+# Posted by SwiftBar itself rather than by osascript, which delivered them as "Script
+# Editor" — an app nobody chose, sharing a bucket with every other script on the machine,
+# so tuning or muting agent alerts meant tuning every AppleScript you own. SwiftBar tags
+# each notification with threadIdentifier = this plugin, so Notification Center collapses
+# the pile into one "Agents" group, and clicking through has somewhere to go.
+#
+# It cannot clear the previous one. swiftbar://notify accepts no identifier, and SwiftBar
+# stamps every request with a fresh UUID (v2.0.1, PluginManger.swift:374), so "replace
+# what this session said last time" is not expressible through this API at all — six
+# finishes leave six entries in the group. Only the *banner* is bounded, by `said` below:
+# one per stop, however the screen is re-read.
+#
+# No silent=true, so these make a sound — the osascript they replaced never did, because
+# `display notification` is mute unless asked. A banner is Temporary by default: it shows
+# for a few seconds and is gone, which is no use to the one case this exists for, where
+# you are not at the screen. The sound is the part that survives not looking.
+#
+# Which also makes it the part that grates. `said` below holds it to one per stop, but
+# with no wait configured a stop is every turn-end, so on a session you are sitting in
+# it sounds once per reply — see the note up top. Muting it is at least a per-app toggle
+# now that it is SwiftBar's own notification, rather than silencing every AppleScript on
+# the machine, which is what the old shared "Script Editor" identity would have meant.
+#
+# jq's @uri, not hand-rolled escaping: the title and the agent's own task text are being
+# pasted into a URL, and the task is arbitrary prose. A bare & truncates the notification
+# at the ampersand and a bare # drops the rest, both silently. @uri also gets multi-byte
+# right (· and — survive), which a byte-wise shell loop would mangle.
+#
+# One thing encoding cannot save: SwiftBar rewrites "+" back to a space on the way out,
+# so a task title containing a plus loses it. Cosmetic, and not ours to fix.
+urlenc() { printf '%s' "$1" | jq -sRr @uri; }
 
-notify() {
-  osascript -e "display notification \"$(clean "$2")\" with title \"$(clean "$1")\"" \
+notify() { # title, body
+  open -g "swiftbar://notify?name=agents&title=$(urlenc "$1")&body=$(urlenc "$2")" \
     >/dev/null 2>&1 || true
 }
 
@@ -162,11 +189,10 @@ while IFS=$'\t' read -r state name agent task; do
     esac
 
     if [ "$seen" = 1 ] && [ "$said" = 0 ] && [ $((NOW - since)) -ge "$GRACE" ]; then
-      mins=$(((NOW - since) / 60))
       if [ "$state" = blocked ]; then
         notify "${agent} needs you · ${proj}" "${task:-Waiting on a permission prompt}"
       else
-        notify "${agent} idle ${mins}m · ${proj}" "${task:-Finished — waiting for your next move}"
+        notify "${agent} idle · ${proj}" "${task:-Finished — waiting for your next move}"
       fi
       said=1
     fi
