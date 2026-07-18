@@ -21,8 +21,13 @@ repos:
         name: Shellcheck
         description: Run shellcheck on shell scripts
         args: [--severity=warning]
-        # Check all shell scripts in sources/
-        files: ^sources/.*\.(sh|bash|zsh)$
+        # Lint every shell script by shebang, the way shfmt above does, so extension-less
+        # ones like bin/.local/bin/aigent are covered too — not just sources/. The old
+        # `files: ^sources/...` regex missed both (wrong dir, no extension). exclude_types
+        # drops zsh: shellcheck supports sh/bash/dash/ksh only and hard-errors on zsh files
+        # (SC1071/SC1087) like zsh/.zshrc, which identify tags as both `shell` and `zsh`.
+        types: [shell]
+        exclude_types: [zsh]
 
   # General pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
