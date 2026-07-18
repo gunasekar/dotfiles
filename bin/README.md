@@ -44,7 +44,7 @@ new     cursor
 | `aigent` | pick a running session to rejoin, or an agent to start |
 | `aigent new` | skip the running sessions, start a fresh one |
 | `aigent status` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
-| `aigent cockpit [N]` | several agents at once in one window — pick them, or take the `N` that most want you |
+| `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
 | `ctrl-x` (in picker) | kill the highlighted session |
 
 Add an agent by dropping one `name|command|args` line into the `AGENTS` table at
@@ -89,9 +89,12 @@ wants me*, and this one is *watch four of them work, and answer whichever one
 stops* — without leaving the window.
 
 ```bash
-aigent cockpit      # pick from a list — tab to select, live preview of each agent's screen
+aigent cockpit      # re-attach to a cockpit already up, else pick from a list
+aigent cockpit new  # ignore any running cockpit and pick a fresh set
 aigent cockpit 4    # skip the picking: the 4 that most want you
 ```
+
+The picker offers tab-to-select with a live preview of each agent's screen.
 
 ```
 ┌─ augur · claude · Add partner integration ─┬─ studio · claude · restructure exchange ───┐
@@ -151,25 +154,25 @@ inner routes can reach `cockpit` itself (the tree lists it, and `)` cycles every
 session alphabetically), which gives you a cockpit inside the cockpit. Harmless
 and recoverable with another `C-b C-b s` — just pointless.
 
-Detaching leaves the cockpit up; `tmux a -t cockpit` walks back into the same
-grid, or re-run `aigent cockpit` to build a new one over a different set. Quit an
-agent and its pane closes and the rest re-tile; quit the last one and the cockpit
-disposes of itself and drops you back where you came from.
+Detaching leaves the cockpit up; bare `aigent cockpit` (or `tmux a -t cockpit`)
+walks back into the same grid, and `aigent cockpit new` builds a fresh one over a
+different set. Quit an agent and its pane closes and the rest re-tile; quit the
+last one and the cockpit disposes of itself and drops you back where you came from.
 
-**There is only ever one.** The session is always named `cockpit`, so re-running
-`aigent cockpit` replaces the one you had rather than adding a second — and if
-another window was sitting in that cockpit, it drops back to a shell when the
-session goes. (Your agents don't notice; they never do.) That's deliberate. A
-cockpit holds no state, so there's nothing to accumulate and nothing worth
-naming, and one fixed name means `tmux a -t cockpit` always finds it. Scale the
-panes instead: eight agents is `aigent cockpit 8`, not two cockpits of four.
+**There is only ever one.** The session is always named `cockpit`, so `aigent
+cockpit new` replaces the one you had rather than adding a second — and if another
+window was sitting in that cockpit, it drops back to a shell when the session goes.
+(Your agents don't notice; they never do.) That's deliberate. A cockpit holds no
+state, so there's nothing to accumulate and nothing worth naming, and one fixed
+name means bare `aigent cockpit` and `tmux a -t cockpit` both always find it. Scale
+the panes instead: eight agents is `aigent cockpit 8`, not two cockpits of four.
 
 **The cockpit owns nothing.** Every pane is a tmux client attached to a live
 `aigent-<project>` session, so it borrows the view rather than taking the pane:
 kill the cockpit, close the window, crash it, and every agent is exactly where it
 was, still running, still attached to whatever else was viewing it. That is also
-why re-running it always builds a fresh one rather than reconciling an old one —
-rebuilding is free when there is no state to keep. The session is named `cockpit`
+why building one (`aigent cockpit new`, or `cockpit N`) always builds fresh rather
+than reconciling an old one — rebuilding is free when there is no state to keep. The session is named `cockpit`
 rather than `aigent-cockpit` for the same reason: the `aigent-` prefix means "an
 agent lives here", and a viewer that ended up under it would be reported by
 `aigent status` and counted by the notifier as one more agent to watch.
