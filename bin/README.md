@@ -94,19 +94,21 @@ aigent cockpit 4    # skip the picking: the 4 that most want you
 ```
 
 ```
-┌─ claude · Add partner integration ─┬─ claude · restructure exchange pkgs ─┐
-│  Do you want to proceed?           │  Editing internal/pkg/exchange…      │
-│  ❯ 1. Yes                          │  ⠂ Thinking…                         │
-├─ claude · Improve observability ───┼─ antigravity · _scratch ─────────────┤
-│  ✳ Wiring up OpenObserve           │                                      │
-└────────────────────────────────────┴──────────────────────────────────────┘
+┌─ augur · claude · Add partner integration ─┬─ studio · claude · restructure exchange ───┐
+│  Do you want to proceed?                   │  Editing internal/pkg/exchange…            │
+│  ❯ 1. Yes                                  │  ⠂ Thinking…                               │
+├─ foundry · claude · Improve observability ─┼─ scratch · antigravity ────────────────────┤
+│  ✳ Wiring up OpenObserve                   │                                            │
+└────────────────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
 Panes are ordered the way the picker is — blocked, then idle, then working — so
 the agent that wants you is top-left and the ones getting on with it sort to the
-back. Each border reads `<agent> · <what it's working on>` and stays current with
-nothing polling anything: the agent publishes its own title, and tmux carries it
-up through the pane.
+back. Each border reads `<dir> · <agent> · <what it's working on>` — the directory
+`aigent` stamps on the pane, then the agent and task from the title the agent
+publishes, which tmux carries up through the pane with nothing polling anything.
+(A pane whose agent hasn't set a task yet shows just `<dir> · <agent>`, as the
+`scratch` one above does.)
 
 It's an ordinary tmux session, so the keys are the stock ones — and you can type
 into any pane, which is the point: see a permission prompt, answer it in place.
