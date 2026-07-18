@@ -69,17 +69,17 @@ get the same treatment Claude does.
 |---|---|---|
 | `AGENT_SETTLE` | `0.35` | gap between the two screen samples — raise for an agent that repaints slower than once a second |
 | `AGENT_ASK_RE` | *(see script)* | regex meaning "this agent is asking you something" (`blocked` vs `idle`) |
-| `AGENT_NOTIFY_AFTER` | `0` | seconds an agent must sit wanting you before the SwiftBar plugin says so — `0` speaks on the poll that sees it stop |
+| `AGENT_NOTIFY_AFTER` | `30` | seconds an agent must sit wanting you before the SwiftBar plugin says so — `0` speaks on the poll that sees it stop |
 
 `aigent status` feeds a SwiftBar plugin
 (`swiftbar/.config/swiftbar/plugins/agents.10s.sh`) that shows a menu-bar count
-and announces each `working → stopped` edge once. Out of the box it speaks on the
-poll that sees the stop, which means a session you are sat in front of announces
-itself at the end of every reply — nothing can tell "you are watching this one"
-apart from "you walked away". `AGENT_NOTIFY_AFTER` is the lever: raise it and an
-agent has to sit there wanting you that long before it may say so, which silences
-the one you are working with for free, because you reply and it goes back to
-`working`.
+and announces each `working → stopped` edge once — but not instantly: by default an
+agent must sit stopped for 30 seconds first. That silences the session you are sat
+in front of for free, because you reply within the wait and it goes back to
+`working`, while one you walked away from still speaks. Nothing can tell "you are
+watching this one" apart from "you walked away", so time is the only lever —
+`AGENT_NOTIFY_AFTER` tunes it: `0` speaks on the poll that sees the stop, higher
+trades latency for quiet.
 
 ### The cockpit
 

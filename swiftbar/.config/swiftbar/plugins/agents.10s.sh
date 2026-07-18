@@ -23,24 +23,26 @@
 # hide the menu bar item entirely — a dot that is always there is a dot you stop seeing.
 #
 # ─── When it speaks ──────────────────────────────────────────────────────────
-# It announces the working → stopped edge, on the poll that sees it.
+# It announces the working → stopped edge, but not the instant it sees it: an agent has
+# to sit stopped for AGENT_NOTIFY_AFTER seconds (default 30) before it may speak.
 #
-# The cost is known and accepted: an agent you are sitting in front of crosses that
-# edge at the end of every single turn, so you hear about the one you are looking at —
-# once per reply. Nothing here can tell the difference. There is no way to ask tmux
-# whether you are *looking* at a session: every session has a client attached (a Ghostty
-# window, a Zed thread, an nvim panel), so attachment says nothing, and #{client_activity}
-# — which does track your keystrokes and not pane output, verified: it did not move once
-# through 48s of an agent painting flat out — answers "when did you last type", which
-# after a three-minute turn reads the same whether you are staring at the pane or asleep.
+# The wait is there because nothing here can tell whether you are *looking* at a session.
+# With no wait, an agent you are sitting in front of crosses that edge at the end of every
+# single turn, so you would hear about the one you are looking at — once per reply. There
+# is no way to ask tmux whether you are looking: every session has a client attached (a
+# Ghostty window, a Zed thread, an nvim panel), so attachment says nothing, and
+# #{client_activity} — which does track your keystrokes and not pane output, verified: it
+# did not move once through 48s of an agent painting flat out — answers "when did you last
+# type", which after a three-minute turn reads the same whether you are staring at the pane
+# or asleep.
 #
 # The lever that does work is time, and it is the only one. Sitting there, you reply in
-# seconds and it goes back to working; walked away, it just sits. So waiting before
-# speaking silences the session you are working with for free — no focus detection, no
-# heuristic, nothing to get wrong — and it makes any future misclassification persist
-# for the whole wait before it can reach you. What it costs is the wait itself, spent on
-# the one case this exists for. AGENT_NOTIFY_AFTER is that dial, in seconds; 60 was the
-# old default and is a reasonable place to put it back if the per-reply sound wears thin.
+# seconds and it goes back to working before the wait is up; walked away, it just sits and,
+# once the wait passes, speaks. So the wait silences the session you are working with for
+# free — no focus detection, no heuristic, nothing to get wrong — at the cost of that much
+# latency on a genuine walk-away, and it makes any future misclassification persist for the
+# whole wait before it can reach you. AGENT_NOTIFY_AFTER is that dial, in seconds: 0 puts
+# the sound back on every reply, 60 was the older default, 30 is the middle it sits at now.
 #
 # `said` bounds it either way: one banner per stop, however many times the screen is
 # re-read. Only a return to working re-arms it.
@@ -61,9 +63,9 @@ YELLOW='#e5c07b' # idle — it finished its turn, your move
 DIM='#5c6370'    # working — leave it alone
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
-# Zero: the poll that sees it stop is the poll that says so. Set AGENT_NOTIFY_AFTER to
-# trade that latency back for quiet — see the note above.
-GRACE=${AGENT_NOTIFY_AFTER:-0}
+# Default 30 seconds; AGENT_NOTIFY_AFTER overrides. Zero would make the poll that sees it
+# stop the poll that says so — see the note above for why the default is a wait, not zero.
+GRACE=${AGENT_NOTIFY_AFTER:-30}
 NOW=$(date +%s)
 
 # One line per session: name, state, when it entered that state, whether it has been
