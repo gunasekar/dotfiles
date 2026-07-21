@@ -61,8 +61,12 @@ repos:
         exclude: '\.Brewfile$'
 
       # Trim trailing whitespace
+      # colima.yaml is rewritten by colima itself on every start/stop, and it
+      # indents blank lines inside nested blocks. Trimming those just makes the
+      # file dirty again on the next VM run.
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        exclude: '^colima/\.config/colima/default/colima\.yaml$'
 
   # Additional security checks (optional - uncomment to enable)
   # Requires: pip install detect-secrets
