@@ -54,10 +54,8 @@ function test-SSH-gitlab {
 #
 # Only an interactive ssh can leave this mess, so a thin wrapper is the right
 # place to clean up: scp, rsync and git-over-ssh allocate no pty and are
-# unaffected. (This is the mirror image of the terminfo hook, which *had* to
-# cover those non-interactive tools and so lives in ~/.ssh/config instead —
-# see ~/.local/bin/ssh-terminfo-sync.) Every sequence below is a "disable"
-# form, so running this after a session that exited cleanly is a harmless no-op.
+# unaffected. Every sequence below is a "disable" form, so running this after a
+# session that exited cleanly is a harmless no-op.
 function ssh {
   command ssh "$@"
   local ret=$?

@@ -176,12 +176,23 @@ truecolor flag — so tmux derives RGB support on its own. Verified via
 Both lines the tutorials tell you to paste are dead config here:
 
 ```tmux
-set -ag terminal-overrides ",xterm-256color:Tc"   # keys off a TERM we never send
+set -ag terminal-overrides ",xterm-256color:Tc"   # keys off a TERM Ghostty never sends
 set -as terminal-features ",xterm-ghostty:RGB"    # re-states what Tc already said
 ```
 
-This relies on the `xterm-ghostty` terminfo entry existing on the remote, which
-the `Match exec` hook in `~/.ssh/config` handles (see `~/.local/bin/ssh-terminfo-sync`).
+Over ssh the TERM changes: `~/.ssh/config` pins `TERM=xterm-256color` for every
+host (client-side only — nothing is installed on the remote), and that entry
+declares no `Tc`, so a tmux started *on a remote* has nothing to derive RGB
+from. It doesn't need to — `tmux.conf` already declares the feature outright:
+
+```tmux
+set -as terminal-features "xterm-256color:RGB:extkeys"
+```
+
+That line is there for Zed, whose terminal under-reports the same way
+([zed#22615](https://github.com/zed-industries/zed/issues/22615)), and it covers
+the ssh case for free: any box running these dotfiles keeps truecolor *and*
+CSI-u under a remote tmux. Only a box without this config needs it added by hand.
 
 ### Extended keys, or half your Neovim bindings die
 

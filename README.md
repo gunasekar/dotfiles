@@ -185,6 +185,30 @@ ssh-keygen-ecdsa "email@example.com"     # ECDSA 521-bit
 # ssh-keygen-dsa is deprecated (shows error)
 ```
 
+### Remote TERM
+
+`~/.ssh/config` is not in this repo (it carries real hostnames — it lives in
+`dotfiles-private`), but one line in it is load-bearing for the terminal config
+here:
+
+```sshconfig
+Host *
+    SetEnv TERM=xterm-256color
+```
+
+Ghostty sends `TERM=xterm-ghostty`, and a remote with no such terminfo entry
+gives zsh a broken line editor — `ls` echoes as `llsls`. Pinning a universally
+known TERM fixes that client-side, installing nothing on the remote. `TERM` is
+the one variable exempt from the server's `AcceptEnv` filter, so `SetEnv` is
+enough; and because it lives in `ssh_config` rather than a shell wrapper, it
+applies to every invocation of the ssh binary.
+
+Two configs here depend on it: Ghostty's `ssh-env` / `ssh-terminfo` shell
+integrations are left off because of it, and `tmux.conf` declares
+`xterm-256color:RGB:extkeys` so a tmux started on a remote keeps truecolor and
+CSI-u under that TERM. See [ghostty/README.md](ghostty/README.md) and
+[tmux/README.md](tmux/README.md).
+
 ## Platform Compatibility
 
 ### macOS

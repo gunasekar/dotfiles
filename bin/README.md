@@ -5,7 +5,6 @@ Personal scripts, stowed onto `PATH` at `~/.local/bin`.
 | Script | What it does |
 |---|---|
 | `aigent` | fzf picker that runs coding agents (Claude Code, Cursor, …) inside persistent tmux sessions |
-| `ssh-terminfo-sync` | ssh pre-connect hook that keeps `xterm-ghostty` terminfo present on remote hosts |
 
 ## Installation
 
@@ -14,8 +13,7 @@ cd ~/.dotfiles
 stow bin
 ```
 
-Symlinks both scripts into `~/.local/bin`. `ssh-terminfo-sync` is wired up from
-`~/.ssh/config` (`Match exec`); `aigent` is run by hand and by Zed / Neovim as
+Symlinks `aigent` into `~/.local/bin`. It is run by hand and by Zed / Neovim as
 their agent-terminal command.
 
 ## aigent
@@ -197,12 +195,3 @@ for that too.
 The design rationale — why tmux, why screen-diffing beats hooks, the
 one-agent-one-pane guards, and the `@agent` / `@agent_locked` user options — lives
 in the script's own comments and in `tmux/README.md`.
-
-## ssh-terminfo-sync
-
-Pre-connect hook driven by `~/.ssh/config` `Match exec`. Ghostty sends
-`TERM=xterm-ghostty`; a remote host without that terminfo entry gives zsh a
-broken line editor, so `ls` echoes as `llsls`. The script compiles the entry
-into `~/.terminfo` on the remote, and its exit status tells ssh which `TERM` to
-send. See the script header for why it replaces Ghostty's own `ssh-terminfo`
-integration and why it lives in `ssh_config` rather than a shell function.
