@@ -52,7 +52,13 @@ local function right_win_opts(count)
     win = {
       position = "right",
       width = 0.4,
-      wo = { winhighlight = "Normal:Normal,NormalFloat:Normal" },
+      -- Pin the winbar off at creation. Snacks gives every non-float terminal a
+      -- winbar, and edgy's right slot turns it back off — but only once it claims
+      -- the window, which is a layout pass later. That flip changes the terminal's
+      -- row count by one, and a one-row resize is a real SIGWINCH: the agent
+      -- redraws its whole frame and leaves the previous one stranded above.
+      -- Declaring it here matches what edgy asks for, without the intermediate size.
+      wo = { winhighlight = "Normal:Normal,NormalFloat:Normal", winbar = "" },
       keys = agent_terminal_keys("Agent"),
     },
     count = count,

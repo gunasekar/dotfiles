@@ -7,9 +7,41 @@
 -- shares the same cwd regardless of which window has focus when opened.
 local shell_cwd = nil
 
+-- Split the *editor* window, never the whole screen. Snacks' `position =
+-- "bottom"` maps to `botright split`, which splits the full width and so
+-- momentarily halves every window on screen — the right-hand agent panel
+-- included (58 rows -> 28, measured). Neovim shrinks that terminal's grid right
+-- away, pushing the top rows into scrollback, and edgy restores the height a
+-- moment later — but the pushed-out rows never come back. The agent's UI ends up
+-- shifted up with a blank gap under it, and because the *net* size is unchanged
+-- no SIGWINCH ever reaches the agent, so nothing redraws it away.
+--
+-- `relative = "win"` splits only the window we hand it, leaving every panel's
+-- height untouched. Prefer the current window when it's an editor window so the
+-- terminal opens where focus already is, and fall back to the old full-width
+-- split if the layout is all panels and there's nothing else to split.
+local function editor_win()
+  local function is_editor(w)
+    local ft = vim.bo[vim.api.nvim_win_get_buf(w)].filetype
+    return ft ~= "snacks_terminal" and ft ~= "neo-tree"
+        and vim.api.nvim_win_get_config(w).relative == ""
+  end
+  local cur = vim.api.nvim_get_current_win()
+  if is_editor(cur) then return cur end
+  for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if is_editor(w) then return w end
+  end
+end
+
 local function bottom_win_opts(count)
+  local main = editor_win()
   return {
-    win = { position = "bottom", height = 20 },
+    win = {
+      position = "bottom",
+      height = 20,
+      relative = main and "win" or "editor",
+      win = main,
+    },
     count = count,
     cwd = shell_cwd,
   }

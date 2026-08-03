@@ -61,7 +61,15 @@ function M.new(opts)
     state.idx = idx
     local t = get_term(state.counts[idx])
     if t and t:buf_valid() then
-      if not t:valid() then t:show() end
+      if not t:valid() then
+        -- A hidden terminal re-splits using the opts it was *created* with. If
+        -- those name a window that has since been closed, snacks silently falls
+        -- back to splitting the current window (snacks/win.lua) — which may be
+        -- another panel. Re-resolve placement against the layout as it is now.
+        local fresh = opts.win_opts(state.counts[idx]).win
+        if fresh then t.opts = vim.tbl_extend("force", t.opts, fresh) end
+        t:show()
+      end
       t:focus()
       focus_term()
     end
