@@ -53,7 +53,12 @@ function M.new(opts)
       end
     end
     state.counts = alive
-    state.idx = math.max(0, math.min(state.idx - shift, #state.counts))
+    -- Closing the session *at* the current index walks idx down past the first
+    -- slot — close session 1 of 2 and idx lands on 0 with a session still alive.
+    -- toggle() reads idx == 0 as "nothing open" and spawns a new session on top
+    -- of the survivors. Only an empty list may leave idx at 0.
+    state.idx = math.min(state.idx - shift, #state.counts)
+    state.idx = #state.counts > 0 and math.max(1, state.idx) or 0
   end
 
   local function show(idx)
