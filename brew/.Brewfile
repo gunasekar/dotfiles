@@ -164,6 +164,7 @@ if OS.mac?
   cask "zoom"
 
   mas "Amphetamine", id: 937984704
+  mas "Gapplin", id: 768053424
   mas "Telegram", id: 747648890
   mas "Monosnap", id: 540348655
   mas "Numbers", id: 409203825

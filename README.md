@@ -87,6 +87,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── xfce4/            # XFCE4 desktop configuration (Linux)
 └── setup/            # One-off setup scripts (run by hand, not stowed)
     ├── macos-defaults.sh
+    ├── macos-file-handlers.sh  # default apps per file type (needs duti)
     └── linux-remove-mint-apps.sh
 ```
 
