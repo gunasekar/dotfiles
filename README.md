@@ -64,6 +64,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── zsh/              # Zsh configuration (.zshrc, .zshenv)
 ├── git/              # Git config with workspace-specific settings
 ├── sources/          # Shell function libraries (sourced by .zshrc)
+│   ├── brew.sh      # Homebrew helpers (`brew-sync`)
 │   ├── dev.sh       # Development tools (Go, Python, Java, NVM)
 │   ├── docker.sh    # Docker helpers
 │   ├── file.sh      # File operations

@@ -1,4 +1,4 @@
-# Machine-local package ignore list for `brew-sync` (see sources/utils.sh).
+# Machine-local package ignore list for `brew-sync` (see sources/brew.sh).
 #
 # Packages listed here are installed on THIS machine but intentionally kept out
 # of the shared Brewfile — brew-sync will not report them as EXTRA.
