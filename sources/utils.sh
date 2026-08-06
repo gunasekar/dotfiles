@@ -45,10 +45,14 @@ function _brew_diff {
     return 1
   fi
 
-  # Extract type\tname pairs, filtering OS-conditional blocks in curated Brewfile
+  # Extract type\tname pairs, filtering OS-conditional blocks in curated Brewfile.
+  # mas entries carry their numeric App Store id rather than the display name:
+  # names may contain spaces ("Windows App"), drift between releases, and are not
+  # what `mas install` accepts. The id -> name mapping is kept aside for display.
+  : >"$BREW_DIFF_DIR/mas_names"
   _brew_extract() {
     local file="$1" filter="${2:-none}"
-    awk -v os="$current_os" -v filter="$filter" '
+    awk -v os="$current_os" -v filter="$filter" -v names="$BREW_DIFF_DIR/mas_names" '
             BEGIN { skip = 0 }
             filter == "os" && /^if OS\.mac\?/  { skip = (os != "mac");  next }
             filter == "os" && /^if OS\.linux\?/ { skip = (os != "linux"); next }
@@ -59,8 +63,16 @@ function _brew_diff {
                 gsub(/^[[:space:]]+/, "", line)
                 split(line, a, /[[:space:]]+/)
                 type = a[1]
-                name = a[2]
-                gsub(/[",]/, "", name)
+                match($0, /"[^"]+"/)
+                name = substr($0, RSTART + 1, RLENGTH - 2)
+                if (type == "mas") {
+                    if (!match($0, /id:[[:space:]]*[0-9]+/)) next
+                    id = substr($0, RSTART, RLENGTH)
+                    sub(/id:[[:space:]]*/, "", id)
+                    print id "\t" name >> names
+                    print type "\t" id
+                    next
+                }
                 print type "\t" name
             }
         ' "$file" | sort -u
@@ -118,6 +130,30 @@ function _brew_diff {
   done
 }
 
+# mas entries are tracked by App Store id, which reads as noise on its own.
+# Print "Name (id)" where a name is known, and the bare entry for every other type.
+function _brew_label {
+  local type="$1" pkg="$2" name
+  if [ "$type" = "mas" ]; then
+    name=$(grep -m1 "^${pkg}	" "$BREW_DIFF_DIR/mas_names" 2>/dev/null | cut -f2)
+    [ -n "$name" ] && printf '%s (%s)' "$name" "$pkg" && return
+  fi
+  printf '%s' "$pkg"
+}
+
+# mas 7 refuses to install or uninstall without root, and Homebrew's bundler shells
+# out to a plain `mas install` — so every App Store entry in the Brewfile fails under
+# `brew bundle`. Handle them here, under sudo, one at a time so a single unavailable
+# app doesn't take the rest down with it.
+function _brew_mas {
+  local action="$1" id
+  shift
+  for id in "$@"; do
+    echo -e "\033[1mmas:\033[0m ${action}ing $(_brew_label mas "$id")..."
+    sudo mas "$action" "$id" || echo -e "\033[0;31mmas: ${action} failed for $(_brew_label mas "$id")\033[0m" >&2
+  done
+}
+
 function brew-sync {
   local green='\033[0;32m' yellow='\033[0;33m' cyan='\033[0;36m' red='\033[0;31m'
   local bold='\033[1m' dim='\033[2m' reset='\033[0m'
@@ -143,7 +179,7 @@ function brew-sync {
       if [ -s "$BREW_DIFF_DIR/missing_${type}" ]; then
         echo -e "  ${bold}${type}:${reset}"
         while IFS= read -r pkg; do
-          echo -e "    ${yellow}- ${pkg}${reset}"
+          echo -e "    ${yellow}- $(_brew_label "$type" "$pkg")${reset}"
         done <"$BREW_DIFF_DIR/missing_${type}"
         echo ""
       fi
@@ -183,7 +219,7 @@ function brew-sync {
       if [ -s "$BREW_DIFF_DIR/new_${type}" ]; then
         echo -e "  ${bold}${type}:${reset}"
         while IFS= read -r pkg; do
-          echo -e "    ${green}+ ${pkg}${reset}"
+          echo -e "    ${green}+ $(_brew_label "$type" "$pkg")${reset}"
         done <"$BREW_DIFF_DIR/new_${type}"
         echo ""
       fi
@@ -210,6 +246,12 @@ function brew-sync {
   case "$ans" in
     i)
       echo ""
+      if [ -s "$BREW_DIFF_DIR/missing_mas" ]; then
+        local mas_ids=()
+        while IFS= read -r pkg; do mas_ids+=("$pkg"); done <"$BREW_DIFF_DIR/missing_mas"
+        _brew_mas install "${mas_ids[@]}"
+        echo ""
+      fi
       brew bundle --global --no-upgrade
       ;;
     I)
@@ -217,14 +259,14 @@ function brew-sync {
       for type in tap brew cask mas; do
         [ -s "$BREW_DIFF_DIR/missing_${type}" ] || continue
         while IFS= read -r pkg <&3; do
-          printf "Install %s %s? [y/N] " "$type" "$pkg"
+          printf "Install %s %s? [y/N] " "$type" "$(_brew_label "$type" "$pkg")"
           read -r confirm
           if [[ "$confirm" == [yY] ]]; then
             case "$type" in
               tap) brew tap "$pkg" ;;
               brew) brew install "$pkg" ;;
               cask) brew install --cask "$pkg" ;;
-              mas) mas install "$pkg" ;;
+              mas) _brew_mas install "$pkg" ;;
             esac
           fi
         done 3<"$BREW_DIFF_DIR/missing_${type}"
@@ -239,14 +281,14 @@ function brew-sync {
       for type in tap brew cask mas; do
         [ -s "$BREW_DIFF_DIR/new_${type}" ] || continue
         while IFS= read -r pkg <&3; do
-          printf "Remove %s %s? [y/N] " "$type" "$pkg"
+          printf "Remove %s %s? [y/N] " "$type" "$(_brew_label "$type" "$pkg")"
           read -r confirm
           if [[ "$confirm" == [yY] ]]; then
             case "$type" in
               tap) brew untap "$pkg" ;;
               brew) brew uninstall "$pkg" ;;
               cask) brew uninstall --cask "$pkg" ;;
-              mas) mas uninstall "$pkg" ;;
+              mas) _brew_mas uninstall "$pkg" ;;
             esac
           fi
         done 3<"$BREW_DIFF_DIR/new_${type}"

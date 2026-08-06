@@ -8,7 +8,9 @@
 # ~/.Brewfile.ignore. Edit your local copy, never this template.
 #
 # One package name per line; blank lines and # comments are ignored.
+# Mac App Store apps go by their numeric id, not their name.
 #
 # Example:
 # android-studio
 # google-drive
+# 497799835
