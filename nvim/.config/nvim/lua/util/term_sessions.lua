@@ -20,8 +20,11 @@ local managers = {}
 -- opts.label:    optional function(term, idx) -> string, for custom
 --                per-session labels (default: "<name> <idx>")
 function M.new(opts)
-  local state = { counts = {}, idx = 0, next = opts.start }
+  -- state.bufs maps terminal buffer -> count, so window events can be traced
+  -- back to the session that owns them (see the WinClosed hook below).
+  local state = { counts = {}, idx = 0, next = opts.start, bufs = {} }
   local label = opts.label or function(_, i) return "Session " .. i end
+  local augroup = vim.api.nvim_create_augroup("term_sessions_" .. opts.name, { clear = true })
 
   local function get_term(count)
     return Snacks.terminal.get(opts.cmd, vim.tbl_extend("force", opts.win_opts(count), { create = false }))
@@ -53,6 +56,9 @@ function M.new(opts)
       end
     end
     state.counts = alive
+    for b in pairs(state.bufs) do
+      if not vim.api.nvim_buf_is_valid(b) then state.bufs[b] = nil end
+    end
     -- Closing the session *at* the current index walks idx down past the first
     -- slot — close session 1 of 2 and idx lands on 0 with a session still alive.
     -- toggle() reads idx == 0 as "nothing open" and spawns a new session on top
@@ -80,6 +86,42 @@ function M.new(opts)
     end
   end
 
+  -- When a session's process exits, snacks closes its window and wipes the
+  -- buffer — which tears down the whole panel slot, even when other sessions
+  -- are alive but hidden in the background. Nothing tells us about that (prune
+  -- only runs on the next toggle/next/prev), so the panel just vanishes and the
+  -- survivors are only reachable by toggling it back on. Hook the exit and put
+  -- the next session up in the dead one's place instead.
+  --
+  -- WinClosed rather than TermClose, deliberately. Snacks' own auto-close runs
+  -- from a *buffer-local* TermClose, and Neovim dispatches those ahead of
+  -- global ones — by the time any TermClose hook of ours runs, snacks has
+  -- already closed the window, wiped the buffer and dropped the terminal from
+  -- its registry, so there's nothing left to identify or measure. WinClosed
+  -- fires first, with the window and buffer both still intact.
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = augroup,
+    callback = function(ev)
+      local win = tonumber(ev.match)
+      if not win or not vim.api.nvim_win_is_valid(win) then return end
+      local buf = vim.api.nvim_win_get_buf(win)
+      -- Only the session that's actually on screen: one exiting in the
+      -- background has no window to replace, and shouldn't pop the panel open.
+      local count = state.bufs[buf]
+      if not count or state.counts[state.idx] ~= count then return end
+      -- WinClosed also fires when the panel is merely hidden (toggle, `q`,
+      -- :q), which must not resurface anything. A dead job is what marks a
+      -- real exit: jobwait reports -1 while the process is still running, and
+      -- the job is already reaped by the time snacks closes the window on exit.
+      local chan = vim.bo[buf].channel
+      if chan and chan > 0 and vim.fn.jobwait({ chan }, 0)[1] == -1 then return end
+      vim.schedule(function()
+        prune()
+        if #state.counts > 0 then show(state.idx) end
+      end)
+    end,
+  })
+
   local function new_session()
     prune()
     hide_all()
@@ -87,7 +129,10 @@ function M.new(opts)
     state.next = state.next + 1
     table.insert(state.counts, count)
     state.idx = #state.counts
-    Snacks.terminal.toggle(opts.cmd, opts.win_opts(count))
+    local t = Snacks.terminal.toggle(opts.cmd, opts.win_opts(count))
+    -- Buffer -> session, so the WinClosed hook above can tell this manager's
+    -- terminals from every other snacks terminal on screen.
+    if t and t.buf then state.bufs[t.buf] = count end
   end
 
   local function toggle()
