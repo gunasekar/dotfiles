@@ -124,7 +124,6 @@ if OS.mac?
   brew "mas"
   brew "openjdk@17"
   brew "openjdk@21"
-  brew "openssh"
   brew "pinentry-mac"
   brew "pngpaste"
   brew "qemu"
