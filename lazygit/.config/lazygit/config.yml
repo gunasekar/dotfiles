@@ -10,6 +10,6 @@ git:
   diffContextSize: 5
   log:
     showWholeGraph: true
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --side-by-side
+      command: delta --paging=never --side-by-side
