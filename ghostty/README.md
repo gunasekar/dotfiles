@@ -84,7 +84,8 @@ font-size = 14
 
 ### Change Theme
 
-Currently uses `Tomorrow Night Bright` (a built-in Ghostty theme). To switch, edit `.config/ghostty/config`:
+Currently uses `Ayu` (a built-in Ghostty theme), with its `#0b0e14` background
+overridden to true black. To switch, edit `.config/ghostty/config`:
 
 ```
 theme = <theme-name>
