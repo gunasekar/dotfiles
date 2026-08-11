@@ -17,30 +17,30 @@ local shell_cwd = nil
 -- no SIGWINCH ever reaches the agent, so nothing redraws it away.
 --
 -- `relative = "win"` splits only the window we hand it, leaving every panel's
--- height untouched. Prefer the current window when it's an editor window so the
--- terminal opens where focus already is, and fall back to the old full-width
--- split if the layout is all panels and there's nothing else to split.
-local function editor_win()
-  local function is_editor(w)
-    local ft = vim.bo[vim.api.nvim_win_get_buf(w)].filetype
-    return ft ~= "snacks_terminal" and ft ~= "neo-tree"
-        and vim.api.nvim_win_get_config(w).relative == ""
-  end
-  local cur = vim.api.nvim_get_current_win()
-  if is_editor(cur) then return cur end
-  for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    if is_editor(w) then return w end
-  end
-end
-
+-- height untouched. The window to split comes from util/panels.lua, shared with
+-- the right agent panel, which has the same problem in the other direction.
+--
+-- The shared mouse keys make a click mean the same thing in either panel. A no-op
+-- for a plain shell, which never asks for mouse reporting and so leaves the events
+-- with nvim anyway — they start earning their keep the moment something
+-- alternate-screen runs at this prompt (`tmux a`, htop, lazygit), which is exactly
+-- when clicking and scrolling would otherwise stop behaving like the panel above.
+-- <Esc> is *not* shared: at a shell prompt it belongs to the program.
+--
+-- No `wo.winbar = ""` here, unlike the right panel — snacks' "<id>: <term_title>"
+-- is worth keeping now that this slot holds several sessions. That leaves the
+-- grid one row under nvim_win_get_height, which the wheel handling subtracts
+-- for; see the winbar note in util/panels.lua before changing either side.
 local function bottom_win_opts(count)
-  local main = editor_win()
+  local panels = require("util.panels")
+  local main = panels.editor_win()
   return {
     win = {
       position = "bottom",
       height = 20,
       relative = main and "win" or "editor",
       win = main,
+      keys = panels.terminal_keys(),
     },
     count = count,
     cwd = shell_cwd,

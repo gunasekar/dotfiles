@@ -5,8 +5,13 @@
 -- diff integration work; it does not manage the terminal itself.
 
 -- ── In-terminal keybindings (shared by all right-panel sessions) ───────────
+-- The mouse and wheel handling is shared with the bottom panel (util/panels.lua);
+-- what is added here is agent-specific and deliberately not given to a shell.
+-- <Esc> is the one that must not spread: down there it belongs to whatever is at
+-- the prompt — the zsh line editor, an fzf overlay, a TUI you started — and
+-- taking it for "leave terminal mode" would be a regression nobody asked for.
 local function agent_terminal_keys(name)
-  return {
+  return vim.tbl_extend("error", require("util.panels").terminal_keys(), {
     -- Single <Esc> exits terminal mode (snacks default requires double-<Esc>)
     term_normal = {
       "<Esc>",
@@ -31,7 +36,7 @@ local function agent_terminal_keys(name)
       mode = "t",
       desc = "Ctrl-Esc interrupt to " .. name,
     },
-  }
+  })
 end
 
 -- ── Agent picker ───────────────────────────────────────────────────────────
@@ -47,17 +52,53 @@ end
 -- To add/remove agents, edit ~/.dotfiles/bin/.local/bin/aigent (the bin package).
 local AGENT_CMD = vim.env.HOME .. "/.dotfiles/bin/.local/bin/aigent"
 
+-- Why there is no `relative = "win"` here, unlike the bottom panel (which sets
+-- it in plugins/editor/snacks.lua, off the shared editor_win in util/panels.lua).
+-- Nothing below describes code that is present — it records an alternative that
+-- was tried and reverted, so the asymmetry between the two panels doesn't read
+-- as an oversight worth "fixing".
+--
+-- The asymmetry is edgy's: the bottom slot spans exactly the editor window's width
+-- and states its own height, so a win-relative split is already the right size.
+-- The right slot spans the *full screen height*, and the editor window does not
+-- — it is short by the bottom panel's 20 rows plus its statusline whenever the
+-- shell is open. Measured on a live layout: editor 74 rows, right slot 95.
+--
+-- So splitting the editor window here (`vertical rightbelow` inside it, snacks
+-- win.lua) would bear the agent at 74 rows for edgy to stretch to 95, and a
+-- 21-row resize is a real SIGWINCH — the agent repaints its whole frame and
+-- strands the previous one above. `relative = "editor"` is `vertical botright`:
+-- full height from the start, so the agent lands at its final size in one step.
+--
+-- The measurement that once called win-relative free on this side (identical
+-- 88x53, with and without) was taken with the bottom panel closed. There the
+-- editor window *is* full height and there is no discrepancy to find — verified,
+-- a second nvim with no bottom panel reports editor 95 and agent 95. Reproduce
+-- with the shell open or the answer is meaningless.
+--
+-- The cost is real and accepted: this full-screen split re-lays-out every window,
+-- putting the bottom shell through three passes (220x20 → 109x20 → 110x53 →
+-- 131x20) rather than one, the middle one handing it 53 rows instead of 20. zsh
+-- redrawing its prompt is cheaper than a stranded agent frame, which sits there
+-- until something repaints it.
 local function right_win_opts(count)
   return {
     win = {
       position = "right",
       width = 0.4,
-      -- Pin the winbar off at creation. Snacks gives every non-float terminal a
-      -- winbar, and edgy's right slot turns it back off — but only once it claims
-      -- the window, which is a layout pass later. That flip changes the terminal's
-      -- row count by one, and a one-row resize is a real SIGWINCH: the agent
-      -- redraws its whole frame and leaves the previous one stranded above.
-      -- Declaring it here matches what edgy asks for, without the intermediate size.
+      -- Pin the winbar off. Snacks gives every non-float terminal one
+      -- ("<id>: <term_title>", snacks/terminal.lua) and nothing else takes it
+      -- away: `winbar = false` on edgy's right slot means "don't add an edgy
+      -- winbar", not "remove that one" — it sets the value to nil and the apply
+      -- loop skips the key (edgy/window.lua). Measured: drop this pin and the
+      -- winbar is still there a layout pass later.
+      --
+      -- So this is the only thing turning it off, and the reason isn't the
+      -- one-row resize an earlier version of this comment claimed — there is no
+      -- flip to race, the winbar simply stays. What the pin buys is a grid equal
+      -- to nvim_win_get_height, which is the alternate-screen test the wheel
+      -- handling in util/panels.lua depends on. Leave it out and scrolling this
+      -- panel in normal mode silently stops working.
       wo = { winhighlight = "Normal:Normal,NormalFloat:Normal", winbar = "" },
       keys = agent_terminal_keys("Agent"),
     },
