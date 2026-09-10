@@ -45,6 +45,8 @@ new     cursor
 | `aigent new` | skip the running sessions, start a fresh one |
 | `aigent status` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
+| `tab` (in picker) | arm the highlighted agent for YOLO — run everything unconfirmed |
+| `ctrl-a` (in picker) | arm the highlighted row to hold this Mac awake for as long as that session lives |
 | `ctrl-x` (in picker) | kill the highlighted session |
 
 Add an agent by dropping one `name|command|args` line into the `AGENTS` table at
@@ -54,6 +56,45 @@ the top of the script — it drives the menu, the PATH filter and the launch.
 directory you start it in as the project, and neither of those is ever what you
 meant — but both are one stray `cd` away. Reporting is unaffected — `aigent
 status` answers for the whole box and works from anywhere.
+
+### Keeping the Mac awake
+
+`ctrl-a` in the picker arms the highlighted row to hold this Mac awake for as long
+as that session lives, drawn as a cyan `(awake)` badge next to the row. It is
+orthogonal to `tab`, so a row can be both YOLO and awake.
+
+It exists because a laptop is not a server. This box idle-sleeps a minute after
+the display does (`pmset -g custom` says `sleep 1`), so an agent left working
+overnight — a long cloud run, a migration, anything you start and walk away from
+— finds itself in `Maintenance Sleep` instead. Claude Code does hold its own
+`caffeinate -i -t 300` while it is *working*, which is exactly the wrong window:
+the assertion lapses while the agent sits waiting on the thing you left it doing.
+
+Per-launch and opt-in on purpose. Most agent sessions are you sat in front of the
+machine, where sleep never comes up and an assertion is just a warmer laptop; only
+you know, at the moment you press Enter, which run is the walk-away one.
+
+A new session is started *under* caffeinate (`caffeinate -ims claude …`), which is
+the documented idiom and means the assertion's lifetime is the agent's by
+construction — nothing to reap, no way to leave the Mac pinned awake by an agent
+that died an hour ago. Attaching to a session that already exists takes the same
+lifetime from the other end, with `caffeinate -ims -w <pane pid>`.
+
+Worth knowing about the process tree, because it is the reverse of what it looks
+like: caffeinate does not fork the agent off as a child. It forks a *helper* that
+holds the assertion and execs the agent in the original process, so `#{pane_pid}`
+still points at the agent and nothing else in `aigent` had to change.
+
+```console
+$ ps -eo pid,ppid,comm
+94161 78117 claude       <- the agent, and still what tmux calls pane_pid
+95208 94161 caffeinate   <- its child, holding the assertion
+```
+
+These holds are deliberately *not* routed through `keepawake`: that owns one
+manual timed hold, and an agent silently cancelling your six-hour hold by
+attaching would be a bad surprise. `keepawake status` reports them as separate
+holders, named for the agent rather than for caffeinate.
 
 ### The status column
 
@@ -223,7 +264,7 @@ awake — held by claude (pid 82625)
 
 One hold at a time, always replacing: two overlapping caffeinates is two things to
 remember to cancel and a menu bar that can only offer to stop one of them. Holders
-that are *not* ours — an agent holding one of its own, Claude Code
+that are *not* ours — an agent launched with `aigent`'s `ctrl-a`, Claude Code
 mid-turn, a Time Machine run — are read out of `pmset -g assertions` and reported
 alongside, named for what they are holding the machine awake *for* rather than for
 `caffeinate`, which they all are.
