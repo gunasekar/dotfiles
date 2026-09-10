@@ -246,6 +246,9 @@ Plugins use native `<swiftbar.*>` metadata.
 - **agents.10s.sh**: Which coding agents are blocked, idle, or working — reads
   `aigent status`, and notifies when one stops needing the CPU and starts needing
   you (see [bin/README.md](bin/README.md))
+- **keepawake.1m.sh**: Hold off idle sleep for 30m / 1h / 6h / 12h — reads and
+  drives `keepawake` (see [bin/README.md](bin/README.md)), and names whatever else
+  is holding the Mac awake. Replaces Amphetamine, which could not be driven over ssh
 - **worldclock.1m.sh**: World clock with multiple timezones
 - **mmi.30m.sh**: Market Mood Index tracker
 - **toolbox.sh**: Developer utilities (UUID, hash generators, etc.)

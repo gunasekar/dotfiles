@@ -1,0 +1,255 @@
+#!/usr/bin/env sh
+# Keep this Mac awake, from a command line — what Amphetamine did from the menu bar, minus
+# the part where you have to be sitting in front of it.
+#
+#   keepawake                who is holding this machine awake right now
+#   keepawake 6h             hold it awake for six hours, replacing any hold already up
+#   keepawake 30m | 45 | 90s hours, minutes, seconds — a bare number is minutes
+#   keepawake on             hold it awake until something says otherwise
+#   keepawake off            drop our hold
+#   keepawake status         same as bare: a sentence on a terminal, TSV when piped
+#
+# Why this exists when `caffeinate` is one binary and already installed: `caffeinate -t
+# 21600 &` typed over ssh dies with the ssh session, leaves nothing behind that can find it
+# again, and gives a menu bar nothing to render. This is the small amount of bookkeeping
+# that turns caffeinate into something you can start from one machine, see from another,
+# and cancel from a menu — and nothing more than that. Every decision about *sleep* is
+# still caffeinate's and powerd's.
+#
+# The consumers are swiftbar/.config/swiftbar/plugins/keepawake.1m.sh (which renders
+# `status` and calls the rest) and your own hands.
+#
+# ─── Which assertions, and why these ─────────────────────────────────────────
+# -i -m -s, and deliberately not -d or -u.
+#
+# -i is the one that matters. This box idle-sleeps a minute after the display goes
+# (`pmset -g custom` reports `sleep 1` on both power sources), which is why a tmux job left
+# running overnight kept finding itself in 'Maintenance Sleep' — that is idle sleep, and
+# PreventUserIdleSystemSleep is what refuses it. -m keeps the disks spinning with it, and
+# -s is insurance macOS quietly ignores on battery, so it costs nothing to pass always.
+#
+# -d is absent because nobody is looking: holding a laptop panel lit to run a build is pure
+# waste. -u is worse than absent — it turns the display *on*, so a "keep the box up" sent
+# from a phone would wake a screen in an empty room.
+#
+# None of these beat a closed lid, and nothing here can. Clamshell sleep is a separate path
+# that ignores assertions entirely; `sudo pmset -a disablesleep 1` is the only lever on it,
+# it is machine-wide and permanent, and so it is deliberately not something this script
+# reaches for on your behalf.
+
+STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/keepawake"
+STATE="$STATE_DIR/hold"
+TAB=$(printf '\t')
+
+usage() {
+  sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+# "6h" → 21600. A bare number is minutes, because minutes is the unit you actually think
+# in when you are about to walk away — `keepawake 45` meaning 45 seconds would be a trap
+# that only shows up as a machine asleep an hour later.
+to_secs() {
+  num=${1%[smhSMH]}
+  case $num in
+    '' | *[!0-9]*) return 1 ;;
+  esac
+  case $1 in
+    *[sS]) secs=$num ;;
+    *[hH]) secs=$((num * 3600)) ;;
+    *[mM] | *[0-9]) secs=$((num * 60)) ;;
+    *) return 1 ;;
+  esac
+  # Zero is not a duration, and refusing it is the point rather than pedantry: it parses
+  # perfectly cleanly, so `keepawake 0` — a plausible typo for `keepawake off` — used to
+  # cancel the hold you had and hand back one with *no end at all*. A duration that fails
+  # towards "forever" is the wrong direction to fail in.
+  [ "$secs" -gt 0 ] || return 1
+  printf '%s' "$secs"
+}
+
+# Seconds → "5h 58m". Only ever read by a person; the plugin gets raw seconds and does its
+# own (more compact) formatting, so this is free to be the roomy one.
+human_secs() {
+  if [ "$1" -ge 3600 ]; then
+    printf '%dh %02dm' $(($1 / 3600)) $((($1 % 3600) / 60))
+  elif [ "$1" -ge 60 ]; then
+    printf '%dm' $(($1 / 60))
+  else
+    printf '%ds' "$1"
+  fi
+}
+
+# Our hold, if we still have one — sets $hpid, $hdeadline ("-" when open-ended) and $hlabel
+# in the caller, the way aigent's rank_dot() does, because sh gives a function one stdout
+# and this answers with three things every caller needs together.
+#
+# A state file whose caffeinate is gone is not a hold: it timed out, or was killed, or the
+# machine rebooted under it. The command name is checked and not merely "is that pid
+# alive", because pids get reused — inheriting a stranger's pid would make `keepawake off`
+# kill something that was never ours.
+hold() {
+  [ -s "$STATE" ] || return 1
+  IFS=' ' read -r hpid hdeadline hlabel <"$STATE" || return 1
+  # A half-written line is not a hold. Both fields are checked before anything arithmetic
+  # reaches them, because an empty $hdeadline arriving at `[ "$x" -gt 0 ]` is a shell error
+  # printed to stderr *and* a wrong answer — a poor way to report a truncated file, and one
+  # that surfaces in the menu bar as an open-ended hold nobody started.
+  case $hpid in
+    '' | *[!0-9]*)
+      rm -f "$STATE"
+      return 1
+      ;;
+  esac
+  case $hdeadline in
+    -) ;; # a hold with no end
+    '' | *[!0-9]*)
+      rm -f "$STATE"
+      return 1
+      ;;
+  esac
+  case $(ps -o comm= -p "$hpid" 2>/dev/null) in
+    *caffeinate) return 0 ;;
+  esac
+  rm -f "$STATE"
+  return 1
+}
+
+# What a pid is holding the machine awake *for*. A menu row reading "caffeinate" answers
+# nothing — every holder on this box is a caffeinate, and the question is always which one.
+# So resolve it one hop, to the parent.
+#
+# The parent is the right hop for both shapes, which is not the obvious result and was
+# measured rather than assumed. A bare assertion is plainly named by its parent: Claude Code
+# renews its own `caffeinate -i -t 300` while it works, and that caffeinate's parent is
+# claude. The surprise is that `caffeinate -ims <utility>` — what aigent's ctrl-a launch
+# builds — is too. caffeinate does not fork the utility off as a child; it forks a *helper*
+# that holds the assertion, and execs the utility in the original process. So the tree comes
+# out inverted from the naive reading:
+#
+#   88522 cat         <- the utility, and still the pid tmux hands out as #{pane_pid}
+#   88524 caffeinate  <- its child, holding all three assertions
+#
+# which is why aigent needs no special care to keep pane_pid pointing at the agent, and why
+# looking for a caffeinate's *child* would have found nothing in either case.
+#
+# An orphan is the one thing the hop cannot name: a caffeinate whose starter has exited is
+# reparented to launchd, and "launchd is keeping your Mac awake" is worse than useless. Say
+# what it is instead.
+owner_of() {
+  comm=$(ps -o comm= -p "$1" 2>/dev/null | sed 's|.*/||')
+  case $comm in
+    caffeinate) ;;
+    *)
+      printf '%s' "$comm"
+      return
+      ;;
+  esac
+  par=$(ps -o ppid= -p "$1" 2>/dev/null | tr -d ' ')
+  who=$(ps -o comm= -p "${par:-0}" 2>/dev/null | sed 's|.*/||')
+  case $who in
+    '' | launchd | init) printf 'caffeinate' ;;
+    *) printf '%s' "$who" ;;
+  esac
+}
+
+# Everyone else holding the machine awake, one "pid<TAB>owner" per line. pmset is the only
+# honest source for this: a hold can come from anywhere — Claude Code while it works, an
+# agent launched with aigent's ctrl-a, a Time Machine run, an installer — and not one of
+# them writes to our state file. Ours is filtered out by pid so `status` never reports the
+# same assertion twice under two names.
+others() {
+  pmset -g assertions 2>/dev/null |
+    awk '/^[[:space:]]*pid [0-9]+\(/ && /PreventUserIdleSystemSleep|PreventSystemSleep/ {
+           p = $2; sub(/\(.*/, "", p); print p
+         }' |
+    sort -u |
+    while read -r p; do
+      [ "$p" = "${1:-0}" ] && continue
+      printf '%s\t%s\n' "$p" "$(owner_of "$p")"
+    done
+}
+
+# One hold at a time, always replacing. Two overlapping caffeinates is two things to
+# remember to cancel and a menu bar that can only offer to stop one of them — and the
+# honest reading of "keep it awake 6 hours" typed over a hold with 20 minutes left is
+# six hours, not whichever of the two happens to outlive the other.
+stop() {
+  hold && kill "$hpid" 2>/dev/null
+  rm -f "$STATE"
+}
+
+start() {
+  stop
+  mkdir -p "$STATE_DIR"
+  # $1 is a positive number of seconds, or empty for a hold with no end. The two stay
+  # distinct all the way into the state file — an open-ended deadline is written "-", never
+  # a 0 — because collapsing them onto one number is precisely how a `0` that parsed fine
+  # used to arrive here and be read as "forever".
+  #
+  # nohup, because the caller is frequently something that exits immediately and takes its
+  # process group with it: a SwiftBar menu action, an ssh command, a shell you close.
+  if [ -n "$1" ]; then
+    nohup caffeinate -ims -t "$1" >/dev/null 2>&1 &
+    pid=$! deadline=$(($(date +%s) + $1))
+  else
+    nohup caffeinate -ims >/dev/null 2>&1 &
+    pid=$! deadline=-
+  fi
+  printf '%s %s %s\n' "$pid" "$deadline" "$2" >"$STATE"
+  [ -t 1 ] && status
+  return 0
+}
+
+# Two audiences, so two views — the split aigent's status() makes, for its reason. A person
+# wants a sentence; the plugin wants fields it can read back with `IFS=$'\t' read`. `[ -t 1 ]`
+# tells them apart with no flag to pass, since the plugin's own $(...) is a pipe.
+#
+#   own<TAB><seconds left, or - when open-ended><TAB><the duration you asked for>
+#   other<TAB><pid><TAB><what it is holding the machine awake for>
+#
+# Silence means the machine is free to sleep. That is a real answer, not a missing one.
+status() {
+  left=
+  if hold; then
+    if [ "$hdeadline" = - ]; then
+      left=-
+    else
+      left=$((hdeadline - $(date +%s)))
+      [ "$left" -lt 0 ] && left=0
+    fi
+  fi
+  rest=$(others "${hpid:-0}")
+
+  if [ ! -t 1 ]; then
+    [ -n "$left" ] && printf 'own\t%s\t%s\n' "$left" "$hlabel"
+    [ -n "$rest" ] && printf '%s\n' "$rest" | sed 's/^/other\t/'
+    return 0
+  fi
+
+  if [ -n "$left" ] && [ "$left" = - ]; then
+    echo "awake — open-ended hold, until you stop it"
+  elif [ -n "$left" ]; then
+    echo "awake — $(human_secs "$left") left of a $hlabel hold"
+  fi
+  [ -n "$rest" ] && printf '%s\n' "$rest" |
+    while IFS="$TAB" read -r p who; do
+      echo "awake — held by $who (pid $p)"
+    done
+  [ -n "$left" ] || [ -n "$rest" ] || echo "sleep allowed — this Mac will idle-sleep"
+  return 0
+}
+
+case ${1:-status} in
+  status) status ;;
+  off | stop) stop ;;
+  on | forever) start '' open-ended ;;
+  -h | --help | help) usage ;;
+  *)
+    secs=$(to_secs "$1") || {
+      echo "keepawake: not a duration: '$1'" >&2
+      usage >&2
+      exit 1
+    }
+    start "$secs" "$1"
+    ;;
+esac
