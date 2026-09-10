@@ -1,8 +1,23 @@
 -- AI agent integrations
 -- Right panel: unified fzf agent picker — <C-\> toggles, <C-S-\> opens a new session.
 -- All terminal UI is handled by the session table below.
--- claudecode.nvim runs as a background WebSocket server so ClaudeCodeSend and
--- diff integration work; it does not manage the terminal itself.
+--
+-- No plugin backs any of this. The agents are started by ~/.dotfiles/bin/.local/bin/aigent,
+-- which runs the picked CLI in its own tmux session; nvim only hosts the terminal, and the
+-- session outlives it either way.
+--
+-- claudecode.nvim used to sit here as a background WebSocket server for ClaudeCodeSend and
+-- claude's in-editor diff view, and it is gone because that connection was never actually
+-- made. claude auto-connects to an IDE only when it inherits CLAUDE_CODE_SSE_PORT and
+-- ENABLE_IDE_INTEGRATION, and claudecode exports those from one place: its own terminal
+-- provider (claudecode/terminal.lua), which this config set to "none" because the session
+-- manager below owns the terminal. So the server ran and wrote a lockfile into ~/.claude/ide
+-- that nothing read unless you typed /ide by hand inside claude. Restoring the integration
+-- means handing claude those two env vars, not re-adding the spec.
+--
+-- Its `keys` table was also what registered every mapping in this file, so those are set
+-- directly at the bottom now. This file is still a lazy spec (it returns one), so it is
+-- evaluated during setup and the mappings land before anything can press them.
 
 -- ── In-terminal keybindings (shared by all right-panel sessions) ───────────
 -- The mouse and wheel handling is shared with the bottom panel (util/panels.lua);
@@ -151,13 +166,9 @@ local function send_context_to_agent()
     return
   end
 
-  -- For claude, the WebSocket path gives richer context than terminal input
-  if detect_agent(chan) == "claude" then
-    vim.cmd("ClaudeCodeSend")
-    return
-  end
-
-  -- cursor-agent (or still at fzf picker): type a code fence into the terminal.
+  -- One path for every agent (and for the fzf picker itself, before one is chosen):
+  -- type a code fence into the terminal. claude took a ClaudeCodeSend branch here until
+  -- claudecode.nvim was removed — see the header for why that path was never live.
   -- Determine range: prefer an active/recent visual selection, fall back to line.
   local mode = vim.fn.mode()
   local s, e
@@ -186,57 +197,50 @@ local function send_context_to_agent()
   sessions.focus()
 end
 
--- ── Plugin specs ───────────────────────────────────────────────────────────
-return {
-  -- claudecode.nvim: WebSocket server + ClaudeCodeSend only.
-  -- Terminal UI is handled by our fzf session manager above.
-  -- When claude runs in our snacks terminal it inherits CLAUDE_NVIM_IPC_*
-  -- env vars and connects to this WebSocket, enabling selection send + diff view.
-  {
-    "coder/claudecode.nvim",
-    dependencies = { "folke/snacks.nvim" },
-    opts = {
-      auto_start = true,
-      log_level = "info",
-      git_repo_cwd = true,
-      -- Disable claudecode.nvim's own terminal management entirely.
-      -- Our snacks session manager owns the terminal; claudecode only provides
-      -- the WebSocket IPC that ClaudeCodeSend and diff integration depend on.
-      terminal = { provider = "none" },
-      diff = {
-        auto_close_on_accept = true,
-        vertical_split = true,
-        open_in_current_tab = true,
-        keep_terminal_focus = true,
-      },
-      focus_after_send = false,
-    },
-    -- Ctrl+Shift+<punctuation> arrives under two different names depending on
-    -- whether we're inside tmux, so each one is bound twice.
-    --
-    -- Bare Ghostty speaks the Kitty keyboard protocol to Neovim, which reports
-    -- the *base* key: Ctrl+Shift+\ is <C-S-\>. tmux does not implement that
-    -- protocol (tmux#3335, closed unimplemented) and negotiates xterm's older
-    -- modifyOtherKeys instead, which reports the *shifted* character — so the
-    -- same physical keypress arrives as <C-S-|>. Verified with vim.on_key.
-    --
-    -- Letters are unaffected (<C-S-L> resolves identically both ways); only
-    -- shifted punctuation splits:  \ →|   ] →}   [ →{   . →>
-    keys = {
-      { "<C-\\>",     sessions.toggle, mode = { "n", "i", "v", "t" }, desc = "Toggle right panel" },
-      { "<C-S-\\>",   sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session" },
-      { "<C-S-|>",    sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session (tmux)" },
-      { "<leader>ac", sessions.toggle, desc = "Toggle right panel" },
-      { "<C-S-]>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session" },
-      { "<C-S-}>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session (tmux)" },
-      { "<C-S-[>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session" },
-      { "<C-S-{>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session (tmux)" },
-      { "<leader>a]", sessions.next, desc = "Next agent session" },
-      { "<leader>a[", sessions.prev, desc = "Prev agent session" },
-      { "<leader>as", send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
-      { "<C-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
-      { "<C-S->>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent (tmux)" },
-      { "<D-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
-    },
-  },
+-- ── Keymaps ────────────────────────────────────────────────────────────────
+-- Set here rather than carried by a plugin spec's `keys`, because there is no longer a
+-- plugin to hang them off. Nothing is lost by that: `keys` exists to defer *loading* a
+-- plugin until first press, and every handler below is a closure over the session manager
+-- this file already built at spec-eval time. Snacks is `lazy = false` (plugins/editor/
+-- snacks.lua), so the terminal API they reach for is up before any of these can fire.
+--
+-- silent = true is a choice here, not parity: lazy has no default for it. Its Keys.opts()
+-- (lazy/core/handler/keys.lua) copies a spec's fields verbatim minus {mode, id, ft, rhs,
+-- lhs} and never adds silent, so these mappings ran at vim.keymap.set's own default of
+-- false until now. Nothing observable changes either way — every rhs below is a Lua
+-- function, and those do not echo the way a :cmd<CR> mapping does.
+--
+-- Ctrl+Shift+<punctuation> arrives under two different names depending on whether we're
+-- inside tmux, so each one is bound twice.
+--
+-- Bare Ghostty speaks the Kitty keyboard protocol to Neovim, which reports the *base* key:
+-- Ctrl+Shift+\ is <C-S-\>. tmux does not implement that protocol (tmux#3335, closed
+-- unimplemented) and negotiates xterm's older modifyOtherKeys instead, which reports the
+-- *shifted* character — so the same physical keypress arrives as <C-S-|>. Verified with
+-- vim.on_key.
+--
+-- Letters are unaffected (<C-S-L> resolves identically both ways); only shifted
+-- punctuation splits:  \ →|   ] →}   [ →{   . →>
+local maps = {
+  { "<C-\\>",     sessions.toggle, mode = { "n", "i", "v", "t" }, desc = "Toggle right panel" },
+  { "<C-S-\\>",   sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session" },
+  { "<C-S-|>",    sessions.new,    mode = { "n", "i", "v", "t" }, desc = "New agent session (tmux)" },
+  { "<leader>ac", sessions.toggle, desc = "Toggle right panel" },
+  { "<C-S-]>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session" },
+  { "<C-S-}>",    sessions.next,   mode = { "n", "i", "v", "t" }, desc = "Next agent session (tmux)" },
+  { "<C-S-[>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session" },
+  { "<C-S-{>",    sessions.prev,   mode = { "n", "i", "v", "t" }, desc = "Prev agent session (tmux)" },
+  { "<leader>a]", sessions.next, desc = "Next agent session" },
+  { "<leader>a[", sessions.prev, desc = "Prev agent session" },
+  { "<leader>as", send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
+  { "<C-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
+  { "<C-S->>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent (tmux)" },
+  { "<D-S-.>",    send_context_to_agent, mode = { "n", "v" }, desc = "Send context to agent" },
 }
+
+for _, m in ipairs(maps) do
+  vim.keymap.set(m.mode or "n", m[1], m[2], { desc = m.desc, silent = true })
+end
+
+-- A spec file has to return one. Everything this file does is above.
+return {}

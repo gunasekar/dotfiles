@@ -78,9 +78,9 @@ return {
     {
       "<leader>up",
       function()
-        -- agents.lua is key-lazy-loaded, so force it in before listing
-        -- sessions or its manager may not have registered yet.
-        require("lazy").load({ plugins = { "claudecode.nvim" } })
+        -- No load needed first: every manager registers itself when its spec
+        -- file is evaluated (plugins/agents.lua calls term_sessions.new at the
+        -- top level), which lazy does during setup, long before this can fire.
         require("util.term_sessions").picker()
       end,
       desc = "Pick panel/session",
