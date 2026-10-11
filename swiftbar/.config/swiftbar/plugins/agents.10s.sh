@@ -159,7 +159,7 @@ while IFS=$'\t' read -r state name agent task; do
 
   line="● ${state} · ${agent} · ${proj}${badge}"
   [ -n "$task" ] && line+=" — ${task}"
-  menu+="${line//|/－} | color=${colour} font=Menlo size=12"$'\n'
+  menu+="${line//|/－} | color=${colour}"$'\n'
 
   # What we knew about this session last poll (all empty the first time we see it).
   IFS=$'\t' read -r p_state p_since p_seen p_said < <(
