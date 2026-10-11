@@ -55,6 +55,51 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 AIGENT="${HOME}/.dotfiles/bin/.local/bin/aigent"
 [ -x "$AIGENT" ] || exit 0
 
+SCRIPT_PATH="$(realpath -q "$0")"
+
+# ─── Actions (SwiftBar re-runs this file with the function name as param1) ───
+# Resume: a new tab in the frontmost Ghostty window, attached to the session — a new window
+# only if Ghostty has none open. Through Ghostty's AppleScript (1.3+, on by default; see
+# ghostty.org/docs/features/applescript), whose surface configuration takes the command to
+# run, so the tab *is* the attach: detaching closes it. macOS asks once to let SwiftBar
+# control Ghostty. tmux by absolute path, since the new tab does not get this file's PATH.
+function resume() {
+  osascript - "$(command -v tmux)" "$1" <<'OSA' >/dev/null
+on run argv
+  set tmuxPath to item 1 of argv
+  set sessionName to item 2 of argv
+  tell application "Ghostty"
+    activate
+    set cfg to new surface configuration
+    set command of cfg to tmuxPath & " attach-session -t " & quoted form of ("=" & sessionName)
+    if (count of windows) > 0 then
+      new tab in front window with configuration cfg
+    else
+      new window with configuration cfg
+    end if
+  end tell
+end run
+OSA
+}
+
+# End: stop the session for good — a hard stop, the agent gets no chance to tidy up, though
+# its transcript stays on disk for its own --resume. The kill is on purpose, so the restore
+# record goes too — `aigent restore` exists for sessions tmux took down, not ones you closed.
+function end() {
+  tmux kill-session -t "=$1" 2>/dev/null
+  "$AIGENT" --forget "$1"
+}
+
+# Only ever act on an aigent session: param2 comes back from our own menu, but a stray
+# `name=` reaching kill-session is not a thing to leave to trust.
+if [[ $# -ge 2 && $2 == aigent-* ]]; then
+  case $1 in
+    resume | end) "$1" "$2" ;;
+    *) ;;
+  esac
+  exit 0
+fi
+
 ROWS=$("$AIGENT" ls 2>/dev/null)
 [ -n "$ROWS" ] || exit 0
 
@@ -150,8 +195,10 @@ while IFS=$'\t' read -r state name agent task; do
   #
   # refresh=true is what keeps the text that colour. A row with no action and no color is a
   # *disabled* item to AppKit, and disabled items are drawn grey — which is exactly how the
-  # working rows came out once their color= went. Clicking a row re-polls, which is at least
-  # a thing worth doing from a status list.
+  # working rows came out once their color= went. It also keeps the row's Resume/End
+  # submenu usable: SwiftBar 2.1.0–2.1.1 greys out an *actionless* submenu parent for good
+  # once its child count changes (swiftbar/SwiftBar#512), and a row's count does change as
+  # it goes idle and back. An action makes the row SwiftBar's, which that bug never touches.
   case $state in
     blocked)
       icon=hand.raised
@@ -170,6 +217,12 @@ while IFS=$'\t' read -r state name agent task; do
   line="${state} · ${agent} · ${proj}${badge}"
   [ -n "$task" ] && line+=" — ${task}"
   menu+="${line//|/－} | sfimage=${icon} refresh=true"$'\n'
+  # What to do about it, one level down. Resume for every state — even a working one is
+  # worth watching. End only once it has gone idle: killing a session mid-turn, or one that
+  # is waiting on your answer, is a decision this menu should not make that easy.
+  menu+="--Resume in Ghostty | bash='${SCRIPT_PATH}' param1=resume param2=${name} terminal=false sfimage=play"$'\n'
+  [ "$state" = idle ] &&
+    menu+="--End session | bash='${SCRIPT_PATH}' param1=end param2=${name} terminal=false refresh=true sfimage=xmark.circle"$'\n'
 
   # What we knew about this session last poll (all empty the first time we see it).
   IFS=$'\t' read -r p_state p_since p_seen p_said < <(
