@@ -46,6 +46,7 @@ opencode  + new
 |---|---|
 | `aigent` | pick a running session to rejoin, or an agent to start |
 | `aigent new` | skip the running sessions, start a fresh one |
+| `aigent help` | the commands and picker keys (also `-h`, `--help`) |
 | `aigent ls` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
 | `aigent restore` | bring back every session that died with tmux, each resuming its conversation, detached (`-n` lists them instead) |
