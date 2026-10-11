@@ -196,6 +196,12 @@ inner routes can reach `cockpit` itself (the tree lists it, and `)` cycles every
 session alphabetically), which gives you a cockpit inside the cockpit. Harmless
 and recoverable with another `C-b C-b s` — just pointless.
 
+To add an agent without rebuilding, split a shell off the cockpit (`C-b |` or
+`C-b -`) and run `aigent` there. Start or pick a session as usual: it gets its own
+`aigent-<project>` session like anywhere else, and the shell pane turns into a view
+of it, so the split you made becomes the new cell. (Run anywhere else inside tmux,
+`aigent` still runs the agent bare in the current pane.)
+
 Detaching leaves the cockpit up; bare `aigent cockpit` (or `tmux a -t cockpit`)
 walks back into the same grid, and `aigent cockpit new` builds a fresh one over a
 different set. Quit an agent and its pane closes and the rest re-tile; quit the
