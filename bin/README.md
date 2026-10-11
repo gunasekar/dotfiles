@@ -118,7 +118,7 @@ get the same treatment Claude does.
 `aigent ls` feeds a SwiftBar plugin
 (`swiftbar/.config/swiftbar/plugins/agents.10s.sh`) that shows a brain in the menu
 bar — red when an agent is asking you something, yellow when one finished its turn,
-dim while they all work — with a superscript count of how many want you, and announces each `working → stopped` edge once — but not instantly: by default an
+plain while they all work — with a superscript count of how many want you, and announces each `working → stopped` edge once — but not instantly: by default an
 agent must sit stopped for 30 seconds first. That silences the session you are sat
 in front of for free, because you reply within the wait and it goes back to
 `working`, while one you walked away from still speaks. Nothing can tell "you are

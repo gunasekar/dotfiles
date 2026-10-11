@@ -60,7 +60,7 @@ ROWS=$("$AIGENT" ls 2>/dev/null)
 
 RED='#e06c75'    # blocked — it is asking you something
 YELLOW='#e5c07b' # idle — it finished its turn, your move
-DIM='#5c6370'    # working — leave it alone
+DIM='#5c6370'    # the summary footer; working itself is uncoloured — nothing to act on
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
 # Default 30 seconds; AGENT_NOTIFY_AFTER overrides. Zero would make the poll that sees it
@@ -152,14 +152,14 @@ while IFS=$'\t' read -r state name agent task; do
       ((idle++))
       ;;
     *)
-      colour=$DIM
+      colour='' # plain menu text: only the rows that want you get a colour
       ((working++))
       ;;
   esac
 
   line="● ${state} · ${agent} · ${proj}${badge}"
   [ -n "$task" ] && line+=" — ${task}"
-  menu+="${line//|/－} | color=${colour}"$'\n'
+  menu+="${line//|/－}${colour:+ | color=${colour}}"$'\n'
 
   # What we knew about this session last poll (all empty the first time we see it).
   IFS=$'\t' read -r p_state p_since p_seen p_said < <(
@@ -214,7 +214,7 @@ done <<<"$ROWS"
 mv -f "${STATE_FILE}.new" "$STATE_FILE"
 
 # Menu bar: how many want you, coloured by the worst of them. When they are all busy
-# there is nothing to act on, so it shows a dim count rather than an alarm.
+# there is nothing to act on, so it shows a plain, uncoloured count rather than an alarm.
 want=$((blocked + idle))
 ICON=brain
 # Medium scale, one step under the large every other plugin's icon gets by default: the
@@ -222,13 +222,23 @@ ICON=brain
 # Scale is the only size knob an sfimage has — SwiftBar (2.1.1, MenuLineParameters.swift)
 # draws it at the menu bar's default point size, and sfsize only reaches inline symbols. The
 # tint rides in the same sfconfig, because SwiftBar ignores sfcolor on a menu-bar image.
-icon_cfg() { printf '{"renderingMode":"Palette","colors":["%s"],"scale":"medium"}' "$1" | base64 | tr -d '\n'; }
+#
+# All working gets no colour at all: an empty colors list is how SwiftBar is told to draw the
+# symbol as a template (MenuLineParameters.swift, `isTemplate = configuredColors.isEmpty`), so
+# the brain follows the bar's light/dark like an ordinary icon until something wants you.
+icon_cfg() {
+  if [ -n "$1" ]; then
+    printf '{"renderingMode":"Palette","colors":["%s"],"scale":"medium"}' "$1"
+  else
+    printf '{"renderingMode":"Hierarchical","colors":[],"scale":"medium"}'
+  fi | base64 | tr -d '\n'
+}
 if [ "$blocked" -gt 0 ]; then
   echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$RED")"
 elif [ "$idle" -gt 0 ]; then
   echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$YELLOW")"
 else
-  echo "$(superscript "$working") | sfimage=${ICON} sfconfig=$(icon_cfg "$DIM")"
+  echo "$(superscript "$working") | sfimage=${ICON} sfconfig=$(icon_cfg '')"
 fi
 
 echo '---'
