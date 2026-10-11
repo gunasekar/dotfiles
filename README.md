@@ -242,9 +242,9 @@ Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
 run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
 Plugins use native `<swiftbar.*>` metadata.
 
-- **trails.10s.sh**: Which coding agents are blocked, idle, or working — reads
-  `trails ls`, and notifies when one stops needing the CPU and starts needing
-  you (see [trails](https://github.com/gunasekar/trails))
+- **trails.10s.sh**: Which coding agents are blocked, idle, or working. It
+  ships with [trails](https://github.com/gunasekar/trails), not here;
+  `trails swiftbar` links it in (install.sh does it when trails is installed)
 - **keepawake.1m.sh**: Hold off idle sleep for 30m / 1h / 6h / 12h — reads and
   drives `keepawake` (see [bin/README.md](bin/README.md)), and names whatever else
   is holding the Mac awake. Replaces Amphetamine, which could not be driven over ssh

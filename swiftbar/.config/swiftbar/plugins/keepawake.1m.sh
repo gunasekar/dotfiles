@@ -16,7 +16,7 @@
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
 #
 # All the thinking lives in `keepawake` (bin/.local/bin/keepawake), the same way this
-# plugin's neighbour trails.10s.sh defers to `trails ls`. This file picks four
+# plugin's neighbour trails.10s.sh (shipped by trails) defers to `trails ls`. This file picks four
 # durations, draws a cup, and shells out — so the same holds can be started and stopped
 # over ssh, which is the entire reason Amphetamine had to go.
 #
