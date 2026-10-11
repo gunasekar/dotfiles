@@ -1,4 +1,5 @@
 # ─── Common Taps ──────────────────────────────────────────────────────────────
+tap "gunasekar/tap"
 tap "jenkins-zh/jcli"
 
 # ─── Common Brews (cross-platform) ───────────────────────────────────────────
@@ -96,6 +97,7 @@ brew "zbar"
 brew "zsh-autosuggestions"
 brew "zsh-completions"
 brew "zsh-syntax-highlighting"
+brew "gunasekar/tap/trails"
 brew "jenkins-zh/jcli/jcli"
 
 # ─── Go Packages (cross-platform) ────────────────────────────────────────────

@@ -80,7 +80,7 @@ human_secs() {
 }
 
 # Our hold, if we still have one — sets $hpid, $hdeadline ("-" when open-ended) and $hlabel
-# in the caller, the way aigent's rank_dot() does, because sh gives a function one stdout
+# in the caller, the way trails' rank_dot() does, because sh gives a function one stdout
 # and this answers with three things every caller needs together.
 #
 # A state file whose caffeinate is gone is not a hold: it timed out, or was killed, or the
@@ -121,7 +121,7 @@ hold() {
 # The parent is the right hop for both shapes, which is not the obvious result and was
 # measured rather than assumed. A bare assertion is plainly named by its parent: Claude Code
 # renews its own `caffeinate -i -t 300` while it works, and that caffeinate's parent is
-# claude. The surprise is that `caffeinate -ims <utility>` — what aigent's ctrl-a launch
+# claude. The surprise is that `caffeinate -ims <utility>` — what trails' ctrl-a launch
 # builds — is too. caffeinate does not fork the utility off as a child; it forks a *helper*
 # that holds the assertion, and execs the utility in the original process. So the tree comes
 # out inverted from the naive reading:
@@ -129,7 +129,7 @@ hold() {
 #   88522 cat         <- the utility, and still the pid tmux hands out as #{pane_pid}
 #   88524 caffeinate  <- its child, holding all three assertions
 #
-# which is why aigent needs no special care to keep pane_pid pointing at the agent, and why
+# which is why trails needs no special care to keep pane_pid pointing at the agent, and why
 # looking for a caffeinate's *child* would have found nothing in either case.
 #
 # An orphan is the one thing the hop cannot name: a caffeinate whose starter has exited is
@@ -154,7 +154,7 @@ owner_of() {
 
 # Everyone else holding the machine awake, one "pid<TAB>owner" per line. pmset is the only
 # honest source for this: a hold can come from anywhere — Claude Code while it works, an
-# agent launched with aigent's ctrl-a, a Time Machine run, an installer — and not one of
+# agent launched with trails' ctrl-a, a Time Machine run, an installer — and not one of
 # them writes to our state file. Ours is filtered out by pid so `status` never reports the
 # same assertion twice under two names.
 others() {
@@ -200,7 +200,7 @@ start() {
   return 0
 }
 
-# Two audiences, so two views — the split aigent's status() makes, for its reason. A person
+# Two audiences, so two views — the split trails' ls makes, for its reason. A person
 # wants a sentence; the plugin wants fields it can read back with `IFS=$'\t' read`. `[ -t 1 ]`
 # tells them apart with no flag to pass, since the plugin's own $(...) is a pipe.
 #

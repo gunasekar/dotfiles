@@ -73,14 +73,13 @@ stow -v zsh
 echo "  • Git → ~/.gitconfig.public, ~/.global.gitignore"
 stow -v git
 
-# The picker is `aigent`, not `agent`, and the extra 'i' is the whole point. ~/.local/bin
-# is a shared namespace — every CLI installer drops binaries into it — and cursor-agent
-# ships one called `agent`, which overwrote this symlink on install *and on every
-# self-update*, silently turning `agent` into Cursor's CLI. stow then refuses to touch a
-# target it does not own and exits 1, which under `set -e` would have killed the rest of
-# this script — skipping every package below. Not owning a name a vendor wants means
-# there is nothing to fight over and nothing to repair.
-echo "  • bin → ~/.local/bin/aigent"
+# keepawake, and `aigent`, a shim that forwards to trails (the agent picker, now its own
+# repo, installed by the Brewfile). ~/.local/bin is a shared namespace — every CLI installer
+# drops binaries into it — so nothing here takes a name a vendor might want: cursor-agent
+# ships an `agent` that overwrote the picker's old symlink on every self-update, and stow
+# then refuses a target it does not own and exits 1, which under `set -e` would have killed
+# every package below.
+echo "  • bin → ~/.local/bin/keepawake, ~/.local/bin/aigent"
 stow -v bin
 
 # Seed the machine-local brew ignore list (gitignored) from the committed

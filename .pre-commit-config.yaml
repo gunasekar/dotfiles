@@ -6,7 +6,7 @@ repos:
   # run on save (formatters.lua, Zed settings.json's "Shell Script" formatter)
   # so files get the same 2-space/case-indent style whether saved in an
   # editor or committed from the CLI. `types: [shell]` auto-detects by
-  # shebang too, so it also covers extension-less scripts like bin/.local/bin/aigent.
+  # shebang too, so it also covers extension-less scripts like bin/.local/bin/keepawake.
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.13.1-1
     hooks:
@@ -22,7 +22,7 @@ repos:
         description: Run shellcheck on shell scripts
         args: [--severity=warning]
         # Lint every shell script by shebang, the way shfmt above does, so extension-less
-        # ones like bin/.local/bin/aigent are covered too — not just sources/. The old
+        # ones like bin/.local/bin/keepawake are covered too — not just sources/. The old
         # `files: ^sources/...` regex missed both (wrong dir, no extension). exclude_types
         # drops zsh: shellcheck supports sh/bash/dash/ksh only and hard-errors on zsh files
         # (SC1071/SC1087) like zsh/.zshrc, which identify tags as both `shell` and `zsh`.

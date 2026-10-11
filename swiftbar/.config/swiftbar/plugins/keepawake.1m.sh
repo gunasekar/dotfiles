@@ -16,7 +16,7 @@
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
 #
 # All the thinking lives in `keepawake` (bin/.local/bin/keepawake), the same way this
-# plugin's neighbour agents.10s.sh defers to `aigent ls`. This file picks four
+# plugin's neighbour agents.10s.sh defers to `trails ls`. This file picks four
 # durations, draws a cup, and shells out — so the same holds can be started and stopped
 # over ssh, which is the entire reason Amphetamine had to go.
 #
@@ -38,8 +38,8 @@
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 
-# The absolute path, for agents.10s.sh's reason: SwiftBar runs plugins from launchd, whose
-# PATH is not the shell's, so a bare name would be a coin toss regardless of what it is called.
+# The absolute path: SwiftBar runs plugins from launchd, whose PATH is not the shell's and
+# has no ~/.local/bin, so a bare name would be a coin toss regardless of what it is called.
 KEEPAWAKE="${HOME}/.dotfiles/bin/.local/bin/keepawake"
 [ -x "$KEEPAWAKE" ] || exit 0
 
@@ -141,7 +141,7 @@ createAction "-- Until I stop it" holdOn
 # by "caffeinate" — which is what all of them are, and so tells you nothing. Listed because
 # without it the icon is a hollow cup with no explanation, and because it is the honest
 # answer to "why has this thing not gone to sleep": frequently an agent you left running,
-# which is the ctrl-a launch in `aigent`.
+# which is the ctrl-a launch in `trails`.
 if ((${#others[@]})); then
   echo "---"
   echo "Also held by | color=${DIM}"

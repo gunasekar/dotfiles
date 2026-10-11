@@ -2,8 +2,8 @@
 -- Right panel: unified fzf agent picker — <C-\> toggles, <C-S-\> opens a new session.
 -- All terminal UI is handled by the session table below.
 --
--- No plugin backs any of this. The agents are started by ~/.dotfiles/bin/.local/bin/aigent,
--- which runs the picked CLI in its own tmux session; nvim only hosts the terminal, and the
+-- No plugin backs any of this. The agents are started by `trails` (github.com/gunasekar/trails,
+-- installed from the gunasekar/tap Homebrew tap), which runs the picked CLI in its own tmux session; nvim only hosts the terminal, and the
 -- session outlives it either way.
 --
 -- claudecode.nvim used to sit here as a background WebSocket server for ClaudeCodeSend and
@@ -64,8 +64,12 @@ end
 -- command inside an *interactive* shell that would otherwise outlive the agent
 -- and leave you at a stray prompt.
 --
--- To add/remove agents, edit ~/.dotfiles/bin/.local/bin/aigent (the bin package).
-local AGENT_CMD = vim.env.HOME .. "/.dotfiles/bin/.local/bin/aigent"
+-- To add/remove agents, edit the AGENTS table in trails itself.
+--
+-- Resolved to an absolute path when it can be, so the terminal's buffer name ends in
+-- /trails and edgy files it in the right slot (plugins/ui/edgy.lua). The bare name is the
+-- fallback: the panel then says "trails: command not found" rather than opening nothing.
+local AGENT_CMD = vim.fn.exepath("trails") ~= "" and vim.fn.exepath("trails") or "trails"
 
 -- Why there is no `relative = "win"` here, unlike the bottom panel (which sets
 -- it in plugins/editor/snacks.lua, off the shared editor_win in util/panels.lua).

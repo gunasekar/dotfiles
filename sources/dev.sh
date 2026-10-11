@@ -8,15 +8,11 @@ function n {
   nvim "${@:-.}"
 }
 
-# `aigent` (~/.local/bin/aigent, see bin/ package) is the same fzf picker used
-# by nvim's right panel and Zed's agent.terminal_init_command — a real
-# command rather than an alias so it also works from scripts and
-# non-interactive shells.
-#
-# It is `aigent` and not `agent` because ~/.local/bin is a shared namespace: every CLI
-# installer drops binaries there, and cursor-agent ships one called `agent` that
-# overwrote our symlink on install *and on every self-update*, silently turning
-# `agent` into Cursor's CLI. `agent` is a name vendors want; `aigent` is not.
+# `trails` (github.com/gunasekar/trails, `brew "gunasekar/tap/trails"` in the
+# Brewfile) is the same fzf picker used by nvim's right panel and Zed's
+# agent.terminal_init_command — a real command rather than an alias so it also
+# works from scripts and non-interactive shells. It used to live here as
+# bin/.local/bin/aigent; that name survives as a forwarding shim (see bin/).
 
 # Lazy tool aliases
 command -v lazygit &>/dev/null && alias gitl='lazygit'

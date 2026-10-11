@@ -61,8 +61,8 @@ Windows and panes number from 1 and renumber themselves when one closes.
 `tmux.conf` is tuned for long-running coding-agent panes (Claude Code and
 friends). The launcher that actually creates and manages those sessions — the
 fzf picker, the `working`/`idle`/`blocked` status view, the one-agent-one-pane
-enforcement — is a separate script, `bin/.local/bin/aigent`, documented with its
-own source. This section covers only the settings that live here.
+enforcement — is a separate tool, [trails](https://github.com/gunasekar/trails),
+documented in its own repo. This section covers only the settings that live here.
 
 **Scrollback** is 20k lines. tmux's 2k default buries the start of an agent run,
 but scrollback is the one part of tmux that costs real memory: measured at
@@ -113,10 +113,10 @@ whichever session the key was pressed in, so a session you started yourself
 splits exactly as before.
 
 Both `@agent` and `@agent_locked` are user options that something else sets —
-`aigent`, here — so on a session you launched by hand neither is present, and
+`trails`, here — so on a session you launched by hand neither is present, and
 every setting above falls back to its default form.
 
-**Nested clients.** `aigent cockpit` shows several agent sessions in one window by
+**Nested clients.** `trails cockpit` shows several agent sessions in one window by
 giving each pane a nested tmux client (`env -u TMUX tmux attach -t <session>` —
 tmux sets `$TMUX` in every pane it creates and refuses to nest while it is set).
 It needs nothing added here, but it makes four of the settings above load-bearing
@@ -301,8 +301,8 @@ force-completion key** (`nvim/.config/nvim/lua/plugins/lsp/completion.lua`) for
 panes inside tmux, and that is the price paid.
 
 **Doubling a prefix sends it through** to whatever runs inside the pane. That is
-the only way to reach a tmux nested in another tmux, which is what the `aigent`
-cockpit is (see [bin/README.md](../bin/README.md)): the outer client eats every
+the only way to reach a tmux nested in another tmux, which is what the `trails`
+cockpit is (see [its architecture notes](https://github.com/gunasekar/trails/blob/main/docs/ARCHITECTURE.md#the-cockpit)): the outer client eats every
 prefix, so `C-b s` chooses a session for the *cockpit* while `C-b C-b s` chooses
 one for the single pane under the cursor.
 

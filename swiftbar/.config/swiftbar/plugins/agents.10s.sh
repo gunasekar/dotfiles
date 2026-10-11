@@ -5,7 +5,7 @@
 # <swiftbar.title>Agents</swiftbar.title>
 # <swiftbar.version>v1.0</swiftbar.version>
 # <swiftbar.desc>Which tmux agent sessions are blocked, idle, or working</swiftbar.desc>
-# <swiftbar.dependencies>tmux,aigent,jq</swiftbar.dependencies>
+# <swiftbar.dependencies>tmux,trails,jq</swiftbar.dependencies>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
@@ -13,10 +13,10 @@
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
 #
-# The picker (`aigent`) only tells you when you go and look, and it is scoped to the
+# The picker (`trails`) only tells you when you go and look, and it is scoped to the
 # project you are standing in. This is the other half: every agent on the box, polled,
 # whether or not you are looking — the "what did I leave running while I walked away"
-# view. All the thinking lives in `aigent ls`, which decides blocked/idle/working
+# view. All the thinking lives in `trails ls`, which decides blocked/idle/working
 # by diffing each session's screen (see tmux/README.md); this file only renders it.
 #
 # It emits nothing at all when no agent is running, which is how SwiftBar is told to
@@ -49,11 +49,11 @@
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 
-# The absolute path, like nvim's AGENT_CMD and Zed's terminal_init_command — SwiftBar
-# runs plugins from launchd, whose PATH is not the shell's, so a bare name would be a
-# coin toss regardless of what it is called.
-AIGENT="${HOME}/.dotfiles/bin/.local/bin/aigent"
-[ -x "$AIGENT" ] || exit 0
+# trails comes from Homebrew (gunasekar/tap). SwiftBar runs plugins from launchd, whose
+# PATH is not the shell's, which is what the export above is for: both Homebrew prefixes
+# go first, so the lookup finds it on Apple Silicon and Intel alike. Not installed, the
+# plugin says nothing, the same as when no agent is running.
+TRAILS=$(command -v trails) || exit 0
 
 SCRIPT_PATH="$(realpath -q "$0")"
 
@@ -84,15 +84,15 @@ OSA
 
 # End: stop the session for good — a hard stop, the agent gets no chance to tidy up, though
 # its transcript stays on disk for its own --resume. The kill is on purpose, so the restore
-# record goes too — `aigent restore` exists for sessions tmux took down, not ones you closed.
+# record goes too — `trails restore` exists for sessions tmux took down, not ones you closed.
 function end() {
   tmux kill-session -t "=$1" 2>/dev/null
-  "$AIGENT" --forget "$1"
+  "$TRAILS" --forget "$1"
 }
 
-# Only ever act on an aigent session: param2 comes back from our own menu, but a stray
+# Only ever act on a trails session: param2 comes back from our own menu, but a stray
 # `name=` reaching kill-session is not a thing to leave to trust.
-if [[ $# -ge 2 && $2 == aigent-* ]]; then
+if [[ $# -ge 2 && $2 == trails-* ]]; then
   case $1 in
     resume | end) "$1" "$2" ;;
     *) ;;
@@ -100,7 +100,7 @@ if [[ $# -ge 2 && $2 == aigent-* ]]; then
   exit 0
 fi
 
-ROWS=$("$AIGENT" ls 2>/dev/null)
+ROWS=$("$TRAILS" ls 2>/dev/null)
 [ -n "$ROWS" ] || exit 0
 
 RED='#e06c75'    # blocked — it is asking you something
@@ -116,7 +116,7 @@ NOW=$(date +%s)
 # One line per session: name, state, when it entered that state, whether it has been
 # seen working (so a session that was already idle when the plugin first saw it is not
 # announced — that is not news), and whether we have already spoken about this episode.
-STATE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/aigent"
+STATE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/trails"
 STATE_FILE="${STATE_DIR}/swiftbar-state"
 mkdir -p "$STATE_DIR"
 PREV=$(cat "$STATE_FILE" 2>/dev/null)
@@ -173,16 +173,16 @@ menu=''
 while IFS=$'\t' read -r state name agent task; do
   [ -n "$name" ] || continue
 
-  # aigent-my_api-2  ->  project "my_api", badge "#2". A project name may itself contain
+  # trails-my_api-2  ->  project "my_api", badge "#2". A project name may itself contain
   # a dash, so only a *trailing* -<digits> is the sibling counter.
-  proj=${name#aigent-}
+  proj=${name#trails-}
   badge=''
   if [[ $proj =~ ^(.*)-([0-9]+)$ ]]; then
     proj="${BASH_REMATCH[1]}"
     badge=" #${BASH_REMATCH[2]}"
   fi
 
-  # `aigent ls` owns these names, and *) means working — so a state it grows that this
+  # `trails ls` owns these names, and *) means working — so a state it grows that this
   # does not know lands in the "leave it alone" pile rather than raising a false alarm.
   # The cost of that default is that renaming one there fails silently here: the arm stops
   # matching, and every agent that wants you is counted as busy and left unannounced. The
@@ -251,7 +251,7 @@ while IFS=$'\t' read -r state name agent task; do
         # Those two are not two events. They are one motionless screen read twice, and
         # which name it gets is decided by grepping whatever text happens to occupy the
         # bottom 15 lines — so a flip means the text moved, not that the agent did
-        # anything. It is a guess by construction (aigent's own comment calls it "the one
+        # anything. It is a guess by construction (trails' own comment calls it "the one
         # heuristic"), and it is wrong often enough to matter: any agent that merely
         # prints the words "Do you want" reads as blocked while it sits there idle.
         #
