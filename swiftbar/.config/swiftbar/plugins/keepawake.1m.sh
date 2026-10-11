@@ -21,19 +21,20 @@
 # over ssh, which is the entire reason Amphetamine had to go.
 #
 # ─── Why it always draws something ───────────────────────────────────────────
-# agents.10s.sh exits silently when no agent is running, because a dot that is always
-# there is a dot you stop seeing. This one is the opposite and must be: the menu is the
+# agents.10s.sh exits silently when no agent is running, because an icon that is always
+# there is one you stop seeing. This one is the opposite and must be: the menu is the
 # only way to *start* a hold, so hiding it when nothing is held would hide the button at
 # exactly the moment you want it. What changes is the icon — a filled cup when we are
 # holding it, a hollow one when something else is (an agent, Claude Code mid-turn), zzz
 # when the machine is free to drop off.
 #
 # ─── The 1m refresh ──────────────────────────────────────────────────────────
-# The title carries a countdown, so it has to re-read on a timer, and a minute is the
-# resolution the countdown is drawn at anyway — a faster poll would spend `pmset -g
-# assertions` every few seconds to redraw the same string. refreshOnOpen covers the case
-# the timer does not: clicking the icon re-reads before the menu is built, so the "Stop"
-# row is never offering to cancel a hold that expired 40 seconds ago.
+# The title is just the cup, but the cup has to change when a hold expires or another holder
+# comes and goes, so it re-reads on a timer. A minute is plenty for an icon nobody watches
+# tick — a faster poll would spend `pmset -g assertions` every few seconds to redraw the same
+# picture. refreshOnOpen covers the case the timer does not: clicking the icon re-reads
+# before the menu is built, so the "Stop" row is never offering to cancel a hold that
+# expired 40 seconds ago.
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 
@@ -44,8 +45,8 @@ KEEPAWAKE="${HOME}/.dotfiles/bin/.local/bin/keepawake"
 
 SCRIPT_PATH="$(realpath -q "$0")"
 
-CYAN='#56b6c2' # our hold — this Mac is up because you said so
-DIM='#5c6370'  # someone else's hold, and the durations themselves
+COFFEE='#a67b5b' # the filled cup — our hold; mid-brown so it reads on a dark or light bar
+DIM='#5c6370'    # the hollow cup — someone else's hold — and the two submenu headers
 
 # ─── Actions (SwiftBar re-runs this file with the function name as param1) ───
 function hold30m() { "$KEEPAWAKE" 30m; }
@@ -89,14 +90,20 @@ function createAction() {
 }
 
 # ─── Title ───────────────────────────────────────────────────────────────────
+# Icon only: the cup's state is the whole message — filled, we are holding it; hollow,
+# something else is; zzz, nothing is. How long is left is a click away in the menu, and a
+# countdown in the bar was width spent on a number you rarely need at a glance.
+#
+# Coloured through sfconfig, because SwiftBar ignores sfcolor on a menu-bar sfimage (it only
+# takes colours from sfconfig — see mmi.30m.sh). No "scale" in it, which SwiftBar reads as
+# large: the same size as an unconfigured icon. zzz is left uncoloured on purpose, a plain
+# template that follows the bar's light/dark, since "nothing is happening" should not draw
+# the eye.
+tint() { printf '{"renderingMode":"Palette","colors":["%s"]}' "$1" | base64 | tr -d '\n'; }
 if [[ -n $own ]]; then
-  if [[ $own == '-' ]]; then
-    echo "∞ | sfimage=cup.and.saucer.fill"
-  else
-    echo "$(compact "$own") | sfimage=cup.and.saucer.fill"
-  fi
+  echo " | sfimage=cup.and.saucer.fill sfconfig=$(tint "$COFFEE")"
 elif ((${#others[@]})); then
-  echo " | sfimage=cup.and.saucer"
+  echo " | sfimage=cup.and.saucer sfconfig=$(tint "$DIM")"
 else
   echo " | sfimage=zzz"
 fi
@@ -106,16 +113,23 @@ echo "---"
 # ─── Menu ────────────────────────────────────────────────────────────────────
 if [[ -n $own ]]; then
   if [[ $own == '-' ]]; then
-    echo "Awake until stopped | color=${CYAN}"
+    echo "Awake until stopped"
   else
     # The wake-until clock, because "5h58m left" and "up till 21:54" answer different
     # questions and the second one is the one you ask before walking away.
-    echo "Awake for $(compact "$own") more, till $(date -v+"${own}"S +%H:%M) | color=${CYAN}"
+    echo "Awake for $(compact "$own") more, till $(date -v+"${own}"S +%H:%M)"
   fi
   createAction "Stop keeping awake" holdOff
   echo "---"
 fi
 
+# The two submenu parents ("Keep awake for", "Also held by") keep their color=, and it is
+# load-bearing rather than decoration. SwiftBar 2.1.0–2.1.1 greys out an *actionless* submenu
+# parent for the rest of the session the moment its child count changes (swiftbar/SwiftBar
+# #512, #514, #515 — "Also held by" changes size whenever a holder comes or goes). A line with
+# a color is owned by SwiftBar's own handler and escapes that path, so these stayed usable
+# for exactly as long as they were coloured. Fixed upstream in 2.1.2 (#518); drop the colour
+# only once that release is installed.
 echo "Keep awake for | color=${DIM}"
 createAction "-- 30 minutes" hold30m
 createAction "-- 1 hour" hold1h
@@ -132,6 +146,6 @@ if ((${#others[@]})); then
   echo "---"
   echo "Also held by | color=${DIM}"
   for entry in "${others[@]}"; do
-    echo "-- ${entry#*|}  (pid ${entry%%|*}) | color=${DIM}"
+    echo "-- ${entry#*|}  (pid ${entry%%|*})"
   done
 fi
