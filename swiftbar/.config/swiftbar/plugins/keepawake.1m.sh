@@ -140,8 +140,7 @@ createAction "-- Until I stop it" holdOn
 # Anything else holding the machine up, named by what it is holding it *for* rather than
 # by "caffeinate" — which is what all of them are, and so tells you nothing. Listed because
 # without it the icon is a hollow cup with no explanation, and because it is the honest
-# answer to "why has this thing not gone to sleep": frequently an agent you left running,
-# which is the ctrl-a launch in `trails`.
+# answer to "why has this thing not gone to sleep": frequently an agent you left running.
 if ((${#others[@]})); then
   echo "---"
   echo "Also held by | color=${DIM}"

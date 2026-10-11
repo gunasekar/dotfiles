@@ -121,8 +121,8 @@ hold() {
 # The parent is the right hop for both shapes, which is not the obvious result and was
 # measured rather than assumed. A bare assertion is plainly named by its parent: Claude Code
 # renews its own `caffeinate -i -t 300` while it works, and that caffeinate's parent is
-# claude. The surprise is that `caffeinate -ims <utility>` — what trails' ctrl-a launch
-# builds — is too. caffeinate does not fork the utility off as a child; it forks a *helper*
+# claude. The surprise is that `caffeinate -ims <utility>` — an agent started under
+# caffeinate — is too. caffeinate does not fork the utility off as a child; it forks a *helper*
 # that holds the assertion, and execs the utility in the original process. So the tree comes
 # out inverted from the naive reading:
 #
@@ -154,7 +154,7 @@ owner_of() {
 
 # Everyone else holding the machine awake, one "pid<TAB>owner" per line. pmset is the only
 # honest source for this: a hold can come from anywhere — Claude Code while it works, an
-# agent launched with trails' ctrl-a, a Time Machine run, an installer — and not one of
+# agent started under caffeinate, a Time Machine run, an installer — and not one of
 # them writes to our state file. Ours is filtered out by pid so `status` never reports the
 # same assertion twice under two names.
 others() {

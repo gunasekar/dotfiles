@@ -116,15 +116,15 @@ Both `@agent` and `@agent_locked` are user options that something else sets —
 `trails`, here — so on a session you launched by hand neither is present, and
 every setting above falls back to its default form.
 
-**Nested clients.** `trails cockpit` shows several agent sessions in one window by
+**Nested clients.** `trails map` shows several agent sessions in one window by
 giving each pane a nested tmux client (`env -u TMUX tmux attach -t <session>` —
 tmux sets `$TMUX` in every pane it creates and refuses to nest while it is set).
 It needs nothing added here, but it makes four of the settings above load-bearing
 in a second way:
 
 - `set-titles-string` becomes a **pane border** as well as a Ghostty tab. The
-  inner client emits the title to its terminal — which *is* the cockpit's pane —
-  so the cockpit reads `claude · <task>` straight off `#{pane_title}` with nothing
+  inner client emits the title to its terminal — which *is* the map's pane —
+  so the map reads `claude · <task>` straight off `#{pane_title}` with nothing
   polling. The hostname and spinner-glyph guards come along for free.
 - **Truecolor survives the nest** with no `terminal-features` entry for
   `tmux-256color`, which declares neither `Tc` nor `RGB` in its terminfo. tmux
@@ -140,11 +140,11 @@ in a second way:
   the right one. A window has one grid, so two clients of different shapes viewing
   one session cannot both be right: the one you are not touching draws small with
   `···` filler until you press a key in it, which re-elects it.
-- **Keys go to the outermost client first**, so `C-b` in a cockpit is the cockpit's
+- **Keys go to the outermost client first**, so `C-b` in a map is the map's
   prefix and the inner client never sees it. `C-b C-b` is the way through — the
   stock `bind-key -T prefix C-b send-prefix` passes a literal `C-b` into the pane,
   where the inner client reads it as its own prefix. That is what makes
-  `C-b C-b s` (choose-tree) re-point a single cockpit pane at a different agent.
+  `C-b C-b s` (choose-tree) re-point a single map pane at a different agent.
 
 ## Notes
 
@@ -302,8 +302,8 @@ panes inside tmux, and that is the price paid.
 
 **Doubling a prefix sends it through** to whatever runs inside the pane. That is
 the only way to reach a tmux nested in another tmux, which is what the `trails`
-cockpit is (see [its architecture notes](https://github.com/gunasekar/trails/blob/main/docs/ARCHITECTURE.md#the-cockpit)): the outer client eats every
-prefix, so `C-b s` chooses a session for the *cockpit* while `C-b C-b s` chooses
+map is (see [its architecture notes](https://github.com/gunasekar/trails/blob/main/docs/ARCHITECTURE.md#the-map)): the outer client eats every
+prefix, so `C-b s` chooses a session for the *map* while `C-b C-b s` chooses
 one for the single pane under the cursor.
 
 ```tmux

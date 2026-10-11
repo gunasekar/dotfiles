@@ -100,7 +100,11 @@ if [[ $# -ge 2 && $2 == trails-* ]]; then
   exit 0
 fi
 
-ROWS=$("$TRAILS" ls 2>/dev/null)
+# Running sessions only: `trails ls` also lists ones lost with tmux (restore) and finished
+# conversations (recent, open), and neither is anything to announce. TRAILS_RECENT_MAX=0
+# skips reading conversation history altogether, the bulk of an ls, every 10 seconds.
+ROWS=$(TRAILS_RECENT_MAX=0 "$TRAILS" ls 2>/dev/null |
+  awk -F'\t' '$1 == "blocked" || $1 == "idle" || $1 == "working"')
 [ -n "$ROWS" ] || exit 0
 
 RED='#e06c75'    # blocked — it is asking you something
@@ -170,8 +174,12 @@ notify() { # title, body
 blocked=0 idle=0 working=0
 menu=''
 
-while IFS=$'\t' read -r state name agent task; do
+# The TSV is `state session agent yolo dir id when pid title`, with - for an empty field
+# (see trails' README) — the title last, so a task with spaces arrives whole.
+while IFS=$'\t' read -r state name agent yolo _dir _id _when _pid task; do
   [ -n "$name" ] || continue
+  label=$agent
+  [ "$yolo" = yolo ] && label+=" (YOLO)"
 
   # trails-my_api-2  ->  project "my_api", badge "#2". A project name may itself contain
   # a dash, so only a *trailing* -<digits> is the sibling counter.
@@ -214,7 +222,7 @@ while IFS=$'\t' read -r state name agent task; do
       ;;
   esac
 
-  line="${state} · ${agent} · ${proj}${badge}"
+  line="${state} · ${label} · ${proj}${badge}"
   [ -n "$task" ] && line+=" — ${task}"
   menu+="${line//|/－} | sfimage=${icon} refresh=true"$'\n'
   # What to do about it, one level down. Resume for every state — even a working one is
