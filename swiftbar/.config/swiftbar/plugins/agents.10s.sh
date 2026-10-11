@@ -20,7 +20,7 @@
 # by diffing each session's screen (see tmux/README.md); this file only renders it.
 #
 # It emits nothing at all when no agent is running, which is how SwiftBar is told to
-# hide the menu bar item entirely — a dot that is always there is a dot you stop seeing.
+# hide the menu bar item entirely — an icon that is always there is one you stop seeing.
 #
 # ─── When it speaks ──────────────────────────────────────────────────────────
 # It announces the working → stopped edge, but not the instant it sees it: an agent has
@@ -76,6 +76,14 @@ STATE_FILE="${STATE_DIR}/swiftbar-state"
 mkdir -p "$STATE_DIR"
 PREV=$(cat "$STATE_FILE" 2>/dev/null)
 : >"${STATE_FILE}.new"
+
+# 3 -> ³, so the count rides on the icon's shoulder like the lattiq plugin's, instead of
+# sitting beside it at full height.
+superscript() {
+  local n=$1 out='' i sup=(⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹)
+  for ((i = 0; i < ${#n}; i++)); do out+=${sup[${n:i:1}]}; done
+  printf '%s' "$out"
+}
 
 # Posted by SwiftBar itself rather than by osascript, which delivered them as "Script
 # Editor" — an app nobody chose, sharing a bucket with every other script on the machine,
@@ -208,12 +216,19 @@ mv -f "${STATE_FILE}.new" "$STATE_FILE"
 # Menu bar: how many want you, coloured by the worst of them. When they are all busy
 # there is nothing to act on, so it shows a dim count rather than an alarm.
 want=$((blocked + idle))
+ICON=brain
+# Medium scale, one step under the large every other plugin's icon gets by default: the
+# brain fills its whole symbol box, so at large it reads a size up from its neighbours.
+# Scale is the only size knob an sfimage has — SwiftBar (2.1.1, MenuLineParameters.swift)
+# draws it at the menu bar's default point size, and sfsize only reaches inline symbols. The
+# tint rides in the same sfconfig, because SwiftBar ignores sfcolor on a menu-bar image.
+icon_cfg() { printf '{"renderingMode":"Palette","colors":["%s"],"scale":"medium"}' "$1" | base64 | tr -d '\n'; }
 if [ "$blocked" -gt 0 ]; then
-  echo "●${want} | color=${RED}"
+  echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$RED")"
 elif [ "$idle" -gt 0 ]; then
-  echo "●${want} | color=${YELLOW}"
+  echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$YELLOW")"
 else
-  echo "●${working} | color=${DIM}"
+  echo "$(superscript "$working") | sfimage=${ICON} sfconfig=$(icon_cfg "$DIM")"
 fi
 
 echo '---'
