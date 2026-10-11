@@ -27,15 +27,18 @@ frontend (a plain shell, a Zed thread, an nvim panel) goes through the same
 script and lands on the same session; reattach from anywhere with
 `tmux a -t aigent-<project>`.
 
-Run with no argument and it shows what's already running for this project
-alongside the agents you can start, sorted by what wants your attention first:
+Run with no argument and it lists the agents you can start, with what is already
+running for this project filed beneath its agent — each branch sorted by what wants
+your attention first, and the cursor starting on the session that wants it most:
 
 ```
-● [blocked · claude]          Rework the retry budget   ← asking you something
-● [idle · cursor · #2]        Fix the flaky auth test   ← finished its turn, your move
-● [working · claude · #3]     Migrate the schema        ← getting on with it
-new     claude
-new     cursor
+claude  + new                                    ← enter starts a fresh one
+  ├─ ● [blocked · #2]        Rework the retry budget   ← asking you something
+  ├─ ● [working · YOLO]      Migrate the schema        ← getting on with it
+  └─ ↻ [restore]             Old spike                 ← died with tmux
+cursor  + new
+  └─ ● [idle · #3]           Fix the flaky auth test   ← finished its turn, your move
+opencode  + new
 …
 ```
 
