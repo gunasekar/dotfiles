@@ -52,10 +52,11 @@ new     cursor
 Add an agent by dropping one `name|command|args` line into the `AGENTS` table at
 the top of the script — it drives the menu, the PATH filter and the launch.
 
-`aigent` refuses to open an agent in `/` or `$HOME`: an agent treats the
-directory you start it in as the project, and neither of those is ever what you
-meant — but both are one stray `cd` away. Reporting is unaffected — `aigent
-status` answers for the whole box and works from anywhere.
+`aigent` refuses to open an agent in `/`: an agent treats the directory you
+start it in as the project, and the filesystem root is never what you meant —
+but a `cd` with an unset variable lands there. `$HOME` is allowed, for a
+general-purpose session that isn't tied to one project. Reporting is unaffected —
+`aigent status` answers for the whole box and works from anywhere.
 
 ### Keeping the Mac awake
 
