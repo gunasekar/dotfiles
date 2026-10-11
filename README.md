@@ -72,8 +72,7 @@ sudo dnf install git stow      # Fedora/RHEL
 │   ├── network.sh   # Network utilities
 │   ├── utils.sh     # General utility functions
 │   └── linux.sh     # Linux-specific utilities
-├── bin/              # ~/.local/bin scripts — `keepawake`, and the `aigent` shim
-│                     #   for trails (github.com/gunasekar/trails, via brew)
+├── bin/              # ~/.local/bin scripts — `keepawake`
 ├── brew/             # Homebrew packages (see brew/README.md)
 ├── python/           # Python dev tools (see python/README.md)
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
@@ -243,7 +242,7 @@ Menu bar utilities (macOS only). Deployed to `~/.config/swiftbar/plugins/` and
 run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
 Plugins use native `<swiftbar.*>` metadata.
 
-- **agents.10s.sh**: Which coding agents are blocked, idle, or working — reads
+- **trails.10s.sh**: Which coding agents are blocked, idle, or working — reads
   `trails ls`, and notifies when one stops needing the CPU and starts needing
   you (see [trails](https://github.com/gunasekar/trails))
 - **keepawake.1m.sh**: Hold off idle sleep for 30m / 1h / 6h / 12h — reads and

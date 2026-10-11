@@ -2,9 +2,9 @@
 
 # Agents that want you back, in the menu bar.
 #
-# <swiftbar.title>Agents</swiftbar.title>
+# <swiftbar.title>trails</swiftbar.title>
 # <swiftbar.version>v1.0</swiftbar.version>
-# <swiftbar.desc>Which tmux agent sessions are blocked, idle, or working</swiftbar.desc>
+# <swiftbar.desc>Which trails agent sessions are blocked, idle, or working</swiftbar.desc>
 # <swiftbar.dependencies>tmux,trails,jq</swiftbar.dependencies>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
@@ -138,7 +138,7 @@ superscript() {
 # Editor" — an app nobody chose, sharing a bucket with every other script on the machine,
 # so tuning or muting agent alerts meant tuning every AppleScript you own. SwiftBar tags
 # each notification with threadIdentifier = this plugin, so Notification Center collapses
-# the pile into one "Agents" group, and clicking through has somewhere to go.
+# the pile into one "trails" group, and clicking through has somewhere to go.
 #
 # It cannot clear the previous one. swiftbar://notify accepts no identifier, and SwiftBar
 # stamps every request with a fresh UUID (v2.0.1, PluginManger.swift:374), so "replace
@@ -167,7 +167,8 @@ superscript() {
 urlenc() { printf '%s' "$1" | jq -sRr @uri; }
 
 notify() { # title, body
-  open -g "swiftbar://notify?name=agents&title=$(urlenc "$1")&body=$(urlenc "$2")" \
+  # name= is the plugin, which SwiftBar knows by its file name: trails.10s.sh is "trails".
+  open -g "swiftbar://notify?name=trails&title=$(urlenc "$1")&body=$(urlenc "$2")" \
     >/dev/null 2>&1 || true
 }
 

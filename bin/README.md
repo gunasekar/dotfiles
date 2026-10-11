@@ -1,10 +1,11 @@
 # bin
 
-Personal scripts, stowed onto `PATH` at `~/.local/bin`.
+Personal scripts, stowed onto `PATH` at `~/.local/bin`. The coding-agent picker
+that used to live here is [trails](https://github.com/gunasekar/trails), installed
+by the Brewfile.
 
 | Script | What it does |
 |---|---|
-| `aigent` | shim that forwards to [trails](https://github.com/gunasekar/trails), the tmux picker for coding agents |
 | `keepawake` | hold off idle sleep for a set stretch, from a command line — the thing Amphetamine could not do over ssh |
 
 ## Installation
@@ -14,20 +15,8 @@ cd ~/.dotfiles
 stow bin
 ```
 
-Symlinks `aigent` and `keepawake` into `~/.local/bin`. `keepawake` is run by hand
+Symlinks `keepawake` into `~/.local/bin`. It is run by hand
 and by the `keepawake.1m.sh` SwiftBar plugin.
-
-## aigent → trails
-
-The tmux picker for coding agents that lived here as `aigent` is now its own
-project, [trails](https://github.com/gunasekar/trails), installed by the Brewfile
-(`brew "gunasekar/tap/trails"`). Its README covers using it and its
-`docs/ARCHITECTURE.md` covers how it works.
-
-`aigent` remains as a shim that forwards to `trails`. Agents started before the
-rename call it by this exact path when they exit, to forget their restore record,
-and the shim translates their old `aigent-*` names to `trails-*`. Delete it once
-`pgrep -f aigent-wrap` prints nothing.
 
 ## keepawake
 

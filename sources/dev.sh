@@ -11,8 +11,7 @@ function n {
 # `trails` (github.com/gunasekar/trails, `brew "gunasekar/tap/trails"` in the
 # Brewfile) is the same fzf picker used by nvim's right panel and Zed's
 # agent.terminal_init_command — a real command rather than an alias so it also
-# works from scripts and non-interactive shells. It used to live here as
-# bin/.local/bin/aigent; that name survives as a forwarding shim (see bin/).
+# works from scripts and non-interactive shells.
 
 # Lazy tool aliases
 command -v lazygit &>/dev/null && alias gitl='lazygit'
