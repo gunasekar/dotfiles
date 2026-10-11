@@ -49,7 +49,7 @@ opencode  + new
 | `aigent help` | the commands and picker keys (also `-h`, `--help`) |
 | `aigent ls` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
-| `aigent restore` | bring back every session that died with tmux, each resuming its conversation, detached (`-n` lists them instead) |
+| `aigent restore` | bring back every session that died with tmux, each resuming its conversation, detached (`-n` or `--dry-run` lists them instead) |
 | `tab` (in picker) | arm the highlighted agent for YOLO — run everything unconfirmed |
 | `ctrl-a` (in picker) | arm the highlighted row to hold this Mac awake for as long as that session lives |
 | `ctrl-x` (in picker) | kill the highlighted session, or forget a `↻` row |
