@@ -58,20 +58,51 @@ TRAILS=$(command -v trails) || exit 0
 SCRIPT_PATH="$(realpath -q "$0")"
 
 # ─── Actions (SwiftBar re-runs this file with the function name as param1) ───
-# Resume: a new tab in the frontmost Ghostty window, attached to the session — a new window
-# only if Ghostty has none open. Through Ghostty's AppleScript (1.3+, on by default; see
-# ghostty.org/docs/features/applescript), whose surface configuration takes the command to
-# run, so the tab *is* the attach: detaching closes it. macOS asks once to let SwiftBar
-# control Ghostty. tmux by absolute path, since the new tab does not get this file's PATH.
+# Resume: open the session in your terminal, attached to it — a new tab in the front window
+# where the terminal has one, a new window otherwise. The command *is* the attach, so
+# detaching closes it. tmux by absolute path, since the new tab does not get this file's
+# PATH. macOS asks once to let SwiftBar control the terminal.
+#
+# Which terminal is yours to pick, from "Open sessions in" at the bottom of the menu:
+# Terminal (the default, since every Mac has it), iTerm or Ghostty. The pick lives in
+# SwiftBar's own storage for this plugin, so it outlives a plugin update. One that isn't
+# installed falls back to Terminal rather than doing nothing.
+TERMINALS="terminal iterm ghostty"
+TERMINAL_FILE="${SWIFTBAR_PLUGIN_DATA_PATH:-${XDG_CACHE_HOME:-${HOME}/.cache}/trails}/terminal"
+
+terminal_app() { # terminal id -> app name
+  case $1 in
+    iterm) echo iTerm ;;
+    ghostty) echo Ghostty ;;
+    *) echo Terminal ;;
+  esac
+}
+installed() { open -Ra "$(terminal_app "$1")" 2>/dev/null; }
+
+chosen_terminal() {
+  t=$(cat "$TERMINAL_FILE" 2>/dev/null)
+  case " $TERMINALS " in *" $t "*) ;; *) t=terminal ;; esac
+  installed "$t" || t=terminal
+  echo "$t"
+}
+
+function set_terminal() {
+  case " $TERMINALS " in *" $1 "*) ;; *) return 0 ;; esac
+  mkdir -p "$(dirname "$TERMINAL_FILE")" && printf '%s\n' "$1" >"$TERMINAL_FILE"
+}
+
 function resume() {
-  osascript - "$(command -v tmux)" "$1" <<'OSA' >/dev/null
+  local tmux_path
+  tmux_path=$(command -v tmux)
+  case $(chosen_terminal) in
+    ghostty)
+      osascript - "$tmux_path" "$1" <<'OSA' >/dev/null
 on run argv
-  set tmuxPath to item 1 of argv
-  set sessionName to item 2 of argv
+  set cmd to item 1 of argv & " attach-session -t " & quoted form of ("=" & item 2 of argv)
   tell application "Ghostty"
     activate
     set cfg to new surface configuration
-    set command of cfg to tmuxPath & " attach-session -t " & quoted form of ("=" & sessionName)
+    set command of cfg to cmd
     if (count of windows) > 0 then
       new tab in front window with configuration cfg
     else
@@ -80,6 +111,36 @@ on run argv
   end tell
 end run
 OSA
+      ;;
+    iterm)
+      osascript - "$tmux_path" "$1" <<'OSA' >/dev/null
+on run argv
+  set cmd to item 1 of argv & " attach-session -t " & quoted form of ("=" & item 2 of argv)
+  tell application "iTerm"
+    activate
+    if (count of windows) > 0 then
+      tell current window to create tab with default profile command cmd
+    else
+      create window with default profile command cmd
+    end if
+  end tell
+end run
+OSA
+      ;;
+    *)
+      # Terminal runs the command in a shell, so exec: detaching ends the shell too, rather
+      # than leaving a prompt behind.
+      osascript - "$tmux_path" "$1" <<'OSA' >/dev/null
+on run argv
+  set cmd to "exec " & quoted form of (item 1 of argv) & " attach-session -t " & quoted form of ("=" & item 2 of argv)
+  tell application "Terminal"
+    activate
+    do script cmd
+  end tell
+end run
+OSA
+      ;;
+  esac
 }
 
 # End: stop the session for good — a hard stop, the agent gets no chance to tidy up, though
@@ -89,6 +150,12 @@ function end() {
   tmux kill-session -t "=$1" 2>/dev/null
   "$TRAILS" --forget "$1"
 }
+
+# Picking a terminal from the menu: param2 is a terminal id, checked against the list.
+if [[ $# -ge 2 && $1 == set_terminal ]]; then
+  set_terminal "$2"
+  exit 0
+fi
 
 # Only ever act on a trails session: param2 comes back from our own menu, but a stray
 # `name=` reaching kill-session is not a thing to leave to trust.
@@ -170,6 +237,10 @@ notify() { # title, body
     >/dev/null 2>&1 || true
 }
 
+# Which terminal Resume opens in, worked out once per refresh: each check asks LaunchServices.
+CURRENT_TERMINAL=$(chosen_terminal)
+TERMINAL_NAME=$(terminal_app "$CURRENT_TERMINAL")
+
 blocked=0 idle=0 working=0
 menu=''
 
@@ -227,7 +298,7 @@ while IFS=$'\t' read -r state name agent yolo _dir _id _when _pid task; do
   # What to do about it, one level down. Resume for every state — even a working one is
   # worth watching. End only once it has gone idle: killing a session mid-turn, or one that
   # is waiting on your answer, is a decision this menu should not make that easy.
-  menu+="--Resume in Ghostty | bash='${SCRIPT_PATH}' param1=resume param2=${name} terminal=false sfimage=play"$'\n'
+  menu+="--Resume in ${TERMINAL_NAME} | bash='${SCRIPT_PATH}' param1=resume param2=${name} terminal=false sfimage=play"$'\n'
   [ "$state" = idle ] &&
     menu+="--End session | bash='${SCRIPT_PATH}' param1=end param2=${name} terminal=false refresh=true sfimage=xmark.circle"$'\n'
 
@@ -319,4 +390,15 @@ echo '---'
 printf '%s' "$menu"
 echo '---'
 echo "${blocked} blocked · ${idle} idle · ${working} working | color=${DIM} size=11"
+echo "Open sessions in"
+for t in $TERMINALS; do
+  name=$(terminal_app "$t")
+  if ! installed "$t"; then
+    echo "--${name} (not installed) | color=${DIM}"
+  elif [ "$t" = "$CURRENT_TERMINAL" ]; then
+    echo "--${name} | checked=true bash='${SCRIPT_PATH}' param1=set_terminal param2=${t} terminal=false refresh=true"
+  else
+    echo "--${name} | bash='${SCRIPT_PATH}' param1=set_terminal param2=${t} terminal=false refresh=true"
+  fi
+done
 echo "Refresh | refresh=true"
