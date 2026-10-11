@@ -107,9 +107,7 @@ ROWS=$(TRAILS_RECENT_MAX=0 "$TRAILS" ls 2>/dev/null |
   awk -F'\t' '$1 == "blocked" || $1 == "idle" || $1 == "working"')
 [ -n "$ROWS" ] || exit 0
 
-RED='#e06c75'    # blocked — it is asking you something
-YELLOW='#e5c07b' # idle — it finished its turn, your move
-DIM='#5c6370'    # the summary footer
+DIM='#5c6370' # the summary footer
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
 # Default 30 seconds; AGENT_NOTIFY_AFTER overrides. Zero would make the poll that sees it
@@ -285,32 +283,36 @@ done <<<"$ROWS"
 
 mv -f "${STATE_FILE}.new" "$STATE_FILE"
 
-# Menu bar: how many want you, coloured by the worst of them. When they are all busy
-# there is nothing to act on, so it shows a plain, uncoloured count rather than an alarm.
-want=$((blocked + idle))
-ICON=brain
-# Medium scale, one step under the large every other plugin's icon gets by default: the
-# brain fills its whole symbol box, so at large it reads a size up from its neighbours.
-# Scale is the only size knob an sfimage has — SwiftBar (2.1.1, MenuLineParameters.swift)
-# draws it at the menu bar's default point size, and sfsize only reaches inline symbols. The
-# tint rides in the same sfconfig, because SwiftBar ignores sfcolor on a menu-bar image.
+# Menu bar: the trails mark, its two dots the state — the top one "wants you" (red when an
+# agent is asking you something, amber when one finished its turn, grey otherwise), the
+# bottom one "working" (green while anything is). Beside it, how many want you, or when
+# nothing does, how many are working.
 #
-# All working gets no colour at all: an empty colors list is how SwiftBar is told to draw the
-# symbol as a template (MenuLineParameters.swift, `isTemplate = configuredColors.isEmpty`), so
-# the brain follows the bar's light/dark like an ordinary icon until something wants you.
-icon_cfg() {
-  if [ -n "$1" ]; then
-    printf '{"renderingMode":"Palette","colors":["%s"],"scale":"medium"}' "$1"
-  else
-    printf '{"renderingMode":"Hierarchical","colors":[],"scale":"medium"}'
-  fi | base64 | tr -d '\n'
-}
-if [ "$blocked" -gt 0 ]; then
-  echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$RED")"
-elif [ "$idle" -gt 0 ]; then
-  echo "$(superscript "$want") | sfimage=${ICON} sfconfig=$(icon_cfg "$YELLOW")"
+# Pre-drawn PNGs, one per state and bar appearance, from trails' assets/render.swift
+# (`swift assets/render.swift --menubar <dir>`): SwiftBar takes an image as base64, and
+# drawing one here every ten seconds would mean a renderer this script doesn't have. They
+# sit beside the plugins folder rather than in it, where SwiftBar would try each as a plugin.
+# Each is 36 px at 144 dpi, which SwiftBar sizes as 18 pt — sharp on a Retina bar.
+#
+# The bar's appearance is the system's: a coloured image can't be a template image, so it
+# can't follow the bar by itself, and the ink has to be picked here.
+ICONS="${HOME}/.config/swiftbar/trails-icons"
+want=$((blocked + idle))
+top=none
+[ "$idle" -gt 0 ] && top=idle
+[ "$blocked" -gt 0 ] && top=blocked
+bottom=rest
+[ "$working" -gt 0 ] && bottom=working
+bar=light
+[ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ] && bar=dark
+count=$want
+[ "$want" -gt 0 ] || count=$working
+icon="${ICONS}/trails-${bar}-${top}-${bottom}.png"
+if [ -f "$icon" ]; then
+  echo "$(superscript "$count") | image=$(base64 <"$icon" | tr -d '\n')"
 else
-  echo "$(superscript "$working") | sfimage=${ICON} sfconfig=$(icon_cfg '')"
+  # The icons didn't come with this copy of the plugin: a stock symbol rather than nothing.
+  echo "$(superscript "$count") | sfimage=point.bottomleft.forward.to.point.topright.scurvepath"
 fi
 
 echo '---'
