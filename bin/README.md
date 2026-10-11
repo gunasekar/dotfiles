@@ -35,7 +35,8 @@ your attention first, and the cursor starting on the session that wants it most:
 claude  + new                                    ← enter starts a fresh one
   ├─ ● [blocked · #2]        Rework the retry budget   ← asking you something
   ├─ ● [working · YOLO]      Migrate the schema        ← getting on with it
-  └─ ↻ [restore]             Old spike                 ← died with tmux
+  ├─ ↻ [restore]             Old spike                 ← died with tmux
+  └─ ◷ [2d ago]              Tidy the release notes    ← a recent conversation, not running
 cursor  + new
   └─ ● [idle · #3]           Fix the flaky auth test   ← finished its turn, your move
 opencode  + new
@@ -50,7 +51,8 @@ opencode  + new
 | `aigent ls` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
 | `aigent restore` | bring back every session that died with tmux, each resuming its conversation, detached (`-n` or `--dry-run` lists them instead) |
-| `tab` (in picker) | arm the highlighted agent for YOLO — run everything unconfirmed |
+| `aigent recent` | conversations from the last 10 days in every directory — a table on a terminal, TSV (mtime, agent, directory, ID, title, pid if still open) when piped |
+| `tab` (in picker) | arm the highlighted agent or `◷` row for YOLO — run everything unconfirmed |
 | `ctrl-a` (in picker) | arm the highlighted row to hold this Mac awake for as long as that session lives |
 | `ctrl-x` (in picker) | kill the highlighted session, or forget a `↻` row |
 
@@ -175,6 +177,33 @@ Things worth knowing:
 - If the agent can't start at all (a bad token, say), the record is kept for next time.
 - Restoring brings back the conversation, not whatever was in flight. A half-run
   command is gone, and you tell the agent to carry on.
+
+### Recent conversations
+
+Records aren't history: one is deleted the moment its agent exits. For "what was I
+working on here", the picker reads each agent's own transcript store instead. That
+is the store its `--resume` reads, so it covers every conversation, including ones
+from before aigent and ones started without it. Nothing is imported or kept.
+
+The `◷` rows are the 5 most recent conversations in this directory from the last 10
+days that nothing is running. Enter resumes one as a new session, recorded like any
+other launch. Tab arms it for YOLO first. `aigent recent` shows the same thing for
+every directory; to pick one up, run `aigent` in its directory.
+
+| Agent | Read from | Shown when |
+|---|---|---|
+| claude | `~/.claude/projects/<dir>/<id>.jsonl` | started from the CLI (not the SDK), and has a title or a prompt |
+| opencode | `session` table in `~/.local/share/opencode/opencode.db` | top-level, not archived, and titled |
+
+The cost depends on the rows shown, not the history: only files touched inside the
+window are looked at, newest first, until there are five. `AIGENT_RECENT_DAYS` and
+`AIGENT_RECENT_MAX` change the window and the count.
+
+A conversation still open in a `claude` that aigent didn't start shows as
+`! [2h ago · open in claude]` instead. Enter on it starts nothing and tells you which
+process has it: opening it a second time would leave two Claudes on one conversation,
+each adding replies the other never sees. Claude lists what it has open in
+`~/.claude/sessions/<pid>.json`, which is how aigent knows.
 
 ### The cockpit
 
