@@ -43,20 +43,22 @@ new     cursor
 |---|---|
 | `aigent` | pick a running session to rejoin, or an agent to start |
 | `aigent new` | skip the running sessions, start a fresh one |
-| `aigent status` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
+| `aigent ls` | every agent session on the box — a table on a terminal, TSV (state, session, agent, task) when piped, for a notifier |
 | `aigent cockpit [N]` | several agents at once in one window — re-attach to one already up, pick a set, or take the `N` that most want you (`cockpit new` forces a fresh pick) |
+| `aigent restore` | bring back every session that died with tmux, each resuming its conversation, detached (`-n` lists them instead) |
 | `tab` (in picker) | arm the highlighted agent for YOLO — run everything unconfirmed |
 | `ctrl-a` (in picker) | arm the highlighted row to hold this Mac awake for as long as that session lives |
-| `ctrl-x` (in picker) | kill the highlighted session |
+| `ctrl-x` (in picker) | kill the highlighted session, or forget a `↻` row |
 
-Add an agent by dropping one `name|command|args` line into the `AGENTS` table at
-the top of the script — it drives the menu, the PATH filter and the launch.
+Add an agent by dropping one `name|command|args|yolo|pin|resume|idform` line into the
+`AGENTS` table at the top of the script — it drives the menu, the PATH filter and the
+launch. Leave the last three empty if the agent can't be restored (see below).
 
 `aigent` refuses to open an agent in `/`: an agent treats the directory you
 start it in as the project, and the filesystem root is never what you meant —
 but a `cd` with an unset variable lands there. `$HOME` is allowed, for a
 general-purpose session that isn't tied to one project. Reporting is unaffected —
-`aigent status` answers for the whole box and works from anywhere.
+`aigent ls` answers for the whole box and works from anywhere.
 
 ### Keeping the Mac awake
 
@@ -83,12 +85,12 @@ lifetime from the other end, with `caffeinate -ims -w <pane pid>`.
 
 Worth knowing about the process tree, because it is the reverse of what it looks
 like: caffeinate does not fork the agent off as a child. It forks a *helper* that
-holds the assertion and execs the agent in the original process, so `#{pane_pid}`
-still points at the agent and nothing else in `aigent` had to change.
+holds the assertion and execs the agent in the original process, so it adds no
+process of its own between the agent and the restore wrapper (see below).
 
 ```console
 $ ps -eo pid,ppid,comm
-94161 78117 claude       <- the agent, and still what tmux calls pane_pid
+94161 78117 claude       <- the agent, child of the restore wrapper
 95208 94161 caffeinate   <- its child, holding the assertion
 ```
 
@@ -113,7 +115,7 @@ get the same treatment Claude does.
 | `AGENT_ASK_RE` | *(see script)* | regex meaning "this agent is asking you something" (`blocked` vs `idle`) |
 | `AGENT_NOTIFY_AFTER` | `30` | seconds an agent must sit wanting you before the SwiftBar plugin says so — `0` speaks on the poll that sees it stop |
 
-`aigent status` feeds a SwiftBar plugin
+`aigent ls` feeds a SwiftBar plugin
 (`swiftbar/.config/swiftbar/plugins/agents.10s.sh`) that shows a menu-bar count
 and announces each `working → stopped` edge once — but not instantly: by default an
 agent must sit stopped for 30 seconds first. That silences the session you are sat
@@ -123,10 +125,56 @@ watching this one" apart from "you walked away", so time is the only lever —
 `AGENT_NOTIFY_AFTER` tunes it: `0` speaks on the poll that sees the stop, higher
 trades latency for quiet.
 
+### Surviving a tmux restart
+
+Every agent lives inside the tmux server, so a reboot, a crash or `tmux kill-server`
+takes them all down. The conversations survive, since each CLI keeps its transcripts on
+disk. What gets lost is which conversation belonged to which session. So `aigent` writes that
+down outside tmux, in one small file per session under `~/.local/state/aigent/sessions/`
+(agent, directory, conversation ID, YOLO, last known task), and brings sessions back
+from it:
+
+```console
+$ aigent ls
+● idle  _dotfiles  claude  Fixing the flaky test
+↻ 2 sessions can be restored — aigent restore -n
+$ aigent restore -n          # what would come back
+$ aigent restore             # bring them all back, detached, then attach as usual
+```
+
+In the picker the same sessions show as `↻ [restore · claude]` rows for the directory
+you're in: enter brings one back and attaches, ctrl-x forgets it. A restored session
+gets its old name back and resumes the same conversation.
+
+This works because `aigent` chooses each conversation's ID up front and passes it to
+the agent (`claude --session-id`, `opencode --session`), then resumes by that ID
+(`--resume`, `--session`). `--continue` wouldn't do: it means "the latest conversation in
+this directory", so two sessions in one project would both resume the same one. Claude
+and opencode are covered. cursor-agent could be, but only by asking `cursor-agent
+create-chat` for an ID before every launch, so it isn't yet.
+
+A record is deleted when its session ends on purpose: you quit the agent, or ctrl-x
+it. It's kept when tmux takes the session down. Telling those two apart is the hard
+part. tmux's own hooks can't do it: `session-closed` also fires partway through
+`kill-server`, and `pane-exited` reports the wrong session. So the agent runs under a
+tiny `sh` wrapper that deletes the record when the agent exits. When tmux dies, it hangs
+up on the wrapper along with the agent, so the delete never runs.
+
+Things worth knowing:
+
+- Only sessions started after this feature shipped have records.
+- A dead session keeps its name reserved, so a fresh agent started in that project
+  lands on `-2` and can't overwrite the record you meant to come back to.
+- An agent you opened and never typed into has no conversation to resume (claude says
+  `No conversation found`). Restoring it starts a fresh one in its place.
+- If the agent can't start at all (a bad token, say), the record is kept for next time.
+- Restoring brings back the conversation, not whatever was in flight. A half-run
+  command is gone, and you tell the agent to carry on.
+
 ### The cockpit
 
 `aigent cockpit` puts several agents in one window. It's the third question the
-script answers: the picker asks *what do I open here*, `aigent status` asks *who
+script answers: the picker asks *what do I open here*, `aigent ls` asks *who
 wants me*, and this one is *watch four of them work, and answer whichever one
 stops* — without leaving the window.
 
@@ -223,7 +271,7 @@ why building one (`aigent cockpit new`, or `cockpit N`) always builds fresh rath
 than reconciling an old one — rebuilding is free when there is no state to keep. The session is named `cockpit`
 rather than `aigent-cockpit` for the same reason: the `aigent-` prefix means "an
 agent lives here", and a viewer that ended up under it would be reported by
-`aigent status` and counted by the notifier as one more agent to watch.
+`aigent ls` and counted by the notifier as one more agent to watch.
 
 **Whichever view you're typing in wins.** A tmux window has one grid, so a session
 that two clients of different shapes are watching — a cockpit pane and a Zed
@@ -237,7 +285,7 @@ put the dead space in the cockpit pane instead. The script's comments say why it
 isn't used.)
 
 The other cost follows from the same re-flow: a resize is a screen change, so the
-`aigent status` poll that straddles an attach reads those agents as `working` for
+`aigent ls` poll that straddles an attach reads those agents as `working` for
 a cycle, and the SwiftBar plugin announces them once more as they settle back —
 the one place a still screen can read as moving. `AGENT_NOTIFY_AFTER` is the dial
 for that too.

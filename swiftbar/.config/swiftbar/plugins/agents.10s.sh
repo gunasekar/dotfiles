@@ -16,7 +16,7 @@
 # The picker (`aigent`) only tells you when you go and look, and it is scoped to the
 # project you are standing in. This is the other half: every agent on the box, polled,
 # whether or not you are looking — the "what did I leave running while I walked away"
-# view. All the thinking lives in `aigent status`, which decides blocked/idle/working
+# view. All the thinking lives in `aigent ls`, which decides blocked/idle/working
 # by diffing each session's screen (see tmux/README.md); this file only renders it.
 #
 # It emits nothing at all when no agent is running, which is how SwiftBar is told to
@@ -55,7 +55,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${PATH}"
 AIGENT="${HOME}/.dotfiles/bin/.local/bin/aigent"
 [ -x "$AIGENT" ] || exit 0
 
-ROWS=$("$AIGENT" status 2>/dev/null)
+ROWS=$("$AIGENT" ls 2>/dev/null)
 [ -n "$ROWS" ] || exit 0
 
 RED='#e06c75'    # blocked — it is asking you something
@@ -129,7 +129,7 @@ while IFS=$'\t' read -r state name agent task; do
     badge=" #${BASH_REMATCH[2]}"
   fi
 
-  # `aigent status` owns these names, and *) means working — so a state it grows that this
+  # `aigent ls` owns these names, and *) means working — so a state it grows that this
   # does not know lands in the "leave it alone" pile rather than raising a false alarm.
   # The cost of that default is that renaming one there fails silently here: the arm stops
   # matching, and every agent that wants you is counted as busy and left unannounced. The

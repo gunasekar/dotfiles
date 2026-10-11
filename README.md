@@ -244,7 +244,7 @@ run by [SwiftBar](https://swiftbar.app/) (`brew install --cask swiftbar`).
 Plugins use native `<swiftbar.*>` metadata.
 
 - **agents.10s.sh**: Which coding agents are blocked, idle, or working — reads
-  `aigent status`, and notifies when one stops needing the CPU and starts needing
+  `aigent ls`, and notifies when one stops needing the CPU and starts needing
   you (see [bin/README.md](bin/README.md))
 - **keepawake.1m.sh**: Hold off idle sleep for 30m / 1h / 6h / 12h — reads and
   drives `keepawake` (see [bin/README.md](bin/README.md)), and names whatever else
