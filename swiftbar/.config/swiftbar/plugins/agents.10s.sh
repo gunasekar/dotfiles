@@ -60,7 +60,7 @@ ROWS=$("$AIGENT" ls 2>/dev/null)
 
 RED='#e06c75'    # blocked — it is asking you something
 YELLOW='#e5c07b' # idle — it finished its turn, your move
-DIM='#5c6370'    # the summary footer; working itself is uncoloured — nothing to act on
+DIM='#5c6370'    # the summary footer
 
 # How long an agent has to sit there wanting you before it is allowed to say so.
 # Default 30 seconds; AGENT_NOTIFY_AFTER overrides. Zero would make the poll that sees it
@@ -142,24 +142,34 @@ while IFS=$'\t' read -r state name agent task; do
   # The cost of that default is that renaming one there fails silently here: the arm stops
   # matching, and every agent that wants you is counted as busy and left unannounced. The
   # two files have to move together.
+  #
+  # The state is carried by an SF Symbol, its shape rather than a colour: SwiftBar 2.1.1
+  # repaints a coloured sfimage on a menu row as a plain template on macOS 26
+  # (swiftbar/SwiftBar#537, fixed in 2.1.2), and a color= would tint the whole line. So the
+  # icon and the text both take the menu's own colour, and follow light/dark.
+  #
+  # refresh=true is what keeps the text that colour. A row with no action and no color is a
+  # *disabled* item to AppKit, and disabled items are drawn grey — which is exactly how the
+  # working rows came out once their color= went. Clicking a row re-polls, which is at least
+  # a thing worth doing from a status list.
   case $state in
     blocked)
-      colour=$RED
+      icon=hand.raised
       ((blocked++))
       ;;
     idle)
-      colour=$YELLOW
+      icon=moon.zzz
       ((idle++))
       ;;
     *)
-      colour='' # plain menu text: only the rows that want you get a colour
+      icon=hourglass
       ((working++))
       ;;
   esac
 
-  line="● ${state} · ${agent} · ${proj}${badge}"
+  line="${state} · ${agent} · ${proj}${badge}"
   [ -n "$task" ] && line+=" — ${task}"
-  menu+="${line//|/－}${colour:+ | color=${colour}}"$'\n'
+  menu+="${line//|/－} | sfimage=${icon} refresh=true"$'\n'
 
   # What we knew about this session last poll (all empty the first time we see it).
   IFS=$'\t' read -r p_state p_since p_seen p_said < <(
