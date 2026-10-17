@@ -18,17 +18,19 @@
 --   * mermaid-cli ............... `mmdc`    -> already installed (/opt/homebrew/bin/mmdc)
 --   * (optional, PlantUML) ...... `plantuml` on PATH
 --
--- QUICK LOOK FALLBACK (non-graphics terminals: Terminal.app, iTerm2, ...):
+-- VIEWER FALLBACK (non-graphics terminals: Terminal.app, iTerm2, ...):
 --   Inline drawing is impossible there, so <leader>ui instead renders the diagram
---   under the cursor and opens it in Quick Look (`qlmanage -p`; `vim.ui.open` off
---   macOS). Detection is env-based — see `has_kitty_graphics()`. Override it with
+--   under the cursor and opens the PNG in the default image app (`vim.ui.open`,
+--   i.e. `open` -> Preview on macOS). It's the same cached PNG the inline path draws:
+--   dark theme on a transparent background, so it reads best with macOS in dark mode.
+--   Detection is env-based — see `has_kitty_graphics()`. Override it with
 --   `vim.g.diagram_inline = true|false` when the guess is wrong (e.g. a tmux server
 --   started from Ghostty, later attached from Terminal.app, still inherits Ghostty's env).
 -- tmux users: add `set -g allow-passthrough on` to ~/.tmux.conf or images won't pass through.
 
 -- Kitty-graphics terminals announce themselves through env vars. TERM survives SSH
 -- (xterm-kitty / xterm-ghostty); the *_DIR / *_ID vars survive into tmux, where
--- TERM_PROGRAM becomes "tmux". Unknown terminals get the Quick Look fallback,
+-- TERM_PROGRAM becomes "tmux". Unknown terminals get the viewer fallback,
 -- which works everywhere, rather than an inline toggle that silently draws nothing.
 local function has_kitty_graphics()
   if vim.g.diagram_inline ~= nil then
@@ -45,7 +47,7 @@ local function has_kitty_graphics()
     or program == "WezTerm"
 end
 
--- Shared by diagram.nvim's setup and the Quick Look path, so both render identically
+-- Shared by diagram.nvim's setup and the viewer path, so both render identically
 -- (and hit the same diagram-cache PNG).
 local renderer_options = {
   mermaid = {
@@ -72,70 +74,10 @@ local renderer_options = {
   },
 }
 
--- Main display size in points (what Quick Look lays images out in: 1px = 1pt for
--- a PNG without DPI metadata). system_profiler takes ~0.3s, so ask once per session.
-local screen_size
-local function main_screen_size()
-  if not screen_size then
-    local res = vim.system({ "system_profiler", "-json", "SPDisplaysDataType" }, { text = true }):wait()
-    local ok, data = pcall(vim.json.decode, res.stdout or "")
-    -- Prefer the main display; otherwise the first one listed; otherwise a guess.
-    for _, gpu in ipairs(ok and data.SPDisplaysDataType or {}) do
-      for _, display in ipairs(gpu.spdisplays_ndrvs or {}) do
-        local w, h = (display._spdisplays_resolution or ""):match("^(%d+) x (%d+)")
-        if w and (not screen_size or display.spdisplays_main == "spdisplays_yes") then
-          screen_size = { tonumber(w), tonumber(h) }
-        end
-      end
-    end
-    screen_size = screen_size or { 1440, 900 }
-  end
-  return screen_size[1], screen_size[2]
-end
-
--- The cached PNGs are dark-theme on a transparent background: fine over the terminal,
--- unreadable light-on-white in Quick Look. Flatten a copy onto the colorscheme's
--- Normal background (magick is already required by image.nvim's processor).
--- Quick Look also sizes its panel to the image, so a wide, short flowchart opens as
--- a thin strip. Scale diagrams that fit on screen up to fill it, centred on a
--- screen-sized canvas, so the panel opens near full screen. Diagrams already larger
--- than the screen are left alone: Quick Look shrinks them to fit either way, and
--- padding a canvas that size takes magick several seconds (blocking Neovim).
-local function prepare_for_viewer(png)
-  local bg = vim.api.nvim_get_hl(0, { name = "Normal", link = false }).bg
-  local color = bg and string.format("#%06x", bg) or "#1e1e1e"
-  local sw, sh = main_screen_size()
-  local out = string.format("%s-%s-%dx%d.png", png:gsub("%.png$", ""), color:sub(2), sw, sh)
-  if vim.fn.filereadable(out) == 1 then
-    return out
-  end
-
-  local cmd = { "magick", png, "-background", color, "-flatten" }
-  local size = vim.system({ "magick", "identify", "-format", "%w %h", png }, { text = true }):wait()
-  local w, h = (size.stdout or ""):match("^(%d+) (%d+)")
-  if w and tonumber(w) <= sw and tonumber(h) <= sh then
-    local screen = string.format("%dx%d", sw, sh)
-    vim.list_extend(cmd, { "-resize", screen, "-gravity", "center", "-extent", screen })
-  end
-  table.insert(cmd, out)
-  local res = vim.system(cmd):wait()
-  return res.code == 0 and out or png
-end
-
-local function open_in_viewer(png)
-  local file = prepare_for_viewer(png)
-  if vim.fn.executable("qlmanage") == 1 then
-    -- -p is the Quick Look panel; qlmanage blocks until it closes, so run detached.
-    vim.system({ "qlmanage", "-p", file }, { detach = true, stdout = false, stderr = false })
-  else
-    vim.ui.open(file)
-  end
-end
-
 -- Render the fenced diagram under the cursor with diagram.nvim's own renderer and
 -- show it in the system viewer. The renderer returns a cached path at once, or an
 -- mmdc/plantuml/d2 job to wait on.
-local function quicklook_diagram_at_cursor()
+local function open_diagram_at_cursor()
   local integration = require("diagram.integrations.markdown")
   local bufnr = vim.api.nvim_get_current_buf()
   if not vim.tbl_contains(integration.filetypes, vim.bo[bufnr].filetype) then
@@ -176,7 +118,7 @@ local function quicklook_diagram_at_cursor()
       vim.notify("Diagram render failed: " .. found.renderer_id, vim.log.levels.ERROR)
       return
     end
-    open_in_viewer(result.file_path)
+    vim.ui.open(result.file_path)
   end
 
   if not result.job_id then
@@ -251,7 +193,7 @@ return {
         "<leader>ui",
         function()
           if not has_kitty_graphics() then
-            return quicklook_diagram_at_cursor()
+            return open_diagram_at_cursor()
           end
           local image = require("image")
           if image.is_enabled() then
@@ -265,7 +207,7 @@ return {
             vim.notify("Inline images/diagrams: on", vim.log.levels.INFO)
           end
         end,
-        desc = "Toggle inline images/diagrams (Quick Look off-graphics)",
+        desc = "Toggle inline images/diagrams (image app off-graphics)",
       },
     },
     -- `opts` must be a function: `require("diagram.integrations.markdown")` can only
