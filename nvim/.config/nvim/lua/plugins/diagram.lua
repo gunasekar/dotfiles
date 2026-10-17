@@ -72,22 +72,58 @@ local renderer_options = {
   },
 }
 
+-- Main display size in points (what Quick Look lays images out in: 1px = 1pt for
+-- a PNG without DPI metadata). system_profiler takes ~0.3s, so ask once per session.
+local screen_size
+local function main_screen_size()
+  if not screen_size then
+    local res = vim.system({ "system_profiler", "-json", "SPDisplaysDataType" }, { text = true }):wait()
+    local ok, data = pcall(vim.json.decode, res.stdout or "")
+    -- Prefer the main display; otherwise the first one listed; otherwise a guess.
+    for _, gpu in ipairs(ok and data.SPDisplaysDataType or {}) do
+      for _, display in ipairs(gpu.spdisplays_ndrvs or {}) do
+        local w, h = (display._spdisplays_resolution or ""):match("^(%d+) x (%d+)")
+        if w and (not screen_size or display.spdisplays_main == "spdisplays_yes") then
+          screen_size = { tonumber(w), tonumber(h) }
+        end
+      end
+    end
+    screen_size = screen_size or { 1440, 900 }
+  end
+  return screen_size[1], screen_size[2]
+end
+
 -- The cached PNGs are dark-theme on a transparent background: fine over the terminal,
 -- unreadable light-on-white in Quick Look. Flatten a copy onto the colorscheme's
 -- Normal background (magick is already required by image.nvim's processor).
-local function flatten_for_viewer(png)
+-- Quick Look also sizes its panel to the image, so a wide, short flowchart opens as
+-- a thin strip. Scale diagrams that fit on screen up to fill it, centred on a
+-- screen-sized canvas, so the panel opens near full screen. Diagrams already larger
+-- than the screen are left alone: Quick Look shrinks them to fit either way, and
+-- padding a canvas that size takes magick several seconds (blocking Neovim).
+local function prepare_for_viewer(png)
   local bg = vim.api.nvim_get_hl(0, { name = "Normal", link = false }).bg
   local color = bg and string.format("#%06x", bg) or "#1e1e1e"
-  local out = png:gsub("%.png$", "") .. "-" .. color:sub(2) .. ".png"
+  local sw, sh = main_screen_size()
+  local out = string.format("%s-%s-%dx%d.png", png:gsub("%.png$", ""), color:sub(2), sw, sh)
   if vim.fn.filereadable(out) == 1 then
     return out
   end
-  local res = vim.system({ "magick", png, "-background", color, "-flatten", out }):wait()
+
+  local cmd = { "magick", png, "-background", color, "-flatten" }
+  local size = vim.system({ "magick", "identify", "-format", "%w %h", png }, { text = true }):wait()
+  local w, h = (size.stdout or ""):match("^(%d+) (%d+)")
+  if w and tonumber(w) <= sw and tonumber(h) <= sh then
+    local screen = string.format("%dx%d", sw, sh)
+    vim.list_extend(cmd, { "-resize", screen, "-gravity", "center", "-extent", screen })
+  end
+  table.insert(cmd, out)
+  local res = vim.system(cmd):wait()
   return res.code == 0 and out or png
 end
 
 local function open_in_viewer(png)
-  local file = flatten_for_viewer(png)
+  local file = prepare_for_viewer(png)
   if vim.fn.executable("qlmanage") == 1 then
     -- -p is the Quick Look panel; qlmanage blocks until it closes, so run detached.
     vim.system({ "qlmanage", "-p", file }, { detach = true, stdout = false, stderr = false })
