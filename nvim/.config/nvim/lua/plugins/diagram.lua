@@ -18,11 +18,12 @@
 --   * mermaid-cli ............... `mmdc`    -> already installed (/opt/homebrew/bin/mmdc)
 --   * (optional, PlantUML) ...... `plantuml` on PATH
 --
--- VIEWER FALLBACK (non-graphics terminals: Terminal.app, iTerm2, ...):
+-- QUICK LOOK FALLBACK (non-graphics terminals: Terminal.app, iTerm2, ...):
 --   Inline drawing is impossible there, so <leader>ui instead renders the diagram
---   under the cursor and opens the PNG in the default image app (`vim.ui.open`,
---   i.e. `open` -> Preview on macOS). It's the same cached PNG the inline path draws:
---   dark theme on a transparent background, so it reads best with macOS in dark mode.
+--   under the cursor and opens the PNG in Quick Look (`qlmanage -p`; `vim.ui.open` off
+--   macOS). It's the same cached PNG the inline path draws, untouched: dark theme on a
+--   transparent background (reads best with macOS in dark mode), and Quick Look
+--   sizes the panel to the image, so wide diagrams open small.
 --   Detection is env-based — see `has_kitty_graphics()`. Override it with
 --   `vim.g.diagram_inline = true|false` when the guess is wrong (e.g. a tmux server
 --   started from Ghostty, later attached from Terminal.app, still inherits Ghostty's env).
@@ -30,7 +31,7 @@
 
 -- Kitty-graphics terminals announce themselves through env vars. TERM survives SSH
 -- (xterm-kitty / xterm-ghostty); the *_DIR / *_ID vars survive into tmux, where
--- TERM_PROGRAM becomes "tmux". Unknown terminals get the viewer fallback,
+-- TERM_PROGRAM becomes "tmux". Unknown terminals get the Quick Look fallback,
 -- which works everywhere, rather than an inline toggle that silently draws nothing.
 local function has_kitty_graphics()
   if vim.g.diagram_inline ~= nil then
@@ -47,7 +48,7 @@ local function has_kitty_graphics()
     or program == "WezTerm"
 end
 
--- Shared by diagram.nvim's setup and the viewer path, so both render identically
+-- Shared by diagram.nvim's setup and the Quick Look path, so both render identically
 -- (and hit the same diagram-cache PNG).
 local renderer_options = {
   mermaid = {
@@ -118,7 +119,12 @@ local function open_diagram_at_cursor()
       vim.notify("Diagram render failed: " .. found.renderer_id, vim.log.levels.ERROR)
       return
     end
-    vim.ui.open(result.file_path)
+    if vim.fn.executable("qlmanage") == 1 then
+      -- -p is the Quick Look panel. qlmanage blocks until it closes, so run detached.
+      vim.system({ "qlmanage", "-p", result.file_path }, { detach = true, stdout = false, stderr = false })
+    else
+      vim.ui.open(result.file_path)
+    end
   end
 
   if not result.job_id then
@@ -207,7 +213,7 @@ return {
             vim.notify("Inline images/diagrams: on", vim.log.levels.INFO)
           end
         end,
-        desc = "Toggle inline images/diagrams (image app off-graphics)",
+        desc = "Toggle inline images/diagrams (Quick Look off-graphics)",
       },
     },
     -- `opts` must be a function: `require("diagram.integrations.markdown")` can only

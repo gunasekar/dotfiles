@@ -112,7 +112,7 @@ Leader key: `Space`
 | `<leader>t[` | Prev terminal session |
 | `<leader>up` | Pick any panel or session by name |
 | `<leader>uP` | Focus main editor window |
-| `<leader>ui` | Inline diagrams (Preview in Terminal.app/iTerm2) |
+| `<leader>ui` | Inline diagrams (Quick Look in Terminal.app/iTerm2) |
 | `<C-\>` | Toggle right panel (current agent session) |
 | `<C-S-\>` | Open new agent session |
 | `<C-S-]>` | Next agent session (all modes) |
