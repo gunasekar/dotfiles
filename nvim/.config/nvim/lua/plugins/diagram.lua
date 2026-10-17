@@ -123,7 +123,12 @@ local function open_diagram_at_cursor()
       -- -p is the Quick Look panel. qlmanage blocks until it closes, so run detached.
       vim.system({ "qlmanage", "-p", result.file_path }, { detach = true, stdout = false, stderr = false })
     else
-      vim.ui.open(result.file_path)
+      -- Off macOS: xdg-open/wslview. Returns an error (rather than throwing) when no
+      -- opener exists, e.g. a headless server — say so instead of doing nothing.
+      local _, err = vim.ui.open(result.file_path)
+      if err then
+        vim.notify(err .. "\nDiagram: " .. result.file_path, vim.log.levels.WARN)
+      end
     end
   end
 
