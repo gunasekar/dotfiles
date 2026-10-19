@@ -18,7 +18,10 @@ background = #000000
 window-padding-x = 8
 window-padding-y = 8
 window-theme = dark
-macos-titlebar-style = tabs
+# native, not tabs: `tabs` is Ghostty's own painted titlebar and breaks on macOS 27
+# (every tab stacked at the right edge — ghostty-org/ghostty discussion #14244).
+# The native macOS tab bar is Apple's to keep working across releases.
+macos-titlebar-style = native
 macos-option-as-alt = true
 maximize = true
 
