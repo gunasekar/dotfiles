@@ -7,6 +7,7 @@ by the Brewfile.
 | Script | What it does |
 |---|---|
 | `keepawake` | hold off idle sleep for a set stretch, from a command line — the thing Amphetamine could not do over ssh |
+| `netcheck` | internet speed test that also checks the router hop and the Wi-Fi link, to say which hop is slow |
 
 ## Installation
 
@@ -15,7 +16,7 @@ cd ~/.dotfiles
 stow bin
 ```
 
-Symlinks `keepawake` into `~/.local/bin`. It is run by hand
+Symlinks `keepawake` and `netcheck` into `~/.local/bin`. It is run by hand
 and by the `keepawake.1m.sh` SwiftBar plugin.
 
 ## keepawake
@@ -62,3 +63,58 @@ behalf.
 (`swiftbar/.config/swiftbar/plugins/keepawake.1m.sh`) that draws a filled cup while
 we hold it, a hollow one while something else does, `zzz` when the Mac is free to
 drop off, and offers 30m / 1h / 6h / 12h / open-ended from the menu.
+
+## netcheck
+
+An internet speed test that also says which hop is to blame. It measures against
+`speed.cloudflare.com` the way fast.com and Ookla do: several streams for a fixed
+time, the TCP ramp-up discarded, and latency probed again while the line is loaded.
+Before that it pings the router and reads the Wi-Fi link, because a speed test alone
+cannot tell a bad Wi-Fi hop from a slow ISP. Python standard library only, so it runs
+as is on macOS and on a plain Debian box.
+
+| Command | Does |
+|---|---|
+| `netcheck` | full test: local network, latency, download, upload (~30 s, ~300 MB) |
+| `netcheck -d 20` | 20 seconds per direction instead of 10 |
+| `netcheck -s 8` | 8 parallel streams instead of 4 |
+| `netcheck --no-upload` | skip the upload test |
+| `netcheck --json` | the result as JSON, for logging |
+
+```console
+$ netcheck
+netcheck  speed.cloudflare.com via Chennai (MAA)
+
+Connection
+  ISP        Broad Band Internet Service Provider, India (AS24309)
+  Public IP  2406:7400:… (IPv6, HTTP/1.1)
+  Location   Bengaluru, Karnataka IN
+
+Local network
+  Router     192.168.0.1 via wlxe4fac4fb7a5a: 2.3 ms ±0.3 ms, 0% loss
+  Wi-Fi      5 GHz ch 44 80 MHz · signal -40 dBm · rate rx 117 / tx 650 Mbps · power save off
+
+Internet
+  Latency    8.7 ms idle, jitter 0.7 ms   (TCP handshake to Cloudflare)
+  Loss       0%   (ICMP to 1.1.1.1, 2.4 ms)
+  Download    106.2 Mbps  p90 110.5 Mbps · loaded latency 26.8 ms (+18.1 ms) · bufferbloat A
+  Upload      115.2 Mbps  p90 126.7 Mbps · loaded latency 11.7 ms (+3.0 ms) · bufferbloat A+
+  Responsiveness  2241 RPM   (round trips a minute under load)
+  Data used  292 MB
+
+Diagnosis    healthy
+```
+
+- **Download / Upload** is the steady rate after a 2 s ramp-up, across all streams;
+  **p90** is the 90th percentile of 1-second windows, the figure Cloudflare's page leads with.
+- **Loaded latency** and the **bufferbloat** grade (Waveform's A+…F scale) show how much
+  the router's queues add while the line is full. **RPM** is the same thing the way
+  macOS `networkQuality` reports it: round trips a minute under load.
+- **Latency** is a TCP handshake to the Cloudflare edge — one network round trip with
+  no server time in it. **Loss** comes from ICMP to 1.1.1.1.
+- Wi-Fi details come from `system_profiler` on macOS and `iw` on Linux (`apt install iw`;
+  without it the line just says connected). A Mac's own Wi-Fi power saving makes its
+  router pings read 20–60 ms at idle; that is normal there, and the diagnosis only
+  blames the local network past 100 ms or 2% loss.
+- `speed.cloudflare.com`'s endpoints are undocumented. If Cloudflare changes them,
+  netcheck exits with an error rather than reporting a wrong number.

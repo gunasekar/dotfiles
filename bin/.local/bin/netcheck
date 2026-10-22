@@ -1,0 +1,460 @@
+#!/usr/bin/env python3
+"""netcheck — an internet speed test that also says which hop is to blame.
+
+    netcheck              full test: local network, latency, download, upload
+    netcheck -d 20        20 seconds per direction instead of 10
+    netcheck -s 8         8 parallel streams instead of 4
+    netcheck --no-upload  skip the upload test
+    netcheck --json       machine-readable result on stdout
+
+Measures against speed.cloudflare.com the way fast.com and Ookla do: several
+streams at once for a fixed time, the TCP ramp-up discarded, and latency probed
+again while the line is loaded (bufferbloat). On top of that it pings the router
+and reads the Wi-Fi link, because a speed test alone cannot tell a bad Wi-Fi hop
+from a slow ISP — and the Wi-Fi hop is the one that keeps failing.
+
+Standard library only, so it runs on the Macs and on Debian (bochs) as is.
+"""
+
+import argparse
+import http.client
+import json
+import os
+import re
+import shutil
+import socket
+import ssl
+import subprocess
+import sys
+import threading
+import time
+
+HOST = "speed.cloudflare.com"
+UA = "netcheck/1"
+DOWN_BYTES = 25_000_000  # per request; the endpoint refuses anything over 50 MB
+UP_BYTES = 8_000_000
+CHUNK = 64 * 1024
+WARMUP = 2.0  # seconds of TCP ramp-up left out of the result
+
+
+def tls():
+    """Default trust plus the OS bundle: python.org's macOS build ships without CA
+    certificates until its "Install Certificates" step is run."""
+    ctx = ssl.create_default_context()
+    for bundle in ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"):
+        if os.path.exists(bundle):
+            ctx.load_verify_locations(bundle)
+    return ctx
+
+
+TLS = tls()
+
+
+def conn():
+    return http.client.HTTPSConnection(HOST, timeout=15, context=TLS)
+
+
+class Stop(Exception):
+    """Raised inside an upload body to abandon the request when time is up."""
+
+
+# ─── local network ───────────────────────────────────────────────────────────
+
+
+def run(*cmd, timeout=20):
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def gateway():
+    """(interface, router IP) of the IPv4 default route; the lowest metric wins."""
+    if sys.platform == "darwin":
+        out = run("route", "-n", "get", "default")
+        gw = re.search(r"gateway: (\S+)", out)
+        dev = re.search(r"interface: (\S+)", out)
+        return (dev and dev[1], gw and gw[1])
+    routes = []
+    for line in run("ip", "-4", "route", "show", "default").splitlines():
+        gw, dev = re.search(r"via (\S+)", line), re.search(r"dev (\S+)", line)
+        metric = re.search(r"metric (\d+)", line)
+        if gw and dev:
+            routes.append((int(metric[1]) if metric else 0, dev[1], gw[1]))
+    return min(routes)[1:] if routes else (None, None)
+
+
+def ping(host, count=5):
+    """ICMP ping summary: avg latency, its spread (stddev/mdev) and loss, in ms/%."""
+    out = run("ping", "-c", str(count), host, timeout=count * 3 + 5)
+    loss = re.search(r"([\d.]+)% packet loss", out)
+    rtt = re.search(r"= [\d.]+/([\d.]+)/[\d.]+/([\d.]+) ms", out)
+    return {
+        "host": host,
+        "avg_ms": float(rtt[1]) if rtt else None,
+        "spread_ms": float(rtt[2]) if rtt else None,
+        "loss_pct": float(loss[1]) if loss else 100.0,
+    }
+
+
+def band(mhz):
+    return "2.4 GHz" if mhz < 3000 else "5 GHz" if mhz < 5950 else "6 GHz"
+
+
+def link(dev):
+    """What the interface is: Wi-Fi details where the OS exposes them, else wired."""
+    if not dev:
+        return {}
+    if sys.platform == "darwin":
+        try:
+            data = json.loads(run("system_profiler", "SPAirPortDataType", "-json"))
+            ifaces = data["SPAirPortDataType"][0]["spairport_airport_interfaces"]
+            cur = next(i for i in ifaces if i["_name"] == dev)["spairport_current_network_information"]
+        except (ValueError, KeyError, IndexError, StopIteration):
+            return {"type": "wired"}
+        ch = re.match(r"(\d+) \(([\d.]+GHz), (\d+)MHz\)", cur.get("spairport_network_channel", ""))
+        sn = re.findall(r"(-?\d+) dBm", cur.get("spairport_signal_noise", ""))
+        ssid = cur.get("_name")
+        return {
+            "type": "wifi",
+            "ssid": None if ssid == "<redacted>" else ssid,
+            "band": ch and ch[2].replace("GHz", " GHz"),
+            "channel": ch and int(ch[1]),
+            "width_mhz": ch and int(ch[3]),
+            "phy": cur.get("spairport_network_phymode"),
+            "signal_dbm": int(sn[0]) if sn else None,
+            "noise_dbm": int(sn[1]) if len(sn) > 1 else None,
+            "tx_mbps": cur.get("spairport_network_rate"),
+        }
+    if not os.path.isdir(f"/sys/class/net/{dev}/wireless"):
+        speed = run("cat", f"/sys/class/net/{dev}/speed").strip()
+        return {"type": "wired", "link_mbps": int(speed) if speed.isdigit() else None}
+    iw = shutil.which("iw") or ("/usr/sbin/iw" if os.path.exists("/usr/sbin/iw") else None)
+    if not iw:
+        return {"type": "wifi"}
+    lk, info = run(iw, "dev", dev, "link"), run(iw, "dev", dev, "info")
+    sta, ps = run(iw, "dev", dev, "station", "dump"), run(iw, "dev", dev, "get", "power_save")
+
+    def num(pattern, text, cast=float):
+        m = re.search(pattern, text)
+        return cast(m[1]) if m else None
+
+    # rtw88 reports "signal: 0 dBm" on and off; the station's average is steadier.
+    signal = num(r"signal avg:\s*(-?\d+)", sta, int) or num(r"signal: (-?\d+)", lk, int)
+    freq = num(r"freq: ([\d.]+)", lk)
+    return {
+        "type": "wifi",
+        "ssid": num(r"SSID: (.+)", lk, str),
+        "band": freq and band(freq),
+        "channel": num(r"channel (\d+)", info, int),
+        "width_mhz": num(r"width: (\d+) MHz", info, int),
+        "signal_dbm": signal or None,
+        "rx_mbps": num(r"rx bitrate: ([\d.]+)", lk),
+        "tx_mbps": num(r"tx bitrate: ([\d.]+)", lk),
+        "power_save": num(r"Power save: (\w+)", ps, str),
+    }
+
+
+# ─── internet ────────────────────────────────────────────────────────────────
+
+
+def meta():
+    """ISP, public IP and Cloudflare location. /meta answers {} without a Referer."""
+    try:
+        c = conn()
+        c.request("GET", "/meta", headers={"User-Agent": UA, "Referer": f"https://{HOST}/"})
+        return json.loads(c.getresponse().read())
+    except (OSError, ValueError, http.client.HTTPException):
+        return {}
+
+
+def tcp_rtt(addr):
+    """One TCP handshake to the edge: a single network round trip, with no server
+    processing in it, which an HTTP request's timing would include."""
+    s = socket.socket(addr[0], socket.SOCK_STREAM)
+    s.settimeout(3)
+    t = time.perf_counter()
+    try:
+        s.connect(addr[4])
+        return (time.perf_counter() - t) * 1000
+    except OSError:
+        return None
+    finally:
+        s.close()
+
+
+def latency(samples):
+    ok = [x for x in samples if x is not None]
+    if not ok:
+        return {"median_ms": None, "jitter_ms": None}
+    ok_sorted = sorted(ok)
+    jitter = sum(abs(a - b) for a, b in zip(ok, ok[1:])) / max(len(ok) - 1, 1)
+    return {"median_ms": ok_sorted[len(ok) // 2], "jitter_ms": jitter}
+
+
+def transfer(kind, streams, duration, addr, live):
+    """Run `streams` downloads or uploads at once for `duration` seconds.
+
+    Bytes are counted as they move and sampled every 100 ms, so the result is the
+    steady rate after WARMUP rather than one file's start-to-finish average."""
+    total, lock, stop = [0], threading.Lock(), threading.Event()
+
+    def count(n):
+        with lock:
+            total[0] += n
+
+    def down():
+        while not stop.is_set():
+            try:
+                c = conn()
+                while not stop.is_set():
+                    c.request("GET", f"/__down?bytes={DOWN_BYTES}", headers={"User-Agent": UA})
+                    r = c.getresponse()
+                    while not stop.is_set() and (b := r.read(CHUNK)):
+                        count(len(b))
+                c.close()
+            except (OSError, http.client.HTTPException):
+                time.sleep(0.2)
+
+    def body():
+        block = b"0" * CHUNK
+        for _ in range(UP_BYTES // CHUNK):
+            if stop.is_set():
+                raise Stop
+            yield block
+            count(CHUNK)
+
+    def up():
+        size = UP_BYTES // CHUNK * CHUNK
+        while not stop.is_set():
+            c = conn()
+            try:
+                c.request(
+                    "POST", "/__up", body=body(),
+                    headers={"User-Agent": UA, "Content-Type": "application/octet-stream",
+                             "Content-Length": str(size)},
+                )
+                c.getresponse().read()
+            except (Stop, OSError, http.client.HTTPException):
+                pass
+            finally:
+                c.close()
+
+    probes = []
+
+    def probe():
+        while not stop.is_set():
+            probes.append(tcp_rtt(addr))
+            stop.wait(0.25)
+
+    workers = [threading.Thread(target=down if kind == "download" else up, daemon=True)
+               for _ in range(streams)]
+    workers.append(threading.Thread(target=probe, daemon=True))
+    start = time.perf_counter()
+    for w in workers:
+        w.start()
+
+    samples = []  # (seconds since start, bytes so far)
+    while (t := time.perf_counter() - start) < duration:
+        with lock:
+            samples.append((t, total[0]))
+        if live and len(samples) % 5 == 0:
+            back = [s for s in samples if s[0] >= t - 1] or samples
+            rate = (back[-1][1] - back[0][1]) * 8 / max(back[-1][0] - back[0][0], 1e-3) / 1e6
+            sys.stderr.write(f"\r  {kind:<9} {rate:7.1f} Mbps  {t:4.1f}s ")
+            sys.stderr.flush()
+        time.sleep(0.1)
+    stop.set()
+    if live:
+        sys.stderr.write("\r\033[K")
+
+    steady = [s for s in samples if s[0] >= WARMUP] or samples
+    secs = max(steady[-1][0] - steady[0][0], 1e-3)
+    windows = [
+        (b[1] - a[1]) * 8 / (b[0] - a[0]) / 1e6
+        for a in steady for b in steady
+        if 0.95 <= b[0] - a[0] <= 1.05
+    ]
+    windows.sort()
+    return {
+        "mbps": (steady[-1][1] - steady[0][1]) * 8 / secs / 1e6,
+        "p90_mbps": windows[int(len(windows) * 0.9)] if windows else None,
+        "bytes": total[0],
+        "streams": streams,
+        "seconds": duration,
+        "loaded": latency(probes),
+    }
+
+
+def grade(added_ms):
+    """Bufferbloat grade from the latency added under load (Waveform's scale)."""
+    if added_ms is None:
+        return "?"
+    for limit, g in ((5, "A+"), (30, "A"), (60, "B"), (200, "C"), (400, "D")):
+        if added_ms < limit:
+            return g
+    return "F"
+
+
+def diagnose(r):
+    router, isp = r["local"].get("router"), r["internet"]["ping"]
+    idle = r["internet"]["idle"]["median_ms"]
+    # 100 ms, not lower: a Mac's own Wi-Fi power saving alone puts idle router pings
+    # at 20-60 ms. The failure this is for reads in seconds.
+    if router and (router["loss_pct"] > 2 or (router["avg_ms"] or 0) > 100):
+        return "local network: the hop to the router itself is slow or dropping packets"
+    if isp["loss_pct"] > 2:
+        return "internet: packets are being lost past the router"
+    if idle is None:
+        return "internet: Cloudflare could not be reached"
+    if idle > 100:
+        return "internet: high latency past the router"
+    worst = max((g for g in (r.get("download", {}).get("bufferbloat"),
+                             r.get("upload", {}).get("bufferbloat")) if g), default="A")
+    if worst in ("D", "F"):
+        return "router queues too much under load (bufferbloat): calls and games will lag"
+    return "healthy"
+
+
+# ─── report ──────────────────────────────────────────────────────────────────
+
+
+def fmt(x, unit="", nd=1):
+    return "-" if x is None else f"{x:.{nd}f}{unit}"
+
+
+def report(r):
+    m, loc, net = r["meta"], r["local"], r["internet"]
+    colo = m.get("colo") or {}
+    print(f"netcheck  {HOST} via {colo.get('city', '?')} ({colo.get('iata', '?')})\n")
+
+    print("Connection")
+    if m.get("asOrganization"):
+        print(f"  ISP        {m['asOrganization']} (AS{m.get('asn')})")
+    if m.get("clientIp"):
+        fam = "IPv6" if ":" in m["clientIp"] else "IPv4"
+        print(f"  Public IP  {m['clientIp']} ({fam}, {m.get('httpProtocol', '?')})")
+    if m.get("city"):
+        print(f"  Location   {m['city']}, {m.get('region', '')} {m.get('country', '')}".rstrip())
+
+    print("\nLocal network")
+    router, lk = loc.get("router"), loc.get("link") or {}
+    if router:
+        print(f"  Router     {router['host']} via {loc.get('interface')}: "
+              f"{fmt(router['avg_ms'], ' ms')} ±{fmt(router['spread_ms'], ' ms')}, "
+              f"{fmt(router['loss_pct'], '% loss', 0)}")
+    if lk.get("type") == "wifi":
+        parts = [
+            " ".join(x for x in (lk.get("band"), lk.get("channel") and f"ch {lk['channel']}",
+                                 lk.get("width_mhz") and f"{lk['width_mhz']} MHz") if x),
+            lk.get("phy"),
+            lk.get("ssid"),
+            lk.get("signal_dbm") and f"signal {lk['signal_dbm']} dBm"
+            + (f" / noise {lk['noise_dbm']} dBm" if lk.get("noise_dbm") else ""),
+            lk.get("rx_mbps") and f"rate rx {lk['rx_mbps']:.0f} / tx {lk['tx_mbps']:.0f} Mbps",
+            not lk.get("rx_mbps") and lk.get("tx_mbps") and f"rate {lk['tx_mbps']} Mbps",
+            lk.get("power_save") and f"power save {lk['power_save']}",
+        ]
+        print(f"  Wi-Fi      {' · '.join(p for p in parts if p) or 'connected (no details: install iw)'}")
+    elif lk.get("type") == "wired":
+        print(f"  Wired      {fmt(lk.get('link_mbps'), ' Mbps link', 0)}")
+
+    print("\nInternet")
+    idle, p = net["idle"], net["ping"]
+    print(f"  Latency    {fmt(idle['median_ms'], ' ms')} idle, jitter {fmt(idle['jitter_ms'], ' ms')}"
+          f"   (TCP handshake to Cloudflare)")
+    print(f"  Loss       {fmt(p['loss_pct'], '%', 0)}   (ICMP to {p['host']}, "
+          f"{fmt(p['avg_ms'], ' ms')})")
+    for kind in ("download", "upload"):
+        if kind not in r:
+            continue
+        t = r[kind]
+        added = (t["loaded"]["median_ms"] - idle["median_ms"]
+                 if t["loaded"]["median_ms"] is not None and idle["median_ms"] is not None else None)
+        print(f"  {kind.capitalize():<10} {fmt(t['mbps'], ' Mbps'):>11}  p90 {fmt(t['p90_mbps'], ' Mbps')}"
+              f" · loaded latency {fmt(t['loaded']['median_ms'], ' ms')} "
+              f"({'+' if (added or 0) >= 0 else ''}{fmt(added, ' ms')}) · bufferbloat {t['bufferbloat']}")
+    if r.get("rpm"):
+        print(f"  Responsiveness  {r['rpm']:.0f} RPM   (round trips a minute under load)")
+    used = sum(r[k]["bytes"] for k in ("download", "upload") if k in r)
+    print(f"  Data used  {used / 1e6:.0f} MB")
+
+    print(f"\nDiagnosis    {r['diagnosis']}")
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("-d", "--duration", type=float, default=10, help="seconds per direction (10)")
+    ap.add_argument("-s", "--streams", type=int, default=4, help="parallel streams (4)")
+    ap.add_argument("--no-upload", action="store_true", help="skip the upload test")
+    ap.add_argument("--json", action="store_true", help="print the result as JSON")
+    a = ap.parse_args()
+    live = sys.stderr.isatty() and not a.json
+
+    def say(msg):
+        if live:
+            sys.stderr.write(f"\r\033[K  {msg}")
+            sys.stderr.flush()
+
+    try:
+        addr = socket.getaddrinfo(HOST, 443, type=socket.SOCK_STREAM)[0]
+    except OSError as e:
+        sys.exit(f"netcheck: cannot resolve {HOST}: {e}")
+    try:
+        c = conn()
+        c.request("GET", "/__down?bytes=0", headers={"User-Agent": UA})
+        c.getresponse().read()
+    except (OSError, http.client.HTTPException) as e:
+        sys.exit(f"netcheck: cannot reach {HOST}: {e}")
+
+    # The pings take ~5 s; run them, the Wi-Fi read and /meta side by side, and
+    # finish them all before any transfer so none of it is measured under load.
+    say("checking the local network…")
+    dev, gw = gateway()
+    out = {}
+    jobs = {
+        "router": lambda: gw and ping(gw),
+        "ping": lambda: ping("1.1.1.1", 10),
+        "link": lambda: link(dev),
+        "meta": meta,
+    }
+    threads = [threading.Thread(target=lambda k=k, f=f: out.__setitem__(k, f())) for k, f in jobs.items()]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+
+    say("measuring idle latency…")
+    idle = latency([tcp_rtt(addr) for _ in range(20)])
+
+    r = {
+        "time": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "host": socket.gethostname(),
+        "meta": out["meta"],
+        "local": {"interface": dev, "router": out["router"], "link": out["link"]},
+        "internet": {"idle": idle, "ping": out["ping"]},
+    }
+    for kind in ("download",) + (() if a.no_upload else ("upload",)):
+        t = transfer(kind, a.streams, a.duration, addr, live)
+        added = (t["loaded"]["median_ms"] - idle["median_ms"]
+                 if t["loaded"]["median_ms"] is not None and idle["median_ms"] is not None else None)
+        t["bufferbloat"] = grade(added)
+        r[kind] = t
+    loaded = [r[k]["loaded"]["median_ms"] for k in ("download", "upload")
+              if k in r and r[k]["loaded"]["median_ms"]]
+    r["rpm"] = 60000 / max(loaded) if loaded else None
+    r["diagnosis"] = diagnose(r)
+    if live:
+        sys.stderr.write("\r\033[K")
+
+    if a.json:
+        print(json.dumps(r, indent=2))
+    else:
+        report(r)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)
