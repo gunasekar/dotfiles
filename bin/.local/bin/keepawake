@@ -80,8 +80,8 @@ human_secs() {
 }
 
 # Our hold, if we still have one — sets $hpid, $hdeadline ("-" when open-ended) and $hlabel
-# in the caller, the way trails' rank_dot() does, because sh gives a function one stdout
-# and this answers with three things every caller needs together.
+# in the caller, because sh gives a function one stdout and this answers with three things
+# every caller needs together.
 #
 # A state file whose caffeinate is gone is not a hold: it timed out, or was killed, or the
 # machine rebooted under it. The command name is checked and not merely "is that pid
@@ -129,7 +129,7 @@ hold() {
 #   88522 cat         <- the utility, and still the pid tmux hands out as #{pane_pid}
 #   88524 caffeinate  <- its child, holding all three assertions
 #
-# which is why trails needs no special care to keep pane_pid pointing at the agent, and why
+# which is why a tmux pane's pid still points at the utility under caffeinate, and why
 # looking for a caffeinate's *child* would have found nothing in either case.
 #
 # An orphan is the one thing the hop cannot name: a caffeinate whose starter has exited is
@@ -200,8 +200,7 @@ start() {
   return 0
 }
 
-# Two audiences, so two views — the split trails' ls makes, for its reason. A person
-# wants a sentence; the plugin wants fields it can read back with `IFS=$'\t' read`. `[ -t 1 ]`
+# Two audiences, so two views. A person wants a sentence; the plugin wants fields it can read back with `IFS=$'\t' read`. `[ -t 1 ]`
 # tells them apart with no flag to pass, since the plugin's own $(...) is a pipe.
 #
 #   own<TAB><seconds left, or - when open-ended><TAB><the duration you asked for>
