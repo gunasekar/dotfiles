@@ -15,14 +15,13 @@
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
 #
-# All the thinking lives in `keepawake` (bin/.local/bin/keepawake), the same way this
-# plugin's neighbour trails.10s.sh (shipped by trails) defers to `trails ls`. This file picks four
+# All the thinking lives in `keepawake` (bin/.local/bin/keepawake). This file picks four
 # durations, draws a cup, and shells out — so the same holds can be started and stopped
 # over ssh, which is the entire reason Amphetamine had to go.
 #
 # ─── Why it always draws something ───────────────────────────────────────────
-# trails.10s.sh exits silently when no agent is running, because an icon that is always
-# there is one you stop seeing. This one is the opposite and must be: the menu is the
+# A status icon is often best hidden when there is nothing to report, since an icon that is
+# always there is one you stop seeing. This one must always draw: the menu is the
 # only way to *start* a hold, so hiding it when nothing is held would hide the button at
 # exactly the moment you want it. What changes is the icon — a filled cup when we are
 # holding it, a hollow one when something else is (an agent, Claude Code mid-turn), zzz

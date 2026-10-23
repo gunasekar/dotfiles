@@ -129,13 +129,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
   # com.ameba, not com.ambar — `osascript -e 'id of app "SwiftBar"'`. The typo wrote the
   # key into a domain no app reads, and `|| true` swallowed the fact that it did nothing.
   defaults write com.ameba.SwiftBar PluginDirectory "$HOME/.config/swiftbar/plugins" 2>/dev/null || true
-  # The agents plugin ships with trails, not here: `trails swiftbar` links it in from the brew
-  # install, so `brew upgrade trails` keeps it in step. On a fresh machine trails arrives with
-  # `brew bundle`, after this script, so the step is left in "Next steps" below instead.
-  if command -v trails >/dev/null 2>&1; then
-    echo "  • trails menu-bar plugin → trails swiftbar"
-    trails swiftbar >/dev/null || echo "    (trails swiftbar failed — run it once SwiftBar is set up)"
-  fi
 
   # --no-folding — Colima writes VM state into this dir; only the yaml is ours
   echo "  • Colima → ~/.config/colima/default/colima.yaml"
@@ -218,12 +211,7 @@ echo "  version: $VERSION   (recorded in $STAMP)"
 echo ""
 echo "Next steps:"
 echo "  1. Install Homebrew packages: brew bundle --global"
-if [[ "$(uname)" == "Darwin" ]]; then
-  echo "  2. Put trails in the menu bar: trails swiftbar"
-  echo "  3. Restart shell: exec zsh"
-else
-  echo "  2. Restart shell: exec zsh"
-fi
+echo "  2. Restart shell: exec zsh"
 echo ""
 echo "Tip: machine-local shell functions go in ~/.config/zsh/local.d/*.sh"
 echo "     (sourced automatically; never committed to this repo)."
