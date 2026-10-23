@@ -97,6 +97,10 @@ return {
       diff = {
         filler_text = "·", -- faint centre dots for lines only one side has (CodeDiffFiller)
       },
+      -- Files as a directory tree, not a flat list, in the changes explorer and under
+      -- each commit in history. `i` toggles back to the list.
+      explorer = { view_mode = "tree" },
+      history = { view_mode = "tree" },
     },
   },
 
