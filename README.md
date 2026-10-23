@@ -78,6 +78,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── nvim/             # Neovim IDE setup (15 LSP servers, 9 linters, Neo-tree)
 ├── ghostty/          # Ghostty terminal (see ghostty/README.md)
 ├── colima/           # Colima container runtime config (see colima/README.md)
+├── printer/          # "Print to PDF" printer, macOS (see printer/README.md)
 ├── lazygit/          # Lazygit Git TUI configuration
 ├── mpv/              # mpv player configuration
 ├── ranger/           # Ranger file manager configuration

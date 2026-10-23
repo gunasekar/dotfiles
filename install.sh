@@ -135,6 +135,23 @@ if [[ "$(uname)" == "Darwin" ]]; then
   mkdir -p "$HOME/.config/colima/default"
   stow -v --no-folding colima
 
+  # Print to PDF printer — see printer/README.md. --no-folding: ~/.local/bin and
+  # ~/Library/LaunchAgents are shared with everything else that installs there.
+  # The agent and the CUPS queue aren't files, so set them up here, each only if
+  # missing. `|| echo` rather than letting set -e end the run: a missing printer is
+  # not worth skipping the git hook and version stamp below.
+  echo "  • Print to PDF printer → ~/.local/bin/print-to-pdf, launch agent, CUPS queue"
+  stow -v --no-folding printer
+  pdf_agent="com.guna.print-to-pdf"
+  launchctl print "gui/$(id -u)/$pdf_agent" &>/dev/null ||
+    launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$pdf_agent.plist" ||
+    echo "      could not load $pdf_agent"
+  if ! lpstat -p Print_to_PDF &>/dev/null; then
+    lpadmin -p Print_to_PDF -D "Print to PDF" -E -v socket://127.0.0.1:9100 \
+      -m drv:///sample.drv/generic.ppd -o PageSize=A4 2>&1 | grep -v deprecated
+    lpstat -p Print_to_PDF &>/dev/null || echo "      could not create the Print_to_PDF queue"
+  fi
+
   # Tailscale MagicDNS: the Homebrew CLI daemon (see brew/.Brewfile) lacks the
   # macOS Network Extension entitlement the GUI app has, so it can't register a
   # nameserver for *.ts.net queries — only a search domain. Fill the gap with a

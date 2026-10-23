@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# Back end of the "Print to PDF" printer: takes one print job on stdin and writes it
+# to ~/Downloads as a PDF. See printer/README.md.
+#
+# launchd runs this once per connection on 127.0.0.1:9100 (inetd-style), with the
+# socket as stdin. The CUPS queue speaks raw socket to that port through the Generic
+# PostScript driver, so what arrives is plain PostScript.
+
+set -u
+
+# launchd starts agents with a bare PATH, so find Homebrew's gs on either arch.
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+tmp=$(mktemp -t print-to-pdf) || exit 1
+trap 'rm -f "$tmp"' EXIT
+cat >"$tmp"
+[[ -s "$tmp" ]] || exit 0
+
+# Name the file after the job: "%%Title: report.pdf" -> report_printed_<stamp>.pdf
+title=$(sed -n -e 's/^%%Title:[[:space:]]*//p' "$tmp" | head -n1 |
+  sed -e 's/^(//' -e 's/)$//' -e 's/\.pdf$//' |
+  LC_ALL=C tr -c 'A-Za-z0-9._-' '_' | cut -c1-80)
+title=${title%%_}
+out="$HOME/Downloads/${title:-print}_printed_$(date +%Y%m%d-%H%M%S).pdf"
+
+gs -q -dSAFER -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sPAPERSIZE=a4 \
+  -sOutputFile="$out" "$tmp"
