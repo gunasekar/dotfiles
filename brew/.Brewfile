@@ -151,6 +151,7 @@ if OS.mac?
   cask "intellij-idea-ce"
   cask "iterm2"
   cask "itsycal"
+  cask "kitty"
   cask "mitmproxy"
   cask "obsidian"
   cask "openemu"

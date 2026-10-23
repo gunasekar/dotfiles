@@ -114,6 +114,9 @@ stow -v topgrade
 echo "  • Ghostty → ~/.config/ghostty/"
 stow -v --no-folding ghostty
 
+echo "  • Kitty → ~/.config/kitty/"
+stow -v --no-folding kitty
+
 # Zed settings.json/keymap.json/tasks.json moved to dotfiles-private (Zed's
 # ssh_connections gets written into settings.json by its remote-dev UI, which
 # leaks machine hostnames + workspace paths — same reasoning as ssh/config).
