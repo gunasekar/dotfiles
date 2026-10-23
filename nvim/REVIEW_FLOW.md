@@ -89,7 +89,7 @@ Plugin loading is centralized in `lua/config/lazy.lua` and imports these groups:
 - Editing: `lua/plugins/editor/*.lua`, `lua/plugins/comments/comment.lua`.
   Review buffer deletion, terminals, autopairs, comments, and indentation.
 - Git: `lua/plugins/git.lua`.
-  Review Lazygit, Diffview, and Gitsigns hunk mappings.
+  Review Lazygit, CodeDiff, and Gitsigns hunk mappings.
 - UI: `lua/plugins/ui/*.lua`, `lua/plugins/colorscheme.lua`.
   Review theme, statusline, notifications, diagnostics, and icons.
 - Markdown and data: `lua/plugins/markdown.lua`, `lua/plugins/diagram.lua`,

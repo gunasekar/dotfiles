@@ -90,7 +90,7 @@ opt.foldenable = true
 -- Command line
 opt.cmdheight = 1
 opt.showcmd = true
-opt.fillchars = { eob = " " } -- Remove ~ at end of buffer
+opt.fillchars = { eob = " ", diff = "·" } -- No ~ at end of buffer; faint centre dots for lines only one side of a diff has, not -
 
 -- Formatting
 opt.formatoptions = "jcroqlnt" -- tcqj format options

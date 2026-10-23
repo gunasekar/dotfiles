@@ -108,6 +108,20 @@ api.nvim_create_autocmd("FileType", {
   desc = "Enable soft wrap for prose filetypes",
 })
 
+-- CodeDiff's filler, the lines only one side has (its filler_text, centre dots): a faint
+-- grey, not its own #444444. CodeDiff sets the group only when it isn't set already. Set
+-- again on every colorscheme change, which clears it.
+local diff_filler_group = api.nvim_create_augroup("DiffFillerDim", { clear = true })
+local function dim_diff_filler()
+  api.nvim_set_hl(0, "CodeDiffFiller", { fg = "#3b4048" })
+end
+dim_diff_filler()
+api.nvim_create_autocmd("ColorScheme", {
+  group = diff_filler_group,
+  callback = dim_diff_filler,
+  desc = "Faint dots for CodeDiff's filler lines",
+})
+
 -- Trim trailing whitespace on save (optional - uncomment if desired)
 -- local trim_whitespace_group = api.nvim_create_augroup("TrimWhitespace", { clear = true })
 -- api.nvim_create_autocmd("BufWritePre", {

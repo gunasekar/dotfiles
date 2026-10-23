@@ -5,6 +5,8 @@ return {
 	-- ── render-markdown.nvim ────────────────────────────────────────────────
 	{
 		"MeanderingProgrammer/render-markdown.nvim",
+		-- Not in a diff popup (plugins/git.lua): a diff shows markdown as written.
+		cond = vim.env.NVIM_DIFF_FLOAT == nil,
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter",
 			"nvim-tree/nvim-web-devicons",
@@ -47,6 +49,8 @@ return {
 		-- inside smart tables and can drift table borders.
 		"OXY2DEV/markview.nvim",
 		enabled = true,
+		-- Not in a diff popup (plugins/git.lua): a diff shows markdown as written.
+		cond = vim.env.NVIM_DIFF_FLOAT == nil,
 		-- Do NOT lazy-load: markview is already internally lazy-loaded. Deferring
 		-- it only delays previews on startup (per upstream docs). Loading after the
 		-- colorscheme also ensures correct highlight groups.
