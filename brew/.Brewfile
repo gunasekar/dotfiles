@@ -138,6 +138,7 @@ if OS.mac?
   brew "yt-dlp"
 
 
+  cask "bruno"
   cask "cursor-cli"
   cask "dbeaver-community"
   cask "discord"
