@@ -162,6 +162,14 @@ return {
 
     -- Indent guides (disabled - using indent-blankline)
     indent = { enabled = false },
+
+    -- Image viewer: opening a png/jpg/gif/... file draws it via the Kitty graphics
+    -- protocol (Kitty, Ghostty, WezTerm). doc is off: markdown diagrams belong to
+    -- image.nvim in the <leader>ui view (plugins/diagram.lua).
+    -- Off inside tmux: snacks identifies the terminal with an escape query, and under
+    -- tmux's `extended-keys always` the reply arrives as typed keys in the buffer
+    -- (snacks.nvim#2332; its workaround only recognises `on`).
+    image = { enabled = vim.env.TMUX == nil, doc = { enabled = false } },
   },
 
   keys = {

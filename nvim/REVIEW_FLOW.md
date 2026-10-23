@@ -247,7 +247,7 @@ Review checklist:
 Before sharing in forums, call out these assumptions:
 
 - The setup expects a Nerd Font for the best icon rendering.
-- The terminal graphics feature for inline images/diagrams expects Ghostty,
+- Diagrams in the read-only markdown view and opened image files expect Ghostty,
   Kitty, or WezTerm and the Kitty graphics protocol.
 - AI agent integrations are personal workflow pieces. The command
   `claude --dangerously-skip-permissions` is intentionally local and should not
