@@ -1,8 +1,7 @@
 # Kitty Terminal Configuration
 
-Kitty configuration with a custom Ayu theme on a true black background, no title
-bar (the tab bar is the top edge of the window), a black powerline tab bar with
-fixed-width tabs, and free-form splits.
+Kitty configuration with a custom Ayu theme on a true black background, a black
+title bar, a black powerline tab bar with fixed-width tabs, and free-form splits.
 
 ## Installation
 
@@ -71,6 +70,7 @@ no longer "clear to cursor".
 | `Cmd+Shift+W` | Close OS window |
 | `Cmd+M` | Minimise OS window |
 | `Ctrl+Cmd+F` | Toggle full screen |
+| `Cmd+Ctrl+M` | Toggle maximise (fills the screen, keeps the menu bar) |
 
 ## Troubleshooting
 
