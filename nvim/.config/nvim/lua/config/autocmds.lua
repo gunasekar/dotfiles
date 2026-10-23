@@ -108,6 +108,77 @@ api.nvim_create_autocmd("FileType", {
   desc = "Enable soft wrap for prose filetypes",
 })
 
+-- Keep scroll-bound windows together when the wheel scrolls one the cursor isn't in.
+-- 'scrollbind' only follows the current window, so a diff side scrolled under the
+-- pointer (codediff, nvim -d) left its partner behind. :syncbind, run from
+-- inside the scrolled window, brings the others to it. (Sideways is below: a horizontal
+-- wheel never applies 'scrollbind' at all.)
+local scrollbind_group = api.nvim_create_augroup("ScrollbindFollowsWheel", { clear = true })
+local syncing = false
+api.nvim_create_autocmd("WinScrolled", {
+  group = scrollbind_group,
+  callback = function()
+    if syncing then
+      return
+    end
+    local cur = api.nvim_get_current_win()
+    for id in pairs(vim.v.event) do
+      local win = tonumber(id)
+      if win and win ~= cur and api.nvim_win_is_valid(win) and vim.wo[win].scrollbind then
+        syncing = true
+        pcall(api.nvim_win_call, win, function()
+          vim.cmd("syncbind")
+        end)
+        syncing = false
+        return
+      end
+    end
+  end,
+  desc = "Scroll-bound windows follow a wheel-scrolled partner",
+})
+
+-- Sideways trackpad scrolling keeps diff sides together. For a horizontal wheel Neovim
+-- scrolls the window under the pointer and applies 'scrollbind' to nothing, cursor in it
+-- or not, so a scroll-bound window under the pointer is scrolled here, by 'mousescroll's
+-- hor step, and the others bound with it brought to the same left column. Any other
+-- window scrolls as Neovim would.
+local function wheel_sideways(dir)
+  local key = dir == "right" and "<ScrollWheelRight>" or "<ScrollWheelLeft>"
+  return function()
+    local win = vim.fn.getmousepos().winid
+    if win == 0 or not api.nvim_win_is_valid(win) or not vim.wo[win].scrollbind then
+      api.nvim_feedkeys(api.nvim_replace_termcodes(key, true, false, true), "n", false)
+      return
+    end
+    local step = tonumber(vim.o.mousescroll:match("hor:(%d+)")) or 6
+    -- By zl/zh rather than by setting the left column: they take the cursor along,
+    -- which Neovim would otherwise scroll back into view. The window under the pointer
+    -- first; then each bound one by whatever it is off from it, since Neovim's own
+    -- binding may already have moved it part of the way.
+    local function leftcol(w)
+      return api.nvim_win_call(w, function()
+        return vim.fn.winsaveview().leftcol
+      end)
+    end
+    local function shift(w, by)
+      if by ~= 0 then
+        api.nvim_win_call(w, function()
+          vim.cmd("normal! " .. math.abs(by) .. (by > 0 and "zl" or "zh"))
+        end)
+      end
+    end
+    shift(win, dir == "right" and step or -step)
+    local target = leftcol(win)
+    for _, other in ipairs(api.nvim_tabpage_list_wins(api.nvim_win_get_tabpage(win))) do
+      if other ~= win and vim.wo[other].scrollbind then
+        shift(other, target - leftcol(other))
+      end
+    end
+  end
+end
+vim.keymap.set({ "n", "x" }, "<ScrollWheelRight>", wheel_sideways("right"), { desc = "Scroll right, diff sides together" })
+vim.keymap.set({ "n", "x" }, "<ScrollWheelLeft>", wheel_sideways("left"), { desc = "Scroll left, diff sides together" })
+
 -- CodeDiff's filler, the lines only one side has (its filler_text, centre dots): a faint
 -- grey, not its own #444444. CodeDiff sets the group only when it isn't set already. Set
 -- again on every colorscheme change, which clears it.

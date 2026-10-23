@@ -79,6 +79,7 @@ opt.lazyredraw = false -- Don't redraw during macros
 -- Scrolling
 opt.scrolloff = 8
 opt.sidescrolloff = 8
+opt.scrollopt = "ver,hor,jump" -- scroll-bound windows (diff sides) follow sideways too
 
 -- Folding (using treesitter)
 opt.foldmethod = "expr"
