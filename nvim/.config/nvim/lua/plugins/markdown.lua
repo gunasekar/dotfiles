@@ -51,6 +51,34 @@ return {
 		enabled = true,
 		-- Not in a diff popup (plugins/git.lua): a diff shows markdown as written.
 		cond = vim.env.NVIM_DIFF_FLOAT == nil,
+		-- Never renders while editing: markdown shows as written, and <leader>ui flips
+		-- the buffer into a read-only rendered view (diagrams too, plugins/diagram.lua)
+		-- and back. Locking the buffer is what keeps rendering out of the way of
+		-- edits: nothing can be typed into the rendered view.
+		keys = {
+			{
+				"<leader>ui",
+				function()
+					local buf = vim.api.nvim_get_current_buf()
+					if not vim.list_contains({ "markdown", "quarto", "rmd" }, vim.bo[buf].filetype) then
+						vim.notify("Not a markdown buffer", vim.log.levels.INFO)
+						return
+					end
+					local actions = require("markview.actions")
+					local preview = vim.b[buf].markdown_preview
+					if preview then
+						actions.disable(buf)
+						vim.bo[buf].modifiable = preview.modifiable
+						vim.b[buf].markdown_preview = nil
+					else
+						vim.b[buf].markdown_preview = { modifiable = vim.bo[buf].modifiable }
+						vim.bo[buf].modifiable = false
+						actions.enable(buf)
+					end
+				end,
+				desc = "Toggle read-only markdown preview",
+			},
+		},
 		-- Do NOT lazy-load: markview is already internally lazy-loaded. Deferring
 		-- it only delays previews on startup (per upstream docs). Loading after the
 		-- colorscheme also ensures correct highlight groups.
@@ -74,40 +102,20 @@ return {
 
 			return {
 				preview = {
+					enable = false, -- only in the read-only view (<leader>ui, see keys above)
 					-- Neovim 0.12.2 compat: markview's set_query guard has a pcall edge
 					-- case (get_parser returning nil before treesitter is active) that
 					-- lets it call vim.treesitter.start() on non-markdown buffers, causing
 					-- an assert failure. Restricting filetypes here prevents attach() from
 					-- ever being called for typst/asciidoc where the crash occurs.
 					filetypes = { "markdown", "quarto", "rmd" },
-					-- Reveal the raw markdown of the node under the cursor in these
-					-- modes, so a NORMAL, visible cursor moves through the table the
-					-- usual Vim way (the fitted render is virtual text over zero-height
-					-- rows, where the cursor would otherwise be invisible).
-					--
-					-- `raw_previews` (below) scopes markview's OWN extmark decorations
-					-- to tables, so headings/links/inline-code stay rendered under the
-					-- cursor. But note a SECOND, separate mechanism: markview derives
-					-- `concealcursor` as (preview.modes MINUS hybrid_modes). Listing "n"
-					-- here drops it from concealcursor, so Neovim natively un-conceals
-					-- treesitter-concealed markup (bold `**`, italic `_`) on the cursor's
-					-- line in normal mode. That is inherent to wanting a visible cursor
-					-- on the table — raw_previews cannot suppress it (it is conceallevel,
-					-- not an extmark). Accepted as the cost of the visible-cursor feature.
-					--
-					-- Trade-off: a wide table shows raw (briefly unfitted) while the
-					-- cursor is on it. Modes: "n" normal, "v"/"V" visual, "i" insert.
-					hybrid_modes = { "n", "v", "V", "i" },
-					raw_previews = {
-						markdown = { "tables" },
-						-- markview reveals every node of any language it is NOT told
-						-- to filter, so listing only `markdown` leaves the inline
-						-- language wide open — inline `code`, links, highlights, etc.
-						-- still flip to raw under the cursor. `{ "none" }` is a
-						-- no-match inclusion (reveal nothing inline), so only tables
-						-- ever drop to raw.
-						markdown_inline = { "none" },
-					},
+					-- No hybrid mode: rendering only happens in the read-only view, where
+					-- nothing is edited, so nothing should flip back to raw under the
+					-- cursor (tables included). Empty also keeps "n" in markview's derived
+					-- `concealcursor`, so bold `**` / italic `_` stay hidden on the cursor's
+					-- line. Cost: smart tables are virtual text over zero-height rows, so
+					-- the cursor is hidden while it crosses a table.
+					hybrid_modes = {},
 				},
 				-- Route table rendering through markview-smart-tables.nvim. It fits
 				-- oversized tables to the window (works WITH your global `wrap = true`)
