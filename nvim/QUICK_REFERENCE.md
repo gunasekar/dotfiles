@@ -98,7 +98,10 @@ Leader key: `Space`
 | `<leader>ll` | Lint current file |
 | `<leader>ls` | Toggle ShellCheck strict mode |
 | `<leader>gg` | Open Lazygit |
-| `<leader>gd` | Diff of the changes (CodeDiff, in a float; `q` closes) |
+| `<leader>gd` | Changes diff (CodeDiff float, read-only; `q` closes) |
+| `-` (in a diff) | Stage / unstage the file under the cursor |
+| `S` / `U` (in a diff) | Stage all / unstage all |
+| `<leader>hu` (in a diff) | Unstage hunk (`<leader>hs` stages) |
 | `<leader>gh` / `<leader>gH` | History of the branch / the current file (CodeDiff, in a float) |
 | `<leader>hs` | Stage hunk |
 | `<leader>hr` | Reset hunk |

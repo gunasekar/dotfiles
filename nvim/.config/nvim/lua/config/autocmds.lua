@@ -193,6 +193,23 @@ api.nvim_create_autocmd("ColorScheme", {
   desc = "Faint dots for CodeDiff's filler lines",
 })
 
+-- In the diff float (<leader>gd, plugins/git.lua) the files on disk are read-only: the
+-- changes view shows the working copy itself as its right side, and a stray `i`, `x` or
+-- `dd` there edited the real file. CodeDiff's own buffers (the old side, the explorer)
+-- are locked already. Its stage and discard keys still work: they go through git, or
+-- unlock the buffer for the one change.
+if vim.env.NVIM_DIFF_FLOAT then
+  api.nvim_create_autocmd("BufWinEnter", {
+    group = api.nvim_create_augroup("DiffFloatReadOnly", { clear = true }),
+    callback = function(ev)
+      if vim.bo[ev.buf].buftype == "" and api.nvim_buf_get_name(ev.buf) ~= "" then
+        vim.bo[ev.buf].modifiable = false
+      end
+    end,
+    desc = "Files on disk are read-only in the diff float",
+  })
+end
+
 -- Trim trailing whitespace on save (optional - uncomment if desired)
 -- local trim_whitespace_group = api.nvim_create_augroup("TrimWhitespace", { clear = true })
 -- api.nvim_create_autocmd("BufWritePre", {

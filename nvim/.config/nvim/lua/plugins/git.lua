@@ -35,7 +35,7 @@ local function diff_float(title, args)
   -- plugins where they are: the markdown renderers stay out (plugins/markdown.lua), so a
   -- diff shows the markdown as written.
   local base = { vim.v.progpath, "-c", "set showtabline=0", "-c", "nnoremap q <cmd>qa!<cr>" }
-  vim.fn.jobstart(vim.list_extend(base, args), {
+  local job = vim.fn.jobstart(vim.list_extend(base, args), {
     term = true,
     env = { NVIM_DIFF_FLOAT = "1" },
     cwd = root,
@@ -50,6 +50,18 @@ local function diff_float(title, args)
       end)
     end,
   })
+  -- The keys this Neovim takes in terminal mode (<Esc> to normal mode, <C-hjkl> to the
+  -- next window) go to the one in the float instead. Otherwise an <Esc> there leaves
+  -- this float in normal mode, where `q` records a macro rather than closing anything.
+  for _, key in ipairs({ "<Esc>", "<C-h>", "<C-j>", "<C-k>", "<C-l>" }) do
+    vim.keymap.set("t", key, key, { buffer = buf, nowait = true })
+  end
+  -- Should it land in normal mode anyway (<C-\><C-n>), `q` still closes it, and coming
+  -- back to it picks up in the view again.
+  vim.keymap.set("n", "q", function()
+    vim.fn.jobstop(job)
+  end, { buffer = buf, nowait = true, desc = "Close the diff float" })
+  vim.api.nvim_create_autocmd("BufEnter", { buffer = buf, command = "startinsert" })
   vim.cmd("startinsert")
 end
 
