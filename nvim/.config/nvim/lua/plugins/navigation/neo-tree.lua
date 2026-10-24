@@ -170,15 +170,18 @@ return {
 		nesting_rules = {},
 		-- Custom commands
 		commands = {
-			-- Open the selected node with the system default opener.
-			-- macOS: directories reveal in Finder in the background (open -g), files
-			-- open in their default app. Linux: xdg-open handles both.
+			-- Open the selected node outside Neovim.
+			-- macOS: directories open in Finder in the background (open -g), files get
+			-- a Quick Look preview (qlmanage -p) instead of their default app.
+			-- qlmanage only uses the built-in previewers, not app extensions, so
+			-- Markdown shows as plain text here even where Finder's Space renders it.
+			-- Linux: xdg-open handles both.
 			system_open = function(state)
 				local node = state.tree:get_node()
 				local path = node:get_id()
 				local is_dir = node.type == "directory"
 				if vim.fn.has("mac") == 1 then
-					local cmd = is_dir and { "open", "-g", path } or { "open", path }
+					local cmd = is_dir and { "open", "-g", path } or { "qlmanage", "-p", path }
 					vim.fn.jobstart(cmd, { detach = true })
 				elseif vim.fn.has("unix") == 1 then
 					vim.fn.jobstart({ "xdg-open", path }, { detach = true })

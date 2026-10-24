@@ -82,6 +82,7 @@ Leader key: `Space`
 | --- | --- |
 | `<leader>e` | Toggle Neo-tree |
 | `<leader>ef` | Reveal current file in Neo-tree |
+| `O` (in Neo-tree) | Folder: open in Finder; file: Quick Look preview |
 | `<leader>ff` | Find files |
 | `<leader>fg` | Live grep |
 | `<leader>,` | Switch buffers |
