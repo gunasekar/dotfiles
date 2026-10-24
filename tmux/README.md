@@ -23,7 +23,26 @@ On a remote host, deploy the dotfiles there the same way — don't hand-edit a
 `~/.tmux.conf` on the box. To remove: `stow -D tmux`.
 
 A running server does **not** re-read the config. After editing: `prefix + r`,
-or `tmux kill-server` for a clean slate.
+or `tmux kill-server` for a clean slate (launchd starts a new one at once; see
+below).
+
+On macOS the server itself comes from launchd, not from a terminal:
+`tmux-server/Library/LaunchAgents/com.guna.tmux.plist`, stowed and loaded by
+`install.sh`. By hand:
+
+```bash
+stow --no-folding tmux-server
+launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/com.guna.tmux.plist
+```
+
+Why: a server started from a shell in kitty (or Zed) stays part of that app's
+*coalition* on macOS, however it detaches, and a **Force Quit** of the app ends
+the whole coalition: the server, and every agent in it. A normal ⌘Q only closes
+the app's own windows, whose tmux clients detach. A server launchd starts belongs
+to no app. It runs `tmux -D` through `zsh -c`, so `~/.zshenv` gives it, and every
+pane, the PATH a terminal has; it waits while a server some app started is still
+up, and comes back by itself after a `kill-server` or a crash. To stop it for
+good: `launchctl bootout gui/"$(id -u)"/com.guna.tmux`.
 
 ## Daily Commands
 
@@ -150,15 +169,16 @@ in a second way:
 
 ### No plugins, deliberately
 
-tmux already survives ssh drops, Wi-Fi loss, and quitting kitty on its own.
+tmux already survives ssh drops, Wi-Fi loss, and quitting kitty on its own
+(and a Force Quit of kitty too, with the launch agent above).
 The popular plugins mostly buy things this config covers natively:
 
 - **tmux-yank** → superseded by `set-clipboard on` and OSC 52 (see below).
 - **tmux-sensible** → its useful options are inlined in `tmux.conf`.
 - **sesh / tmux-sessionx** → `choose-tree` (`prefix + s`) is built in.
-- **tmux-resurrect / continuum** → the one real gap: they restore sessions after
-  a **reboot of the host**. Worth adding *only* if that starts happening; the
-  cost is bootstrapping a plugin manager on every machine you ssh into.
+- **tmux-resurrect / continuum** → what they restore after a reboot, the agents,
+  trails restores itself: `trails restore` runs from `tmux.conf` whenever the
+  server starts, and brings each lost trail back on its conversation.
 
 ### Clipboard over ssh
 

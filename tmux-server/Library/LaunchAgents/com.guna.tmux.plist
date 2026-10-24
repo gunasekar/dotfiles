@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.guna.tmux</string>
+	<!-- The tmux server, started by launchd rather than by a terminal: a server a terminal
+	     started belongs to that app's coalition however it detaches, and a Force Quit of the
+	     app takes it down with every agent in it. zsh -c reads ~/.zshenv, so the server, and
+	     every pane, has the PATH and XDG variables a terminal would. -D keeps it in the
+	     foreground for launchd, with exit-empty off. While a server some app started is up,
+	     it waits for that one to go rather than fail against it. -->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/zsh</string>
+		<string>-c</string>
+		<string>while /opt/homebrew/bin/tmux ls >/dev/null 2>&amp;1; do sleep 5; done; exec /opt/homebrew/bin/tmux -D</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<!-- Back at once if it exits: a kill-server, a crash. -->
+	<key>KeepAlive</key>
+	<true/>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/tmux-server.log</string>
+</dict>
+</plist>
