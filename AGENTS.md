@@ -7,7 +7,7 @@ Guidelines for AI assistants working on this personal dotfiles repository.
 Personal dotfiles repository managing cross-platform development environment
 configurations using GNU Stow.
 
-**Stack**: Zsh, Neovim (15 LSP servers), Ghostty, Homebrew, Git
+**Stack**: Zsh, Neovim (15 LSP servers), kitty, Homebrew, Git
 **Platforms**: macOS (ARM/Intel), Linux
 **Current Version**: Neovim 0.11.5
 
