@@ -12,19 +12,19 @@
 --
 -- REQUIREMENTS (host-level, not managed by lazy.nvim):
 --   * A terminal speaking the KITTY GRAPHICS PROTOCOL.
---       Works:    WezTerm, Kitty, Ghostty.
---       Does NOT: iTerm2, Terminal.app, plain xterm. There the preview shows the
+--       Works:    Kitty, WezTerm.
+--       Does NOT: Terminal.app, plain xterm. There the preview shows the
 --       fenced source as a code block.
 --   * ImageMagick CLI ........... `magick`  -> already installed (/opt/homebrew/bin/magick)
 --   * mermaid-cli ............... `mmdc`    -> already installed (/opt/homebrew/bin/mmdc)
 --   * (optional, PlantUML) ...... `plantuml` on PATH
 --   Override detection with `vim.g.diagram_inline = true|false` when the guess is
---   wrong (e.g. a tmux server started from Ghostty, later attached from Terminal.app,
---   still inherits Ghostty's env).
+--   wrong (e.g. a tmux server started from kitty, later attached from Terminal.app,
+--   still inherits kitty's env).
 -- tmux users: add `set -g allow-passthrough on` to ~/.tmux.conf or images won't pass through.
 
 -- Kitty-graphics terminals announce themselves through env vars. TERM survives SSH
--- (xterm-kitty / xterm-ghostty); the *_DIR / *_ID vars survive into tmux, where
+-- (xterm-kitty); the *_ID / *_PANE vars survive into tmux, where
 -- TERM_PROGRAM becomes "tmux".
 local function has_kitty_graphics()
   if vim.g.diagram_inline ~= nil then
@@ -41,14 +41,11 @@ local function has_kitty_graphics()
       return false
     end
   end
-  if env.KITTY_WINDOW_ID or env.GHOSTTY_RESOURCES_DIR or env.WEZTERM_PANE then
+  if env.KITTY_WINDOW_ID or env.WEZTERM_PANE then
     return true
   end
   local term, program = env.TERM or "", env.TERM_PROGRAM or ""
-  return term:match("kitty") ~= nil
-    or term:match("ghostty") ~= nil
-    or program == "ghostty"
-    or program == "WezTerm"
+  return term:match("kitty") ~= nil or program == "WezTerm"
 end
 
 -- Wire diagram rendering to markview's enable/disable events. Runs from `init`, so

@@ -110,10 +110,7 @@ stow -v tmux
 echo "  • Topgrade → ~/.config/topgrade.toml"
 stow -v topgrade
 
-# --no-folding — these tools write their own files to config dir
-echo "  • Ghostty → ~/.config/ghostty/"
-stow -v --no-folding ghostty
-
+# --no-folding — kitty writes its own files to its config dir
 echo "  • Kitty → ~/.config/kitty/"
 stow -v --no-folding kitty
 

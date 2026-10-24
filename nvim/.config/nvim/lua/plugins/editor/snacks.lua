@@ -164,7 +164,7 @@ return {
     indent = { enabled = false },
 
     -- Image viewer: opening a png/jpg/gif/... file draws it via the Kitty graphics
-    -- protocol (Kitty, Ghostty, WezTerm). doc is off: markdown diagrams belong to
+    -- protocol (Kitty, WezTerm). doc is off: markdown diagrams belong to
     -- image.nvim in the <leader>ui view (plugins/diagram.lua).
     -- Off inside tmux: snacks identifies the terminal with an escape query, and under
     -- tmux's `extended-keys always` the reply arrives as typed keys in the buffer
@@ -289,7 +289,7 @@ return {
     -- right-panel agent picker (toggle current / new / cycle sessions)
     -- <C-S-`> is bound twice: inside tmux the same keypress arrives as <C-S-~>,
     -- because tmux speaks xterm's modifyOtherKeys (which reports the shifted
-    -- character) rather than the Kitty protocol Ghostty uses directly. See the
+    -- character) rather than the Kitty protocol kitty uses directly. See the
     -- comment in plugins/agents.lua. <C-S-L>/<C-S-H> need no alias — letters
     -- resolve the same under both protocols.
     { "<C-`>",     toggle_bottom_panel, desc = "Toggle bottom panel", mode = { "n", "i", "v", "t" } },

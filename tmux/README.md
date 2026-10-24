@@ -1,8 +1,8 @@
 # tmux Configuration
 
 Session persistence for remote and agent work. The tmux server runs on the
-remote host, so a dropped ssh link, a closed laptop, or quitting Ghostty leaves
-your work running — Ghostty is only the viewer.
+remote host, so a dropped ssh link, a closed laptop, or quitting kitty leaves
+your work running — kitty is only the viewer.
 
 Tuned for long-running coding-agent sessions (Claude Code) and for Neovim, not
 copied from a starter gist. Every non-obvious line in `tmux.conf` says why it's
@@ -72,7 +72,7 @@ lines actually produced — idle panes are free.
 
 **Bell notifications.** Claude Code rings the terminal bell when it finishes or
 wants input. `monitor-bell` + `bell-action any` + `visual-bell off` keep that a
-real bell, so it reaches Ghostty instead of being swallowed into a tmux status
+real bell, so it reaches kitty instead of being swallowed into a tmux status
 line. It's Claude-only, though — the other three agents never ring.
 
 **Silence alerts.** `Ctrl+b` `m` arms `monitor-silence` on the current window: no
@@ -84,7 +84,7 @@ it's a rough "did that build stop" flag for ordinary windows, nothing more.
 **Pane labels.** `pane-border-status top` labels every pane with its running
 command, so a grid of panes tells you which is `claude` and which is a shell.
 
-**Tab title.** `set-titles-string` gives Ghostty's tab `claude · <task>` when a
+**Tab title.** `set-titles-string` gives kitty's tab `claude · <task>` when a
 session carries an `@agent` user option, and the default `#S:#W ·
 #{pane_current_command}` otherwise. `@agent` exists because the command name
 alone lies — Claude Code reports `claude.exe` (a Bun single-file executable),
@@ -122,7 +122,7 @@ tmux sets `$TMUX` in every pane it creates and refuses to nest while it is set).
 It needs nothing added here, but it makes four of the settings above load-bearing
 in a second way:
 
-- `set-titles-string` becomes a **pane border** as well as a Ghostty tab. The
+- `set-titles-string` becomes a **pane border** as well as a kitty tab. The
   inner client emits the title to its terminal — which *is* the map's pane —
   so the map reads `claude · <task>` straight off `#{pane_title}` with nothing
   polling. The hostname and spinner-glyph guards come along for free.
@@ -150,7 +150,7 @@ in a second way:
 
 ### No plugins, deliberately
 
-tmux already survives ssh drops, Wi-Fi loss, and quitting Ghostty on its own.
+tmux already survives ssh drops, Wi-Fi loss, and quitting kitty on its own.
 The popular plugins mostly buy things this config covers natively:
 
 - **tmux-yank** → superseded by `set-clipboard on` and OSC 52 (see below).
@@ -165,19 +165,19 @@ The popular plugins mostly buy things this config covers natively:
 `set -s set-clipboard on` lets Neovim (or an agent) on a remote box push a yank
 to the local macOS clipboard via OSC 52. The default `external` is **not**
 enough — it lets tmux set the clipboard but forbids applications inside from
-doing so. Ghostty advertises the `Ms` capability, so tmux has somewhere to send
+doing so. kitty advertises the `Ms` capability, so tmux has somewhere to send
 it.
 
 ### Truecolor needs no configuration
 
-Ghostty sets `TERM=xterm-ghostty`, whose terminfo declares `Tc` — tmux's own
-truecolor flag — so tmux derives RGB support on its own. Verified via
-`#{client_termfeatures}`, which lists `RGB` with no color options set at all.
+kitty sets `TERM=xterm-kitty`, whose terminfo declares `Tc` — tmux's own
+truecolor flag — so tmux derives RGB support on its own. Check with
+`#{client_termfeatures}`, which should list `RGB` with no color options set.
 Both lines the tutorials tell you to paste are dead config here:
 
 ```tmux
-set -ag terminal-overrides ",xterm-256color:Tc"   # keys off a TERM Ghostty never sends
-set -as terminal-features ",xterm-ghostty:RGB"    # re-states what Tc already said
+set -ag terminal-overrides ",xterm-256color:Tc"   # keys off a TERM kitty never sends
+set -as terminal-features ",xterm-kitty:RGB"      # re-states what Tc already said
 ```
 
 Over ssh the TERM changes: `~/.ssh/config` pins `TERM=xterm-256color` for every
@@ -211,19 +211,21 @@ That covers much of the Neovim agent workflow:
 | `<C-Esc>` | agent panel | **no** |
 
 `Ctrl+Shift+<punct>`, `Ctrl+backtick` and `Ctrl+Esc` exist only under CSI-u.
-Three settings are all required, and this is the one place Ghostty's terminfo
+Three settings are all required, and this is the one place kitty's terminfo
 is **not** enough (unlike `Tc` and `Smulx`):
 
 ```tmux
 set -s extended-keys always
 set -s extended-keys-format csi-u
-set -as terminal-features "xterm-ghostty:extkeys"
+set -as terminal-features "xterm-kitty:extkeys:hyperlinks:usstyle:strikethrough:overline"
 ```
 
 - **`extkeys`** — tmux requests extended keys from the terminal only *if it
   believes the terminal supports them*, and it decides that from terminfo.
-  `xterm-ghostty` doesn't advertise `extkeys`, so without this tmux never asks
-  Ghostty, and the keys never arrive at all.
+  `xterm-kitty` doesn't advertise `extkeys`, so without this tmux never asks
+  kitty, and the keys never arrive at all. tmux doesn't recognise kitty and
+  enable its other features itself either, so the same line lists hyperlinks,
+  styled underlines and the extra text styles.
 - **`always`** — with `on`, tmux forwards only to apps that ask via tmux's own
   `modifyOtherKeys` handshake. Neovim asks via the **Kitty** protocol, which
   tmux doesn't implement ([tmux#3335](https://github.com/tmux/tmux/issues/3335)),
@@ -237,7 +239,7 @@ run `tmux kill-server` and start a fresh session.
 #### Shifted punctuation arrives under a different name inside tmux
 
 Even wired up correctly, `Ctrl+Shift+<punctuation>` is reported *differently*
-inside tmux, and this is not fixable in config. Bare Ghostty speaks the **Kitty**
+inside tmux, and this is not fixable in config. Bare kitty speaks the **Kitty**
 keyboard protocol to Neovim, which reports the **base** key — `Ctrl+Shift+\` is
 `<C-S-\>`. tmux doesn't implement that protocol
 ([tmux#3335](https://github.com/tmux/tmux/issues/3335), closed unimplemented) and
@@ -274,7 +276,7 @@ right — and a transparent background (`bg=default`, the absence of a colour, s
 the terminal's own rather than tmux's default green slab). Borders, the window list,
 copy-mode selection and messages all use tmux's stock styling.
 
-This started life as a hand-picked Ayu palette to match Ghostty, then as ANSI-palette
+This started life as a hand-picked Ayu palette to match the terminal, then as ANSI-palette
 references so it would track any theme. Both were upkeep for little gain — the status
 bar is off in agent sessions anyway, so the styling only ever showed in manual tmux
 sessions. Removed rather than maintained.
@@ -282,7 +284,7 @@ sessions. Removed rather than maintained.
 One consequence worth knowing: copy-mode selection is now tmux's default highlight,
 and either way it's a solid fill — the terminal draws *its* selection as a translucent
 overlay that tints the text underneath. For that exact look, bypass tmux's mouse
-capture with the terminal's own selection modifier (Shift-drag in Ghostty).
+capture with the terminal's own selection modifier (Shift-drag in kitty).
 
 ### Two prefixes: Ctrl+b and Ctrl+Space
 
@@ -290,13 +292,12 @@ Both are live (`prefix` and `prefix2`). `Ctrl+b` stays primary so every
 cheatsheet, guide and remote host behaves as documented; `Ctrl+Space` is the
 comfortable one to actually reach for. There is no distinct terminal code for it —
 it arrives as a raw NUL (`0x00`), which tmux reads as `C-Space` — and it is free
-across zsh and Ghostty.
+across zsh and kitty.
 
 Every candidate costs something and this is the cheapest one left. `Ctrl+a`, the
 classic Screen rebind, shadows readline **beginning-of-line** in zsh. `Alt+Space`
-held this job until Ghostty claimed it globally for the quick terminal
-(`global:opt+space`, see [ghostty/README.md](../ghostty/README.md)); a global grab
-wins everywhere, so tmux could not keep it. `Ctrl+Space` shadows **blink.cmp's
+held this job until a terminal's global quick-terminal hotkey claimed it; a
+global grab wins everywhere, so tmux could not keep it. `Ctrl+Space` shadows **blink.cmp's
 force-completion key** (`nvim/.config/nvim/lua/plugins/lsp/completion.lua`) for
 panes inside tmux, and that is the price paid.
 
@@ -324,7 +325,7 @@ Click a pane to focus it, wheel to scroll history, drag a border to resize,
 click a window name in the status line to switch.
 
 The usual warning against this doesn't apply. tmux runs on the **alternate
-screen** (it emits `smcup` on attach), so Ghostty's scrollback receives no pane
+screen** (it emits `smcup` on attach), so kitty's scrollback receives no pane
 output at all — there is no native scrollback to trade away, and with the mouse
 off the wheel does nothing whatsoever. Pane history lives only inside tmux.
 
@@ -353,16 +354,14 @@ alpha, tinting the text so it stays readable underneath, which is what makes it 
 mild. tmux only speaks solid SGR colours, no alpha, so its selection is a solid
 block (bright blue, `mode-style` above) rather than a tint. When you want the
 terminal's *own* selection — its exact look, or to span pane borders — bypass tmux's
-mouse capture and drag with the terminal's modifier: in Ghostty hold **Shift**
-(`mouse-shift-capture` defaults to `false`); Zed's terminal uses its own binding.
+mouse capture and drag with the terminal's modifier: in kitty hold **Shift**
+(`terminal_select_modifiers` defaults to `shift`); Zed's terminal uses its own binding.
 
-### Ghostty splits vs. tmux panes
+### kitty splits vs. tmux panes
 
-Ghostty binds `Ctrl+H/J/K/L` to `goto_split` as `performable:`, so those keys
-only reach tmux/Neovim when no Ghostty split exists in that direction. Locally,
-prefer Ghostty's splits (`Cmd+D`, `Cmd+Shift+T`); use tmux panes on remotes,
-where Ghostty has none. This is also why `vim-tmux-navigator` isn't installed —
-it would put three layers in contention for the same four keys.
+kitty moves between its splits with `Cmd+Alt+H/J/K/L` (`kitty.conf`), so
+`Ctrl+H/J/K/L` always reach tmux and Neovim. Locally, prefer kitty's splits
+(`Cmd+D`, `Cmd+Shift+D`); use tmux panes on remotes, where kitty has none.
 
 ## Resources
 

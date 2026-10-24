@@ -123,4 +123,4 @@ Examples:
 - lazy.nvim: <https://lazy.folke.io/>
 - Telescope: <https://github.com/nvim-telescope/telescope.nvim>
 - Homebrew: <https://docs.brew.sh/>
-- Ghostty: <https://ghostty.org/docs>
+- kitty: <https://sw.kovidgoyal.net/kitty/>

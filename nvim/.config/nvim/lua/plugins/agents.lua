@@ -217,7 +217,7 @@ end
 -- Ctrl+Shift+<punctuation> arrives under two different names depending on whether we're
 -- inside tmux, so each one is bound twice.
 --
--- Bare Ghostty speaks the Kitty keyboard protocol to Neovim, which reports the *base* key:
+-- Bare kitty speaks the Kitty keyboard protocol to Neovim, which reports the *base* key:
 -- Ctrl+Shift+\ is <C-S-\>. tmux does not implement that protocol (tmux#3335, closed
 -- unimplemented) and negotiates xterm's older modifyOtherKeys instead, which reports the
 -- *shifted* character — so the same physical keypress arrives as <C-S-|>. Verified with
