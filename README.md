@@ -89,6 +89,7 @@ sudo dnf install git stow      # Fedora/RHEL
 └── setup/            # One-off setup scripts (run by hand, not stowed)
     ├── macos-defaults.sh
     ├── macos-file-handlers.sh  # default apps per file type (needs duti)
+    ├── obsidian-quicklook-mermaid.sh  # fit Mermaid in Obsidian's Quick Look
     └── linux-remove-mint-apps.sh
 ```
 
