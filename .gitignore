@@ -59,6 +59,10 @@ gnupg/.gnupg/pubring.kbx~
 # Never commit password store
 .password-store/
 
+### Python ###
+__pycache__/
+*.py[cod]
+
 ### Temporary Files ###
 tmp/
 temp/

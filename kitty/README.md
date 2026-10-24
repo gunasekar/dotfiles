@@ -12,10 +12,10 @@ stow --no-folding kitty
 ```
 
 `--no-folding` keeps `~/.config/kitty/` a real directory, because kitty writes
-its own files there (e.g. `current-theme.conf` from `kitten themes`). The only
-symlink is:
+its own files there (e.g. `current-theme.conf` from `kitten themes`). Symlinks:
 
 - `~/.config/kitty/kitty.conf` → `~/.dotfiles/kitty/.config/kitty/kitty.conf`
+- `~/.config/kitty/tab_bar.py` → `~/.dotfiles/kitty/.config/kitty/tab_bar.py`
 
 A fresh kitty install writes a commented-out default `kitty.conf`, which makes
 stow refuse. Delete it first (it holds no settings) and stow again.
@@ -71,6 +71,11 @@ no longer "clear to cursor".
 | `Cmd+M` | Minimise OS window |
 | `Ctrl+Cmd+F` | Toggle full screen |
 | `Cmd+Ctrl+M` | Toggle maximise (fills the screen, keeps the menu bar) |
+
+SSH / remote tabs get a 🖥️ prefix (for example `3: 🖥️ guna@probochs:~`),
+via `tab_bar.py` using kitty's `child_is_remote` and ssh-kitten detection.
+Reload with `Cmd+Ctrl+,` after edits (`stow --no-folding -R kitty` if the
+symlink is missing).
 
 ## Troubleshooting
 
