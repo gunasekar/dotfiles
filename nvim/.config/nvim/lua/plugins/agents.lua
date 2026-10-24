@@ -64,7 +64,7 @@ end
 -- command inside an *interactive* shell that would otherwise outlive the agent
 -- and leave you at a stray prompt.
 --
--- To add/remove agents, edit the AGENTS table in trails itself.
+-- To add/remove agents, edit trails' config (~/.config/trails/config.json, `trails config`).
 --
 -- Resolved to an absolute path when it can be, so the terminal's buffer name ends in
 -- /trails and edgy files it in the right slot (plugins/ui/edgy.lua). The bare name is the

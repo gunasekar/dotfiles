@@ -44,10 +44,9 @@ awake — held by claude (pid 82625)
 
 One hold at a time, always replacing: two overlapping caffeinates is two things to
 remember to cancel and a menu bar that can only offer to stop one of them. Holders
-that are *not* ours — an agent launched with `trails`' `ctrl-a`, Claude Code
-mid-turn, a Time Machine run — are read out of `pmset -g assertions` and reported
-alongside, named for what they are holding the machine awake *for* rather than for
-`caffeinate`, which they all are.
+that are *not* ours — Claude Code mid-turn, a Time Machine run — are read out of
+`pmset -g assertions` and reported alongside, named for what they are holding the
+machine awake *for* rather than for `caffeinate`, which they all are.
 
 It asserts `-i -m -s` and deliberately not `-d` or `-u`. `-i` is the one that
 matters; `-d` would light a panel nobody is looking at, and `-u` is worse than
