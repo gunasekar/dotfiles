@@ -152,15 +152,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
     lpstat -p Print_to_PDF &>/dev/null || echo "      could not create the Print_to_PDF queue"
   fi
 
-  # The tmux server, from launchd: a server a terminal starts is part of that app, and a
-  # Force Quit of the app takes it and every agent in it down. See tmux/README.md.
-  # --no-folding: ~/Library/LaunchAgents is shared, as for the printer above.
-  echo "  • tmux server → launch agent com.guna.tmux"
-  stow -v --no-folding tmux-server
-  tmux_agent="com.guna.tmux"
-  launchctl print "gui/$(id -u)/$tmux_agent" &>/dev/null ||
-    launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$tmux_agent.plist" ||
-    echo "      could not load $tmux_agent"
+  # The tmux server, from trails' Homebrew service (trails server): a server a terminal
+  # starts is part of that app, and a Force Quit of the app takes it and every agent in it
+  # down. See tmux/README.md.
+  echo "  • tmux server → brew services start trails"
+  brew services list 2>/dev/null | grep -q '^trails .*started' ||
+    brew services start gunasekar/tap/trails >/dev/null ||
+    echo "      could not start the trails service"
 
   # Tailscale MagicDNS: the Homebrew CLI daemon (see brew/.Brewfile) lacks the
   # macOS Network Extension entitlement the GUI app has, so it can't register a

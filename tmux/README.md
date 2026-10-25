@@ -23,30 +23,28 @@ On a remote host, deploy the dotfiles there the same way — don't hand-edit a
 `~/.tmux.conf` on the box. To remove: `stow -D tmux`.
 
 A running server does **not** re-read the config. After editing: `prefix + r`,
-or `tmux kill-server` for a clean slate (launchd starts a new one at once; see
-below).
+or `tmux kill-server` for a clean slate (the service starts a new one at once;
+see below).
 
-On macOS the server itself comes from launchd, not from a terminal:
-`tmux-server/Library/LaunchAgents/com.guna.tmux.plist`, stowed and loaded by
-`install.sh`. By hand:
+The server itself comes from trails' Homebrew service, not from a terminal,
+started by `install.sh`. By hand:
 
 ```bash
-stow --no-folding tmux-server
-launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/com.guna.tmux.plist
+brew services start gunasekar/tap/trails
 ```
 
 Why: a server started from a shell in kitty (or Zed) stays part of that app's
 *coalition* on macOS, however it detaches, and a **Force Quit** of the app ends
 the whole coalition: the server, and every agent in it. A normal ⌘Q only closes
 the app's own windows, whose tmux clients detach. A server launchd starts belongs
-to no app. It runs `tmux -D` through `zsh -c`, so `~/.zshenv` gives it, and every
-pane, the PATH a terminal has, and comes back by itself after a `kill-server` or a
-crash. While a server some app started is still up, launchd retries every 10
-seconds until it goes. A second after each start it runs `trails restore`, which
-brings back the lost trails with no terminal open: a `tmux -D` server reads
-`tmux.conf` only once a client connects, and the restore is that client. Its
-output goes to `/tmp/tmux-server.log`. To stop it for good:
-`launchctl bootout gui/"$(id -u)"/com.guna.tmux`.
+to no app. The service runs `trails server` (launch agent
+`homebrew.mxcl.trails`), which takes the login shell's environment, so
+`~/.zshenv` gives the server, and every pane, the PATH a terminal has. It brings
+back the lost trails as it starts, with no terminal open, and starts tmux again
+after a `kill-server` or a crash; while a server some app started is still up,
+it retries every 10 seconds until that one goes. Its log is
+`/opt/homebrew/var/log/trails-server.log`. To stop it, and with it every trail:
+`brew services stop trails`. See trails' README, "When tmux goes down".
 
 ## Daily Commands
 
@@ -174,7 +172,7 @@ in a second way:
 ### No plugins, deliberately
 
 tmux already survives ssh drops, Wi-Fi loss, and quitting kitty on its own
-(and a Force Quit of kitty too, with the launch agent above).
+(and a Force Quit of kitty too, with the service above).
 The popular plugins mostly buy things this config covers natively:
 
 - **tmux-yank** → superseded by `set-clipboard on` and OSC 52 (see below).
@@ -182,7 +180,7 @@ The popular plugins mostly buy things this config covers natively:
 - **sesh / tmux-sessionx** → `choose-tree` (`prefix + s`) is built in.
 - **tmux-resurrect / continuum** → what they restore after a reboot, the agents,
   trails restores itself: `trails restore` runs whenever the server starts (from
-  the launch agent, and from `tmux.conf` for a server a terminal started), and
+  `trails server`, and from `tmux.conf` for a server a terminal started), and
   brings each lost trail back on its conversation.
 
 ### Clipboard over ssh
