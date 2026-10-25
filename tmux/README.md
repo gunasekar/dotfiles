@@ -37,13 +37,13 @@ Why: a server started from a shell in kitty (or Zed) stays part of that app's
 *coalition* on macOS, however it detaches, and a **Force Quit** of the app ends
 the whole coalition: the server, and every agent in it. A normal ⌘Q only closes
 the app's own windows, whose tmux clients detach. A server launchd starts belongs
-to no app. The service runs `trails server` (launch agent
+to no app. The service runs `trails boot` (launch agent
 `sh.brew.trails`), which takes the login shell's environment, so
 `~/.zshenv` gives the server, and every pane, the PATH a terminal has. It brings
 back the lost trails as it starts, with no terminal open, and starts tmux again
 after a `kill-server` or a crash; while a server some app started is still up,
 it retries every 10 seconds until that one goes. Its log is
-`/opt/homebrew/var/log/trails-server.log`. To stop it, and with it every trail:
+`/opt/homebrew/var/log/trails-boot.log`. To stop it, and with it every trail:
 `brew services stop trails`. See trails' README, "When tmux goes down".
 
 ## Daily Commands
@@ -179,7 +179,7 @@ The popular plugins mostly buy things this config covers natively:
 - **tmux-sensible** → its useful options are inlined in `tmux.conf`.
 - **sesh / tmux-sessionx** → `choose-tree` (`prefix + s`) is built in.
 - **tmux-resurrect / continuum** → what they restore after a reboot, the agents,
-  trails restores itself: `trails server` runs `trails restore` whenever it
+  trails restores itself: `trails boot` runs `trails restore` whenever it
   starts the server, and brings each lost trail back on its conversation.
 
 ### Clipboard over ssh

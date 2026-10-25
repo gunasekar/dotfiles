@@ -152,7 +152,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     lpstat -p Print_to_PDF &>/dev/null || echo "      could not create the Print_to_PDF queue"
   fi
 
-  # The tmux server, from trails' Homebrew service (trails server): a server a terminal
+  # The tmux server, from trails' Homebrew service (trails boot): a server a terminal
   # starts is part of that app, and a Force Quit of the app takes it and every agent in it
   # down. See tmux/README.md.
   echo "  • tmux server → brew services start trails"
