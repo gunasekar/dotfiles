@@ -40,9 +40,13 @@ Why: a server started from a shell in kitty (or Zed) stays part of that app's
 the whole coalition: the server, and every agent in it. A normal ⌘Q only closes
 the app's own windows, whose tmux clients detach. A server launchd starts belongs
 to no app. It runs `tmux -D` through `zsh -c`, so `~/.zshenv` gives it, and every
-pane, the PATH a terminal has; it waits while a server some app started is still
-up, and comes back by itself after a `kill-server` or a crash. To stop it for
-good: `launchctl bootout gui/"$(id -u)"/com.guna.tmux`.
+pane, the PATH a terminal has, and comes back by itself after a `kill-server` or a
+crash. While a server some app started is still up, launchd retries every 10
+seconds until it goes. A second after each start it runs `trails restore`, which
+brings back the lost trails with no terminal open: a `tmux -D` server reads
+`tmux.conf` only once a client connects, and the restore is that client. Its
+output goes to `/tmp/tmux-server.log`. To stop it for good:
+`launchctl bootout gui/"$(id -u)"/com.guna.tmux`.
 
 ## Daily Commands
 
@@ -177,8 +181,9 @@ The popular plugins mostly buy things this config covers natively:
 - **tmux-sensible** → its useful options are inlined in `tmux.conf`.
 - **sesh / tmux-sessionx** → `choose-tree` (`prefix + s`) is built in.
 - **tmux-resurrect / continuum** → what they restore after a reboot, the agents,
-  trails restores itself: `trails restore` runs from `tmux.conf` whenever the
-  server starts, and brings each lost trail back on its conversation.
+  trails restores itself: `trails restore` runs whenever the server starts (from
+  the launch agent, and from `tmux.conf` for a server a terminal started), and
+  brings each lost trail back on its conversation.
 
 ### Clipboard over ssh
 

@@ -8,13 +8,16 @@
 	     started belongs to that app's coalition however it detaches, and a Force Quit of the
 	     app takes it down with every agent in it. zsh -c reads ~/.zshenv, so the server, and
 	     every pane, has the PATH and XDG variables a terminal would. -D keeps it in the
-	     foreground for launchd, with exit-empty off. While a server some app started is up,
-	     it waits for that one to go rather than fail against it. -->
+	     foreground for launchd, with exit-empty off. While a server some app started holds the
+	     socket, tmux -D exits 1 at once and KeepAlive tries again every 10 seconds, until that
+	     one goes. A -D server reads tmux.conf only when its first client connects, so its
+	     restore line would wait for a terminal: trails restore, a second in, is that client,
+	     and brings back the lost trails with none open. Its output goes to the log. -->
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/zsh</string>
 		<string>-c</string>
-		<string>while /opt/homebrew/bin/tmux ls >/dev/null 2>&amp;1; do sleep 5; done; exec /opt/homebrew/bin/tmux -D</string>
+		<string>(sleep 1; /opt/homebrew/bin/trails restore >&amp;2) &amp; exec /opt/homebrew/bin/tmux -D</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
