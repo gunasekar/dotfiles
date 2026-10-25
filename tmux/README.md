@@ -38,7 +38,7 @@ Why: a server started from a shell in kitty (or Zed) stays part of that app's
 the whole coalition: the server, and every agent in it. A normal ⌘Q only closes
 the app's own windows, whose tmux clients detach. A server launchd starts belongs
 to no app. The service runs `trails server` (launch agent
-`homebrew.mxcl.trails`), which takes the login shell's environment, so
+`sh.brew.trails`), which takes the login shell's environment, so
 `~/.zshenv` gives the server, and every pane, the PATH a terminal has. It brings
 back the lost trails as it starts, with no terminal open, and starts tmux again
 after a `kill-server` or a crash; while a server some app started is still up,
