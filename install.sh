@@ -98,6 +98,9 @@ stow -v nvim
 echo "  • Lazygit → ~/.config/lazygit/"
 stow -v lazygit
 
+echo "  • Hunk → ~/.config/hunk/"
+stow -v hunk
+
 echo "  • mpv → ~/.config/mpv/"
 stow -v mpv
 

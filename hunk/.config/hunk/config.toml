@@ -1,0 +1,16 @@
+# Hunk: a review-only diff viewer, beside an agent to watch what it changes.
+# See https://hunk.dev/docs/reference/config/ for every setting.
+
+# kitty's palette: Ayu Dark, on kitty's own black (Ayu Dark's is #10141c).
+theme = "ayu-dark"
+transparent_background = true
+
+menu_bar = false   # M shows it
+sidebar = true
+
+# Side by side, one row per line: ←/→ (shift for faster) scroll both sides together.
+mode = "split"
+wrap_lines = false
+
+# Reload as the working tree changes, so an agent's edits show as they land.
+watch = true
