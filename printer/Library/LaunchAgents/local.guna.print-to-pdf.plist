@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.guna.print-to-pdf</string>
+	<string>local.guna.print-to-pdf</string>
 	<!-- launchd doesn't expand ~ or $HOME in ProgramArguments, sh does -->
 	<key>ProgramArguments</key>
 	<array>

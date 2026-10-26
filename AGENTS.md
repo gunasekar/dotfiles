@@ -58,6 +58,20 @@ configurations using GNU Stow.
 - Scripts must pass `shellcheck` before commit.
 - Detect architecture dynamically instead of hardcoding platform paths.
 
+### Launch Agents
+
+- Label is `local.guna.<job>`. `.local` is a reserved TLD, so the label claims
+  no domain, and `guna` keeps it from colliding with other `local.*` agents.
+- `<job>` uses lowercase letters, digits and hyphens, and names the tool or
+  task (`colima`, `print-to-pdf`). Add a dotted sub-segment only to tell apart
+  several jobs for one tool (`local.guna.backup.daily`).
+- Filename is the label plus `.plist`.
+- The plist lives in its tool's stow package at `<pkg>/Library/LaunchAgents/`,
+  in `.dotfiles-private` when it holds anything private. Stow it with
+  `--no-folding`.
+- Agents a tool installs itself (`homebrew.mxcl.*`, `sh.brew.*`) keep that
+  tool's label.
+
 ## Neovim Review Gate
 
 The `nvim-review-flow` skill lives at `.agents/skills/nvim-review-flow/SKILL.md`

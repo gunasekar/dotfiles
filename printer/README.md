@@ -25,7 +25,7 @@ Needs `ghostscript` (in the Brewfile).
 | Piece | Where | Role |
 |---|---|---|
 | CUPS queue `Print_to_PDF` | `lpadmin`, run by `install.sh` | Generic PostScript driver, device `socket://127.0.0.1:9100` |
-| `com.guna.print-to-pdf` | `~/Library/LaunchAgents/` | launchd listens on `127.0.0.1:9100` and starts the script once per connection |
+| `local.guna.print-to-pdf` | `~/Library/LaunchAgents/` | launchd listens on `127.0.0.1:9100` and starts the script once per connection |
 | `print-to-pdf` | `~/.local/bin/` | Reads the PostScript job from stdin, runs `gs` (pdfwrite, A4) into `~/Downloads` |
 
 The listener is bound to loopback only, so nothing else on the network can print
@@ -41,7 +41,7 @@ IPP Everywhere equivalent.
 ## Removal
 
 ```bash
-launchctl bootout gui/$(id -u)/com.guna.print-to-pdf
+launchctl bootout gui/$(id -u)/local.guna.print-to-pdf
 lpadmin -x Print_to_PDF
 cd ~/.dotfiles && stow -D printer
 ```

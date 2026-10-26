@@ -29,7 +29,7 @@ and the config lives in the dotfiles repo.
 
 ## Autostart at login
 
-`Library/LaunchAgents/com.guna.colima.plist` runs `colima start -f` at login.
+`Library/LaunchAgents/local.guna.colima.plist` runs `colima start -f` at login.
 `brew services start colima` is **not** used because its generated plist only sets
 `PATH` — launchd would not see `COLIMA_HOME`, so Colima would fall back to the legacy
 `~/.colima` instead of this XDG profile. The custom agent pins `COLIMA_HOME` explicitly.
@@ -37,9 +37,9 @@ No `KeepAlive`, so `colima stop` is not fought.
 
 ```bash
 # load now (install.sh does this automatically)
-launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/com.guna.colima.plist
+launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
 # disable autostart
-launchctl bootout gui/"$(id -u)" ~/Library/LaunchAgents/com.guna.colima.plist
+launchctl bootout gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
 ```
 
 Logs: `~/Library/Logs/colima.log`.
@@ -50,11 +50,11 @@ Logs: `~/Library/Logs/colima.log`.
 cd ~/.dotfiles
 mkdir -p ~/.config/colima/default
 stow -v --no-folding colima
-launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/com.guna.colima.plist
+launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
 ```
 
 Creates: `~/.config/colima/default/colima.yaml` → `~/.dotfiles/colima/.config/colima/default/colima.yaml`
-and `~/Library/LaunchAgents/com.guna.colima.plist` → the tracked plist.
+and `~/Library/LaunchAgents/local.guna.colima.plist` → the tracked plist.
 
 ## Migrating from a legacy `~/.colima`
 

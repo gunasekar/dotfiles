@@ -142,7 +142,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
   # not worth skipping the git hook and version stamp below.
   echo "  • Print to PDF printer → ~/.local/bin/print-to-pdf, launch agent, CUPS queue"
   stow -v --no-folding printer
-  pdf_agent="com.guna.print-to-pdf"
+  pdf_agent="local.guna.print-to-pdf"
   launchctl print "gui/$(id -u)/$pdf_agent" &>/dev/null ||
     launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$pdf_agent.plist" ||
     echo "      could not load $pdf_agent"
