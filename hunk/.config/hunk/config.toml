@@ -14,3 +14,7 @@ wrap_lines = false
 
 # Reload as the working tree changes, so an agent's edits show as they land.
 watch = true
+
+# / goes to the file filter (Tab reaches it too); content search keeps n / N for its matches.
+[keybindings]
+"hunk.review.focusFilter" = "/"
