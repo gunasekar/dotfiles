@@ -5,15 +5,18 @@
 theme = "ayu-dark"
 transparent_background = true
 
-menu_bar = false   # M shows it
+menu_bar = false
 sidebar = true
 
 # Side by side, one row per line: ←/→ (shift for faster) scroll both sides together.
-mode = "split"
+mode = "auto"
 wrap_lines = false
 
 # Reload as the working tree changes, so an agent's edits show as they land.
 watch = true
+
+# This file is the only source of truth: never offer to write view changes back on quit.
+prompt_save_view_preferences = false
 
 # / goes to the file filter (Tab reaches it too); content search keeps n / N for its matches.
 [keybindings]
