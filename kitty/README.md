@@ -47,7 +47,7 @@ vertical splits, and `stack`, which is used only for zoom.
 | `Cmd+Alt+H/J/K/L` | Focus pane left/down/up/right |
 | `Cmd+Ctrl+H` / `Cmd+Ctrl+L` | Current pane narrower / wider |
 | `Cmd+Ctrl+K` / `Cmd+Ctrl+J` | Current pane taller / shorter |
-| `Ctrl+Shift+F7` | Focus a pane by its number |
+| `Ctrl+Shift+Cmd+F7` | Focus a pane by its number |
 
 Pane focus does **not** use `Ctrl+H/J/K/L`. Kitty can't pass those keys through
 when there's no pane in that direction, so binding them would take the keys
@@ -56,7 +56,7 @@ from Neovim and tmux every time.
 Overridden kitty defaults: `Cmd+Shift+D` splits down instead of closing the
 pane; `Cmd+W` closes the pane, not the tab;
 `Cmd+1-9` jump to tabs, not panes (panes by number stay on
-`Ctrl+Shift+1-9`); `Cmd+Alt+H` is no longer "Hide Others"; `Cmd+Ctrl+L` is
+`Ctrl+Shift+Cmd+1-9`); `Cmd+Alt+H` is no longer "Hide Others"; `Cmd+Ctrl+L` is
 no longer "clear to cursor".
 
 ### Tabs
@@ -76,6 +76,31 @@ SSH / remote tabs get a 🖥️ prefix (for example `3: 🖥️ guna@probochs:~`
 via `tab_bar.py` using kitty's `child_is_remote` and ssh-kitten detection.
 Reload with `Cmd+Ctrl+,` after edits (`stow --no-folding -R kitty` if the
 symlink is missing).
+
+### Ctrl keys belong to the programs
+
+kitty keeps to Cmd. Ctrl and Ctrl+Shift go to what runs inside it (Neovim,
+agents, hunk, tmux), so `kitty_mod` is `Ctrl+Shift+Cmd` rather than kitty's
+default `Ctrl+Shift`. That moves every kitty shortcut written as `kitty_mod+…`
+off keys a terminal program could use:
+
+| Keybinding | Action |
+| --- | --- |
+| `Ctrl+Shift+Cmd+E` | Open a URL on screen (hints kitten) |
+| `Ctrl+Shift+Cmd+P`, then a letter | Pick a path, line, word or hash |
+| `Ctrl+Shift+Cmd+H` | Scrollback in a pager |
+| `Ctrl+Shift+Cmd+G` | Last command's output in a pager |
+| `Ctrl+Shift+Cmd+F3` | Command palette |
+
+Everything used daily already has a Cmd default, listed above. `Ctrl+Tab` /
+`Ctrl+Shift+Tab` (next / previous tab) aren't `kitty_mod` shortcuts and stay.
+
+### Links
+
+`Shift+click` opens a link anywhere. A plain click opens one only where nothing
+has captured the mouse: tmux (`mouse on`) and Neovim (`mouse=a`) take plain
+clicks, and Shift is kitty's override. By keyboard, `Ctrl+Shift+Cmd+E` labels
+every link on screen. Both open the link on this Mac, over ssh too.
 
 ## Troubleshooting
 
