@@ -214,14 +214,15 @@ end
 -- false until now. Nothing observable changes either way — every rhs below is a Lua
 -- function, and those do not echo the way a :cmd<CR> mapping does.
 --
--- Ctrl+Shift+<punctuation> arrives under two different names depending on whether we're
--- inside tmux, so each one is bound twice.
+-- Ctrl+Shift+<punctuation> arrives under two different names depending on the terminal
+-- in front of tmux, so each one is bound twice.
 --
--- Bare kitty speaks the Kitty keyboard protocol to Neovim, which reports the *base* key:
--- Ctrl+Shift+\ is <C-S-\>. tmux does not implement that protocol (tmux#3335, closed
--- unimplemented) and negotiates xterm's older modifyOtherKeys instead, which reports the
--- *shifted* character — so the same physical keypress arrives as <C-S-|>. Verified with
--- vim.on_key.
+-- kitty reports the *base* key, Ctrl+Shift+\ as <C-S-\>: directly through the Kitty
+-- keyboard protocol, and inside tmux as CSI-u, since kitty ignores tmux's modifyOtherKeys
+-- request and Ctrl+Shift+<key> has no legacy encoding to fall back to. A terminal that
+-- does speak modifyOtherKeys to tmux (Zed's, or another terminal over ssh) reports the
+-- *shifted* character, so the same physical keypress arrives as <C-S-|>. Both verified
+-- by which mapping fires.
 --
 -- Letters are unaffected (<C-S-L> resolves identically both ways); only shifted
 -- punctuation splits:  \ →|   ] →}   [ →{   . →>

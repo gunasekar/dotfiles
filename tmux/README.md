@@ -218,7 +218,7 @@ CSI-u under a remote tmux. Only a box without this config needs it added by hand
 
 ### Extended keys, or half your Neovim bindings die
 
-`set -s extended-keys on` is not optional here. Legacy terminal input can only
+`set -s extended-keys always` is not optional here. Legacy terminal input can only
 encode a couple of dozen control keys; anything outside that set has no byte
 representation at all and silently never reaches the application inside tmux.
 That covers much of the Neovim agent workflow:
@@ -230,24 +230,16 @@ That covers much of the Neovim agent workflow:
 | `<C-S-\>` | new agent session | **no** |
 | `<C-S-]>` / `<C-S-[>` | cycle agent sessions | **no** |
 | `<C-S-.>` | send context to agent | **no** |
-| `<C-Esc>` | agent panel | **no** |
+| `<C-Esc>` | interrupt the agent | **no** |
 
 `Ctrl+Shift+<punct>`, `Ctrl+backtick` and `Ctrl+Esc` exist only under CSI-u.
-Three settings are all required, and this is the one place kitty's terminfo
-is **not** enough (unlike `Tc` and `Smulx`):
+Two settings cover the link from tmux to the program in the pane:
 
 ```tmux
 set -s extended-keys always
 set -s extended-keys-format csi-u
-set -as terminal-features "xterm-kitty:extkeys:hyperlinks:usstyle:strikethrough:overline"
 ```
 
-- **`extkeys`** — tmux requests extended keys from the terminal only *if it
-  believes the terminal supports them*, and it decides that from terminfo.
-  `xterm-kitty` doesn't advertise `extkeys`, so without this tmux never asks
-  kitty, and the keys never arrive at all. tmux doesn't recognise kitty and
-  enable its other features itself either, so the same line lists hyperlinks,
-  styled underlines and the extra text styles.
 - **`always`** — with `on`, tmux forwards only to apps that ask via tmux's own
   `modifyOtherKeys` handshake. Neovim asks via the **Kitty** protocol, which
   tmux doesn't implement ([tmux#3335](https://github.com/tmux/tmux/issues/3335)),
@@ -258,17 +250,43 @@ set -as terminal-features "xterm-kitty:extkeys:hyperlinks:usstyle:strikethrough:
 **These take effect when a client attaches, so `prefix + r` is not enough** —
 run `tmux kill-server` and start a fresh session.
 
-#### Shifted punctuation arrives under a different name inside tmux
+#### kitty doesn't hand tmux every key
 
-Even wired up correctly, `Ctrl+Shift+<punctuation>` is reported *differently*
-inside tmux, and this is not fixable in config. Bare kitty speaks the **Kitty**
-keyboard protocol to Neovim, which reports the **base** key — `Ctrl+Shift+\` is
-`<C-S-\>`. tmux doesn't implement that protocol
-([tmux#3335](https://github.com/tmux/tmux/issues/3335), closed unimplemented) and
-negotiates xterm's older `modifyOtherKeys`, which reports the **shifted
-character** — so the same keypress arrives as `<C-S-|>`.
+The other link, from the terminal to tmux, is the terminal's. tmux asks it for
+extended keys with xterm's `modifyOtherKeys`, but only if its `terminal-features`
+include `extkeys` (the `xterm-256color` line above). kitty ignores that request:
+it speaks only its own protocol. So kitty talks to tmux in its legacy encoding.
+That still sends `Ctrl+Shift+<key>` as CSI-u, since those have no legacy form,
+but flattens four keys the Neovim and agent workflow uses:
 
-| Key | Outside tmux | Inside tmux |
+| Key | kitty sends tmux | Arrives in Neovim as |
+|---|---|---|
+| ``Ctrl+` `` | a bare `` ` `` | `` ` `` |
+| ``Ctrl+Shift+` `` | NUL | no mapping fires |
+| `Shift+Enter` | Enter | `<CR>` |
+| `Ctrl+Esc` | Esc | `<Esc>` |
+
+`kitty.conf` maps those four to send their CSI-u form
+(`map ctrl+grave send_text all \x1b[96;5u`, …), which tmux reads and passes on
+intact. A shell prompt doesn't know them, so `.zshrc` makes `Shift+Enter` accept
+the line and `Ctrl+Esc` a no-op. It's also why the kitty `terminal-features` line
+has no `extkeys`: it would only make tmux send a request kitty ignores. The line
+is still needed for links, styled underlines and the extra text styles, which
+tmux doesn't enable for kitty by itself:
+
+```tmux
+set -as terminal-features "xterm-kitty:hyperlinks:usstyle:strikethrough:overline"
+```
+
+#### Shifted punctuation arrives under two names
+
+Which name `Ctrl+Shift+<punctuation>` arrives under depends on the terminal in
+front of tmux. kitty reports the **base** key, directly through its own protocol
+and through tmux as CSI-u. A terminal that speaks `modifyOtherKeys` to tmux
+(Zed's, or another terminal over ssh) reports the **shifted character**, so the
+same keypress arrives as `<C-S-|>`.
+
+| Key | kitty, with or without tmux | `modifyOtherKeys` terminal, through tmux |
 |---|---|---|
 | `Ctrl+Shift+\` | `<C-S-\>` | `<C-S-\|>` |
 | `Ctrl+Shift+]` | `<C-S-]>` | `<C-S-}>` |
@@ -281,8 +299,9 @@ So `plugins/agents.lua` and `plugins/editor/snacks.lua` bind **both spellings**
 to the same action. Zellij is the only multiplexer that speaks the Kitty
 protocol natively, if this ever becomes worth switching for.
 
-To check the wiring: run `cat -v` in a pane and press `Ctrl+Shift+\`. You should
-see `^[[92;6u`. Nothing at all means the negotiation isn't happening.
+To check the wiring: run `cat -v` in a pane and press `Ctrl+Shift+.`. You should
+see `^[[46;6u`. A key with a legacy code, like `Ctrl+Shift+\`, shows as that
+code (`^\`) here, because `cat` never asks for more; Neovim does.
 
 ### Images need allow-passthrough
 
