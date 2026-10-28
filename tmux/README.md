@@ -256,21 +256,30 @@ The other link, from the terminal to tmux, is the terminal's. tmux asks it for
 extended keys with xterm's `modifyOtherKeys`, but only if its `terminal-features`
 include `extkeys` (the `xterm-256color` line above). kitty ignores that request:
 it speaks only its own protocol. So kitty talks to tmux in its legacy encoding.
-That still sends `Ctrl+Shift+<key>` as CSI-u, since those have no legacy form,
-but flattens four keys the Neovim and agent workflow uses:
+That still sends `Ctrl+Shift+<letter>` as CSI-u, but flattens the keys below,
+all of which the Neovim and agent workflow uses. Measured with physical key
+presses, which differ from `kitten @ send-key`: that skips macOS's keyboard
+layer and shows CSI-u for `Ctrl+Shift+<punctuation>` too.
 
 | Key | kitty sends tmux | Arrives in Neovim as |
 |---|---|---|
 | ``Ctrl+` `` | a bare `` ` `` | `` ` `` |
 | ``Ctrl+Shift+` `` | NUL | no mapping fires |
+| `Ctrl+Shift+\` | `\|` | `\|` |
+| `Ctrl+Shift+[` / `]` | `{` / `}` | `{` / `}` |
+| `Ctrl+Shift+.` | `>` | `>` |
 | `Shift+Enter` | Enter | `<CR>` |
 | `Ctrl+Esc` | Esc | `<Esc>` |
 
-`kitty.conf` maps those four to send their CSI-u form
+`kitty.conf` maps each of them to send its CSI-u form
 (`map ctrl+grave send_text all \x1b[96;5u`, …), which tmux reads and passes on
 intact. A shell prompt doesn't know them, so `.zshrc` makes `Shift+Enter` accept
-the line and `Ctrl+Esc` a no-op. It's also why the kitty `terminal-features` line
-has no `extkeys`: it would only make tmux send a request kitty ignores. The line
+the line and the rest no-ops. One exception: tmux hands `Ctrl+Shift+[` to a
+program that hasn't asked for extended keys, as zsh hasn't, as a bare Esc, so at
+a prompt it still acts as Esc and takes the next key with it.
+
+It's also why the kitty `terminal-features` line has no `extkeys`: it would only
+make tmux send a request kitty ignores. The line
 is still needed for links, styled underlines and the extra text styles, which
 tmux doesn't enable for kitty by itself:
 

@@ -218,8 +218,8 @@ end
 -- in front of tmux, so each one is bound twice.
 --
 -- kitty reports the *base* key, Ctrl+Shift+\ as <C-S-\>: directly through the Kitty
--- keyboard protocol, and inside tmux as CSI-u, since kitty ignores tmux's modifyOtherKeys
--- request and Ctrl+Shift+<key> has no legacy encoding to fall back to. A terminal that
+-- keyboard protocol, and inside tmux as the CSI-u that kitty.conf maps these keys to
+-- (kitty ignores tmux's modifyOtherKeys request and would send a bare |). A terminal that
 -- does speak modifyOtherKeys to tmux (Zed's, or another terminal over ssh) reports the
 -- *shifted* character, so the same physical keypress arrives as <C-S-|>. Both verified
 -- by which mapping fires.

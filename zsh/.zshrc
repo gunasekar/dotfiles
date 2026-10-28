@@ -42,6 +42,10 @@ if [[ "$OSTYPE" == darwin* ]]; then
   # kitty sends these in CSI-u form so they survive tmux (see kitty.conf).
   bindkey "^[[13;2u" accept-line # Shift + Enter runs the line, as Enter
   bindkey "^[[27;5u" redisplay   # Ctrl + Esc does nothing
+  bindkey "^[[92;6u" redisplay   # Ctrl + Shift + \ does nothing
+  bindkey "^[[91;6u" redisplay   # Ctrl + Shift + [ does nothing
+  bindkey "^[[93;6u" redisplay   # Ctrl + Shift + ] does nothing
+  bindkey "^[[46;6u" redisplay   # Ctrl + Shift + . does nothing
 fi
 
 # Source every *.sh in a directory. Missing dir → silently skip (so optional

@@ -95,10 +95,10 @@ off keys a terminal program could use:
 Everything used daily already has a Cmd default, listed above. `Ctrl+Tab` /
 `Ctrl+Shift+Tab` (next / previous tab) aren't `kitty_mod` shortcuts and stay.
 
-Four keys are mapped to send their CSI-u form: ``Ctrl+` ``, ``Ctrl+Shift+` ``,
-`Shift+Enter` and `Ctrl+Esc`. Inside tmux kitty would otherwise flatten them
-and the programs never see them. `.zshrc` binds the two a shell prompt would
-print as junk. See
+Some Ctrl keys are mapped to send their CSI-u form: ``Ctrl+` ``,
+``Ctrl+Shift+` ``, `Ctrl+Shift+\`, `[`, `]` and `.`, `Shift+Enter` and
+`Ctrl+Esc`. Inside tmux kitty would otherwise flatten them and the programs never
+see them. `.zshrc` binds the ones a shell prompt would print as junk. See
 [tmux/README.md](../tmux/README.md#kitty-doesnt-hand-tmux-every-key).
 
 ### Links
