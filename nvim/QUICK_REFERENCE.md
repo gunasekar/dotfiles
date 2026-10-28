@@ -117,6 +117,10 @@ Leader key: `Space`
 | `<leader>t[` | Prev terminal session |
 | `<leader>up` | Pick any panel or session by name |
 | `<leader>uP` | Focus main editor window |
+| Drag a panel border | Resize panel (kept until nvim quits) |
+| `<C-w>+` / `<C-w>-` | In a panel: grow / shrink the shell |
+| `<C-w>>` / `<C-w><` | In a panel: widen / narrow a side panel |
+| `<C-w>=` | In a panel: reset all panel sizes |
 | `<leader>ui` | Toggle read-only rendered markdown view, diagrams included |
 | `<C-\>` | Toggle right panel (current agent session) |
 | `<C-S-\>` | Open new agent session |
@@ -125,6 +129,47 @@ Leader key: `Space`
 | `<leader>as` | Send context to active agent |
 | `<leader>a]` | Next agent session |
 | `<leader>a[` | Prev agent session |
+
+## Panel Keys Inside tmux Under kitty
+
+Neovim inside tmux under kitty (the trails editor) only gets most panel keys
+because `kitty.conf` sends them as CSI-u and gives up its own `Ctrl+Shift`
+shortcuts. Before those changes (2026-10-29) only the toggle and the leader
+keys worked. Why, and what kitty sends: `tmux/README.md`, "kitty doesn't hand
+tmux every key".
+
+### Agent pane (right panel)
+
+| Action | Key | Before | Now |
+| --- | --- | --- | --- |
+| Toggle panel | `<C-\>` | ✅ | ✅ |
+| New agent session | `<C-S-\>` | ❌ typed `\|` | ✅ |
+| Next / prev session | `<C-S-]>` / `<C-S-[>` | ❌ kitty switched splits | ✅ |
+| Send context to agent | `<C-S-.>` | ❌ kitty moved the tab | ✅ |
+| Interrupt the agent | `<C-Esc>` | ❌ arrived as `<Esc>` | ✅ |
+| Leave terminal mode | `<Esc>` | ✅ | ✅ |
+| Newline in Claude's prompt | `Shift+Enter` | ❌ submitted | ✅ |
+| Leader versions | `<leader>ac` `a]` `a[` `as` | ✅ | ✅ |
+
+### Shell pane (bottom panel)
+
+| Action | Key | Before | Now |
+| --- | --- | --- | --- |
+| Toggle panel | ``<C-`>`` | ❌ typed a backtick | ✅ |
+| New terminal session | ``<C-S-`>`` | ❌ kitty moved the split | ✅ |
+| Next / prev session | `<C-S-L>` / `<C-S-H>` | ❌ kitty took both | ✅ |
+| Leader versions | `<leader>tt` `t]` `t[` | ✅ | ✅ |
+
+### Moving between panes
+
+| Action | Key | Before | Now |
+| --- | --- | --- | --- |
+| Window left / down / up / right | `<C-h/j/k/l>` | ✅ | ✅ |
+| Pick any panel or session | `<leader>up` | ✅ | ✅ |
+
+`Ctrl+<letter>` and leader keys always came through tmux intact. With the
+trail's own agent pane focused (outside Neovim), keys go to the agent, not
+Neovim; there `Shift+Enter` now inserts a newline.
 
 ## Configured Language Servers
 
