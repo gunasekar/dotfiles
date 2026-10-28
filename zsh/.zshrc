@@ -39,6 +39,9 @@ if [[ "$OSTYPE" == darwin* ]]; then
   bindkey -e
   bindkey "^[[1;3C" forward-word  # Option + Right Arrow
   bindkey "^[[1;3D" backward-word # Option + Left Arrow
+  # kitty sends these in CSI-u form so they survive tmux (see kitty.conf).
+  bindkey "^[[13;2u" accept-line # Shift + Enter runs the line, as Enter
+  bindkey "^[[27;5u" redisplay   # Ctrl + Esc does nothing
 fi
 
 # Source every *.sh in a directory. Missing dir → silently skip (so optional
