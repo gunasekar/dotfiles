@@ -3,9 +3,8 @@
 **Default terminal** for this machine. kitty stays installed as an alternate
 (`open -a kitty`) when you want GPU splits or kitty-only features.
 
-`install.sh` also asks Launch Services to open `.sh` / `.bash` / `.zsh` in
-Terminal (kitty’s cask often steals that). macOS may pop a Finder confirmation —
-accept it, or use Get Info → Open with → Terminal → Change All.
+Shell scripts are **not** bound to Terminal — double-click opens TextEdit for
+editing (see `setup/macos-file-handlers.sh`). Run scripts from a shell explicitly.
 
 Minimal profile: true black background, Hack Nerd Font Mono, Option-as-Meta,
 and **close the window when the shell exits**. No splits or extra chrome —

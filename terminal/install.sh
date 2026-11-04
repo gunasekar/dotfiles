@@ -116,24 +116,8 @@ end run
 APPLESCRIPT
 fi
 
-# Claim shell-script openers so double-clicked .sh/.bash/.zsh use Terminal, not
-# kitty (kitty's cask often steals public.shell-script). Same bindings live in
-# setup/macos-file-handlers.sh. macOS may show a Finder confirm dialog and hold
-# the write until you accept — duti/LSSetDefault can exit 0 while kitty remains.
-if command -v duti &>/dev/null; then
-  duti -s com.apple.Terminal public.shell-script all || true
-  duti -s com.apple.Terminal com.apple.terminal.shell-script all || true
-  if [[ "$(duti -x sh 2>/dev/null | sed -n 3p)" == "com.apple.Terminal" ]]; then
-    echo "  default app for .sh/.bash/.zsh → Terminal.app"
-  else
-    echo "  default app for .sh still $(duti -x sh 2>/dev/null | sed -n 1p) — accept the Finder"
-    echo "    dialog if one appeared, or: Get Info on a .sh → Open with → Terminal → Change All"
-  fi
-else
-  echo "  tip: install duti (brew bundle) then re-run to claim .sh/.bash/.zsh from kitty"
-fi
-
 echo "Terminal.app profile '$PROFILE_NAME' installed and set as default (daily driver)."
 echo "  kitty is alternate: Spotlight or \`open -a kitty\`."
 echo "  New windows/tabs use Black; close-on-shell-exit on; tab bar hidden for single tabs."
 echo "  Already-open windows keep their old profile — use Cmd+N (or quit Terminal once)."
+echo "  File-type defaults (scripts → TextEdit, not Terminal): setup/macos-file-handlers.sh"
