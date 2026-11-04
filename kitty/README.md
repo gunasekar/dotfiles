@@ -1,5 +1,9 @@
 # Kitty Terminal Configuration
 
+**Alternate terminal** — Terminal.app is the default daily driver (see
+`terminal/README.md`). Keep kitty for GPU splits, the custom tab bar, and
+kitty-protocol keys; open it with Spotlight or `open -a kitty`.
+
 Kitty configuration with a custom Ayu theme on a true black background, a black
 title bar, a black powerline tab bar with fixed-width tabs, and free-form splits.
 

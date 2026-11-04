@@ -1,0 +1,6 @@
+# Package-local ignore replaces ~/.stow-global-ignore for this package
+# (stow does not merge them). Keep README out of $HOME and leave helpers
+# in the repo only.
+^/README.*
+^/install\.sh$
+^/generate-black-terminal\.swift$

@@ -33,4 +33,11 @@ bind() {
 # but writes nothing), so there is no second line for it.
 bind com.wolfrosch.Gapplin public.svg-image svg
 
+# Terminal.app is the default terminal; kitty is alternate (open by hand).
+# Kitty's installer often claims public.shell-script (.sh/.bash/.zsh).
+bind com.apple.Terminal public.shell-script sh
+# .command / .tool already default to Terminal; re-assert in case something else
+# grabbed them.
+bind com.apple.Terminal com.apple.terminal.shell-script command
+
 exit "$status"

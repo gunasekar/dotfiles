@@ -33,6 +33,25 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+# Terminal.app title (Black profile leaves its title checkboxes off).
+# Want user@host:cwd in the title bar and in each tab. Setting OSC ]1 and ]2
+# both to that string makes Terminal join them: "user@host:~ — user@host:~".
+# Set only the window title (]2) and clear the tab title (]1); with an empty
+# ]1, Terminal falls back to the window title in the tab bar — one string,
+# both places. After oh-my-zsh: termsupport.zsh overwrites idle strings.
+if [[ "$TERM_PROGRAM" == Apple_Terminal ]]; then
+  ZSH_THEME_TERM_TITLE_IDLE="%n@%m:%~"
+  ZSH_THEME_TERM_TAB_TITLE_IDLE="%n@%m:%~"
+
+  title() {
+    setopt localoptions nopromptsubst
+    [[ -n "${INSIDE_EMACS:-}" && "$INSIDE_EMACS" != vterm ]] && return
+    : ${2=$1}
+    print -Pn "\e]2;${2:q}\a" # window title
+    print -Pn "\e]1;\a"       # clear tab title — avoids ]1+]2 em-dash join
+  }
+fi
+
 # Emacs-style line editing + Option-arrow word jumps (interactive only).
 # Moved here from .zshenv — bindkey is meaningless in non-interactive shells.
 if [[ "$OSTYPE" == darwin* ]]; then

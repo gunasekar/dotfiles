@@ -155,6 +155,14 @@ if [[ "$(uname)" == "Darwin" ]]; then
     lpstat -p Print_to_PDF &>/dev/null || echo "      could not create the Print_to_PDF queue"
   fi
 
+  # Terminal.app profile — see terminal/README.md. Stow keeps the exported
+  # .terminal file under ~/.config/terminal/; install.sh merges it into
+  # Terminal's preferences (profiles are not live-read from disk).
+  echo "  • Terminal.app → ~/.config/terminal/Black.terminal (apply profile)"
+  stow -v terminal
+  "$DOTFILES/terminal/install.sh" ||
+    echo "      could not apply the Terminal.app Black profile"
+
   # The tmux server, from trails' Homebrew service (trails boot): a server a terminal
   # starts is part of that app, and a Force Quit of the app takes it and every agent in it
   # down. See tmux/README.md.
