@@ -33,25 +33,6 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
-# Terminal.app title (Black profile leaves its title checkboxes off).
-# Want user@host:cwd in the title bar and in each tab. Setting OSC ]1 and ]2
-# both to that string makes Terminal join them: "user@host:~ — user@host:~".
-# Set only the window title (]2) and clear the tab title (]1); with an empty
-# ]1, Terminal falls back to the window title in the tab bar — one string,
-# both places. After oh-my-zsh: termsupport.zsh overwrites idle strings.
-if [[ "$TERM_PROGRAM" == Apple_Terminal ]]; then
-  ZSH_THEME_TERM_TITLE_IDLE="%n@%m:%~"
-  ZSH_THEME_TERM_TAB_TITLE_IDLE="%n@%m:%~"
-
-  title() {
-    setopt localoptions nopromptsubst
-    [[ -n "${INSIDE_EMACS:-}" && "$INSIDE_EMACS" != vterm ]] && return
-    : ${2=$1}
-    print -Pn "\e]2;${2:q}\a" # window title
-    print -Pn "\e]1;\a"       # clear tab title — avoids ]1+]2 em-dash join
-  }
-fi
-
 # Emacs-style line editing + Option-arrow word jumps (interactive only).
 # Moved here from .zshenv — bindkey is meaningless in non-interactive shells.
 if [[ "$OSTYPE" == darwin* ]]; then
@@ -88,11 +69,29 @@ source_all_in_directory "$HOME/.dotfiles/sources"
 # It does not exist by default — nothing here depends on it.
 source_all_in_directory "${ZSH_LOCAL_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/zsh/local.d}"
 
-# Show user@host when in SSH session or running as different user.
-# Runs after sources so DEFAULT_USER (set in private dotfiles) is available.
-if [[ -n "$SSH_CONNECTION" || "$USER" != "$DEFAULT_USER" ]]; then
+# Prompt + terminal/tmux pane titles (after sources so DEFAULT_USER is set).
+# Local as DEFAULT_USER: cwd only (or the running command — oh-my-zsh termsupport).
+# SSH or another user: user@host:cwd — common when ssh → probochs → trails/tmux (#T).
+if [[ -n "${SSH_CONNECTION:-}" || (-n "${DEFAULT_USER:-}" && "$USER" != "$DEFAULT_USER") ]]; then
   PROMPT="%{$fg_bold[green]%}%n@%m %(?:%{$fg_bold[green]%}%1{➜%} :%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%c%{$reset_color%}"
   PROMPT+=' $(git_prompt_info)'
+  ZSH_THEME_TERM_TITLE_IDLE="%n@%m:%~"
+  ZSH_THEME_TERM_TAB_TITLE_IDLE="%n@%m:%~"
+else
+  ZSH_THEME_TERM_TITLE_IDLE="%~"
+  ZSH_THEME_TERM_TAB_TITLE_IDLE="%15<..<%~%<<"
+fi
+
+# Terminal.app: set only OSC ]2; clear ]1 so the tab doesn't join "]1 — ]2".
+# g9n profile leaves title checkboxes off, so the shell owns both places.
+if [[ "$TERM_PROGRAM" == Apple_Terminal ]]; then
+  title() {
+    setopt localoptions nopromptsubst
+    [[ -n "${INSIDE_EMACS:-}" && "$INSIDE_EMACS" != vterm ]] && return
+    : ${2=$1}
+    print -Pn "\e]2;${2:q}\a" # window / tmux pane title
+    print -Pn "\e]1;\a"       # clear tab title — avoids ]1+]2 em-dash join
+  }
 fi
 
 export GPG_TTY=$(tty)

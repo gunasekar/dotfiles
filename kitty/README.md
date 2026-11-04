@@ -4,7 +4,7 @@
 `terminal/README.md`). Keep kitty for GPU splits, the custom tab bar, and
 kitty-protocol keys; open it with Spotlight or `open -a kitty`.
 
-Kitty configuration with a custom Ayu theme on a true black background, a black
+Kitty configuration with the **g9n** theme (Ayu-dark on true black), a black
 title bar, a black powerline tab bar with fixed-width tabs, and free-form splits.
 
 ## Installation

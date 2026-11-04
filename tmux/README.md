@@ -8,6 +8,12 @@ Tuned for long-running coding-agent sessions (Claude Code) and for Neovim, not
 copied from a starter gist. Every non-obvious line in `tmux.conf` says why it's
 there.
 
+## Theme (g9n)
+
+Status/window chrome is **g9n** (`g9n.conf`): g9n palette (Ayu dark on true black), bottom bar,
+slanted window tabs (25-cell labels). `trails keys` still supplies status-left /
+status-right content (workspaces, task, checklist, clock).
+
 ## Installation
 
 tmux is already declared in `brew/.Brewfile`. `install.sh` stows it, or by hand:
@@ -53,14 +59,18 @@ Both are always live; the tables below show `Ctrl+b`.
 
 | Action | Command |
 |--------|---------|
-| Start or re-attach a session | `tmux new -A -s my_project` |
+| Casual shell (`default` session) | `t` |
+| Start or re-attach a named session | `tmux new -A -s my_project` |
 | Detach (leaves it running) | `Ctrl+b` `d` |
 | List sessions | `tmux ls` |
 | Attach to a named session | `tmux a -t my_project` |
 | Kill a session | `tmux kill-session -t my_project` |
 
-`new -A -s` is the idiom worth learning: attach if it exists, create if it
-doesn't. It's the whole `new`-or-`attach` dance in one command.
+`t` (in `sources/tmux.sh`) runs `new-session -A -s default`: attach to
+**default** if it exists, otherwise create it. `tmux` itself is unchanged.
+Trails workspaces keep their own names (`personal`, `lattiq`, …).
+
+`new -A -s` is the idiom: attach if it exists, create if it doesn't.
 
 ## Keybindings
 
@@ -318,23 +328,16 @@ code (`^\`) here, because `cat` never asks for more; Neovim does.
 without it, tmux swallows the Kitty graphics escapes and diagrams render
 nothing. See `nvim/.config/nvim/lua/plugins/diagram.lua`.
 
-### No custom colours
+### Theme: g9n
 
-tmux and the terminal supply their own colours; nothing here overrides them. The only
-styling left is the status bar's **content** — session name on the left, clock on the
-right — and a transparent background (`bg=default`, the absence of a colour, so it's
-the terminal's own rather than tmux's default green slab). Borders, the window list,
-copy-mode selection and messages all use tmux's stock styling.
+`g9n.conf` paints the chrome (bottom status bar, slanted window tabs, pane borders,
+messages) in the same g9n hex as Terminal / kitty. Trails still owns
+the **words** on the left and right of the bar. Window chips show **window
+names** (`#W`, trails’ trail ids) — not pane titles (`#T`, where trails puts
+`agent · task`). Chips are fixed at 25 cells, left-aligned.
 
-This started life as a hand-picked Ayu palette to match the terminal, then as ANSI-palette
-references so it would track any theme. Both were upkeep for little gain — the status
-bar is off in agent sessions anyway, so the styling only ever showed in manual tmux
-sessions. Removed rather than maintained.
-
-One consequence worth knowing: copy-mode selection is now tmux's default highlight,
-and either way it's a solid fill — the terminal draws *its* selection as a translucent
-overlay that tints the text underneath. For that exact look, bypass tmux's mouse
-capture with the terminal's own selection modifier (Shift-drag in kitty).
+Copy-mode selection stays tmux's solid highlight. For the terminal's translucent
+selection, Shift-drag (kitty) bypasses tmux's mouse capture.
 
 ### Two prefixes: Ctrl+b and Ctrl+Space
 

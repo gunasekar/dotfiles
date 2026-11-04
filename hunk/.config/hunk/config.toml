@@ -1,8 +1,8 @@
 # Hunk: a review-only diff viewer, beside an agent to watch what it changes.
 # See https://hunk.dev/docs/reference/config/ for every setting.
 
-# kitty's palette: Ayu Dark, on kitty's own black (Ayu Dark's is #10141c).
-theme = "ayu-dark"
+# g9n — Ayu-dark base on true black (matches kitty / Terminal / tmux chrome).
+theme = "g9n"
 transparent_background = true
 
 menu_bar = false
@@ -17,6 +17,15 @@ watch = true
 
 # This file is the only source of truth: never offer to write view changes back on quit.
 prompt_save_view_preferences = false
+
+[themes.g9n]
+base = "ayu-dark"
+label = "g9n"
+background = "#000000"
+accent = "#e6b450"
+text = "#bfbdb6"
+muted = "#686868"
+border = "#555555"
 
 # / goes to the file filter (Tab reaches it too); content search keeps n / N for its matches.
 [keybindings]

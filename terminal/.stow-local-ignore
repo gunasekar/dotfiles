@@ -3,4 +3,4 @@
 # in the repo only.
 ^/README.*
 ^/install\.sh$
-^/generate-black-terminal\.swift$
+^/generate-g9n-terminal\.swift$

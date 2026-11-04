@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Apply the Terminal.app "Black" profile from this package and make it the
+# Apply the Terminal.app "g9n" profile from this package and make it the
 # default. Safe to re-run. macOS only.
 #
 # Terminal keeps profiles in its preferences domain (not a live-read config
@@ -16,11 +16,11 @@ if [[ "$(uname)" != "Darwin" ]]; then
 fi
 
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
-PROFILE_NAME="Black"
+PROFILE_NAME="g9n"
 # Prefer the stowed path; fall back to the repo copy before stow has run.
-PROFILE_PATH="$HOME/.config/terminal/Black.terminal"
+PROFILE_PATH="$HOME/.config/terminal/g9n.terminal"
 if [[ ! -f "$PROFILE_PATH" ]]; then
-  PROFILE_PATH="$DOTFILES/terminal/.config/terminal/Black.terminal"
+  PROFILE_PATH="$DOTFILES/terminal/.config/terminal/g9n.terminal"
 fi
 
 if [[ ! -f "$PROFILE_PATH" ]]; then
@@ -35,7 +35,8 @@ if [[ ! -f "$HOME/Library/Fonts/HackNerdFontMono-Regular.ttf" ]] &&
 fi
 
 # Merge the exported profile into Terminal's Window Settings, replacing any
-# previous "Black" entry. Do not `open` the .terminal file here — that spawns a
+# previous "g9n" entry. Also drop the old "Black" / "Black N" names from before
+# the g9n rename. Do not `open` the .terminal file here — that spawns a
 # window, and auto-closing it trips "terminate running processes: -zsh, env".
 # Prefs on disk are enough for the next new window; if Terminal is already
 # running, the light AppleScript below retargets Default/Startup without
@@ -59,9 +60,11 @@ else:
 
 windows = prefs.setdefault("Window Settings", {})
 windows[name] = profile
-# Prior installs used `open Black.terminal`, which duplicates as "Black 1", …
+# Drop duplicate "g9n 1"/"Black 1" style copies and the pre-rename "Black" profile.
 for key in list(windows):
-    if key != name and key.startswith(name + " "):
+    if key == name:
+        continue
+    if key.startswith(name + " ") or key == "Black" or key.startswith("Black "):
         del windows[key]
 prefs["Default Window Settings"] = name
 prefs["Startup Window Settings"] = name
@@ -118,6 +121,6 @@ fi
 
 echo "Terminal.app profile '$PROFILE_NAME' installed and set as default (daily driver)."
 echo "  kitty is alternate: Spotlight or \`open -a kitty\`."
-echo "  New windows/tabs use Black; close-on-shell-exit on; tab bar hidden for single tabs."
+echo "  New windows/tabs use g9n; close-on-shell-exit on; tab bar hidden for single tabs."
 echo "  Already-open windows keep their old profile — use Cmd+N (or quit Terminal once)."
 echo "  File-type defaults (scripts → TextEdit, not Terminal): setup/macos-file-handlers.sh"

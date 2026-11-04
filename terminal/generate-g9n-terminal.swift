@@ -1,6 +1,6 @@
-// Generate Terminal.app "Black" profile (.terminal plist).
+// Generate Terminal.app "g9n" profile (.terminal plist).
 // Usage (font must be installed):
-//   swift generate-black-terminal.swift .config/terminal/Black.terminal
+//   swift generate-g9n-terminal.swift .config/terminal/g9n.terminal
 // Then: ./install.sh
 
 import AppKit
@@ -28,7 +28,7 @@ guard let font = NSFont(name: "Hack Nerd Font Mono", size: 12)
     exit(1)
 }
 
-// Ayu-on-black palette from kitty/.config/kitty/kitty.conf
+// g9n palette (Ayu-dark colours on true black) — matches kitty.conf / g9n tmux
 let colors: [String: String] = [
     "TextColor": "#bfbdb6",
     "TextBoldColor": "#ffffff",
@@ -54,7 +54,7 @@ let colors: [String: String] = [
 ]
 
 var profile: [String: Any] = [
-    "name": "Black",
+    "name": "g9n",
     "type": "Window Settings",
     "ProfileCurrentVersion": 2.09,
     "Font": archive(font),

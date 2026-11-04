@@ -6,7 +6,7 @@
 Shell scripts are **not** bound to Terminal — double-click opens TextEdit for
 editing (see `setup/macos-file-handlers.sh`). Run scripts from a shell explicitly.
 
-Minimal profile: true black background, Hack Nerd Font Mono, Option-as-Meta,
+**g9n** profile: true black background, Hack Nerd Font Mono, Option-as-Meta,
 and **close the window when the shell exits**. No splits or extra chrome —
 tmux and the shell cover that.
 
@@ -28,10 +28,10 @@ stow terminal
 
 Symlink:
 
-- `~/.config/terminal/Black.terminal` → `~/.dotfiles/terminal/.config/terminal/Black.terminal`
+- `~/.config/terminal/g9n.terminal` → `~/.dotfiles/terminal/.config/terminal/g9n.terminal`
 
 Terminal.app does not live-read that file. `install.sh` merges it into
-`~/Library/Preferences/com.apple.Terminal.plist` and sets **Black** as the
+`~/Library/Preferences/com.apple.Terminal.plist` and sets **g9n** as the
 Default and Startup profile. It does **not** open a Terminal window (that used
 to trigger a “terminate running processes” dialog on close). Re-run
 `./terminal/install.sh` after edits or `git pull`; open a **new** window
@@ -41,10 +41,10 @@ to trigger a “terminate running processes” dialog on close). Re-run
 
 | Setting | Value |
 | --- | --- |
-| Name | Black |
+| Name | g9n |
 | Font | Hack Nerd Font Mono 12 |
 | Background | `#000000` |
-| Foreground / ANSI | Ayu-on-black (same palette as kitty) |
+| Foreground / ANSI | g9n (Ayu-on-black; same palette as kitty) |
 | Option as Meta | yes |
 | When the shell exits | Close the window |
 | Title bar | `user@host:cwd` |
@@ -55,7 +55,7 @@ Window size default: 120×30. The tab bar appears when you open a second tab
 (`Cmd+T`); hide/show manually with `⇧⌘T`. Opening/closing tabs can change
 window height when the bar appears or disappears — that is Terminal.app.
 
-**Titles.** Black leaves Terminal’s window *and* tab title checkboxes off
+**Titles.** g9n leaves Terminal’s window *and* tab title checkboxes off
 (including `Show*InTabTitle` — those produced `~ — … — -zsh`). `~/.zshrc`
 sets `user@host:cwd` on OSC window (`]2`) only and clears the tab title
 (`]1`): setting both to the same string made the title bar
@@ -65,12 +65,12 @@ title in the tab bar (Terminal.app only).
 ## Regenerating the profile
 
 Fonts and colours in `.terminal` files are archived Cocoa objects, so the
-committed `Black.terminal` is produced by a small Swift generator (needs the
+committed `g9n.terminal` is produced by a small Swift generator (needs the
 font installed on the machine that runs it):
 
 ```bash
 cd ~/.dotfiles/terminal
-swift generate-black-terminal.swift .config/terminal/Black.terminal
+swift generate-g9n-terminal.swift .config/terminal/g9n.terminal
 ./install.sh
 ```
 
@@ -78,7 +78,7 @@ swift generate-black-terminal.swift .config/terminal/Black.terminal
 
 ```bash
 cd ~/.dotfiles && stow -D terminal
-# Then in Terminal → Settings → Profiles, delete "Black" if you no longer want it.
+# Then in Terminal → Settings → Profiles, delete "g9n" if you no longer want it.
 ```
 
 ## Resources
