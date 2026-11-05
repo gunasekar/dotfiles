@@ -185,20 +185,27 @@ tmux already survives ssh drops, Wi-Fi loss, and quitting kitty on its own
 (and a Force Quit of kitty too, with the service above).
 The popular plugins mostly buy things this config covers natively:
 
-- **tmux-yank** → superseded by `set-clipboard on` and OSC 52 (see below).
+- **tmux-yank** → superseded by native `copy-command` and OSC 52 (see below).
 - **tmux-sensible** → its useful options are inlined in `tmux.conf`.
 - **sesh / tmux-sessionx** → `choose-tree` (`prefix + s`) is built in.
 - **tmux-resurrect / continuum** → what they restore after a reboot, the agents,
   trails restores itself: `trails boot` runs `trails restore` whenever it
   starts the server, and brings each lost trail back on its conversation.
 
-### Clipboard over ssh
+### Clipboard locally and over ssh
+
+On local macOS, `copy-command pbcopy` and the `copy-pipe-*` bindings copy
+directly to the system clipboard, including in Terminal.app, which does not
+support OSC 52 clipboard writes. Mouse release copies without leaving history;
+keyboard copy uses `Ctrl+b` then `[`, `v` to select, and `y` to copy and leave.
+The command is enabled only when `pbcopy` is available.
 
 `set -s set-clipboard on` lets Neovim (or an agent) on a remote box push a yank
 to the local macOS clipboard via OSC 52. The default `external` is **not**
 enough — it lets tmux set the clipboard but forbids applications inside from
 doing so. kitty advertises the `Ms` capability, so tmux has somewhere to send
-it.
+it. Terminal.app cannot receive this remote clipboard path; use kitty for OSC 52
+over SSH. A remote `pbcopy` writes the remote machine’s clipboard.
 
 ### Truecolor needs no configuration
 
@@ -384,7 +391,8 @@ off the wheel does nothing whatsoever. Pane history lives only inside tmux.
 
 The one real trade is selection: a drag belongs to tmux now. That's mostly fine,
 because tmux's drag-select copies to the macOS clipboard anyway via
-`set-clipboard`. Mouse release uses `copy-selection-no-clear` rather than the
+`pbcopy` on local macOS, or OSC 52 in supported terminals. Mouse release uses
+`copy-pipe-no-clear` rather than the
 default `copy-pipe-and-cancel`, so a selection copies **without** jumping back
 to the live cursor — you stay scrolled with the highlight still visible.
 

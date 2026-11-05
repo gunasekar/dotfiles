@@ -62,6 +62,13 @@ sets `user@host:cwd` on OSC window (`]2`) only and clears the tab title
 `user@host:~ — user@host:~`. With `]1` empty, Terminal reuses the window
 title in the tab bar (Terminal.app only).
 
+## Copying in tmux
+
+Terminal.app does not support OSC 52 clipboard writes. The tmux configuration
+uses `pbcopy` on local macOS for mouse selections and copy-mode `y`, including
+agent sessions under Trails. Reload with `tmux source-file ~/.config/tmux/tmux.conf`
+after updating. For remote tmux clipboard copying over SSH, use kitty.
+
 ## Regenerating the profile
 
 Fonts and colours in `.terminal` files are archived Cocoa objects, so the
