@@ -37,6 +37,10 @@ to trigger a “terminate running processes” dialog on close). Re-run
 `./terminal/install.sh` after edits or `git pull`; open a **new** window
 (`Cmd+N`) — or quit Terminal once — to pick up changes.
 
+The installer also sets Terminal’s General preference **New tabs open with →
+Default Working Directory**, so new tabs start in your home directory. Restart
+Terminal if a running instance does not pick up the preference immediately.
+
 ## Profile settings
 
 | Setting | Value |
@@ -92,3 +96,4 @@ cd ~/.dotfiles && stow -D terminal
 
 - [Import and export Terminal profiles](https://support.apple.com/guide/terminal/import-and-export-terminal-profiles-trml4299c696/mac)
 - [Profiles Shell settings](https://support.apple.com/guide/terminal/change-profiles-shell-settings-trmlshll/mac)
+- [General settings](https://support.apple.com/guide/terminal/change-general-settings-trmlstrtup/mac)

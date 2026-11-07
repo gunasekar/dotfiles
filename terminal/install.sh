@@ -79,6 +79,9 @@ defaults read com.apple.Terminal >/dev/null
 defaults write com.apple.Terminal "Default Window Settings" -string "$PROFILE_NAME"
 defaults write com.apple.Terminal "Startup Window Settings" -string "$PROFILE_NAME"
 
+# General → New tabs open with → Default Working Directory (the user's home).
+defaults write com.apple.Terminal NewTabWorkingDirectoryBehavior -int 1
+
 # Hide the tab bar when there is only one tab. Apple's key really is spelled
 # "Shoud". ShowTabBar is the older boolean some docs mention; clear both so a
 # prior "always show tab bar" (View → Show Tab Bar) does not stick.
@@ -122,5 +125,6 @@ fi
 echo "Terminal.app profile '$PROFILE_NAME' installed and set as default (daily driver)."
 echo "  kitty is alternate: Spotlight or \`open -a kitty\`."
 echo "  New windows/tabs use g9n; close-on-shell-exit on; tab bar hidden for single tabs."
+echo "  New tabs start in the home directory."
 echo "  Already-open windows keep their old profile — use Cmd+N (or quit Terminal once)."
 echo "  File-type defaults (scripts → TextEdit, not Terminal): setup/macos-file-handlers.sh"
