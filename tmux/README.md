@@ -13,8 +13,7 @@ there.
 Status/window chrome is **g9n** (`g9n.conf`): g9n palette (Ayu dark on true black), bottom bar,
 slanted window tabs (25-cell labels). `trails tmux-config` supplies status-left /
 status-right content (workspaces, task, checklist, clock) and the star and bell
-indicators through generic theme slots. The integration loads after the theme;
-older Trails releases fall back to `trails keys` until upgraded.
+indicators through generic theme slots. The integration loads after the theme.
 
 ## Installation
 
