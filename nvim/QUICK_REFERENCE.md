@@ -36,6 +36,8 @@ Inside Neovim, run:
 
 ## Plugin File Map
 
+Short `plugins/` paths are relative to `nvim/.config/nvim/lua/`.
+
 | Area | File or directory |
 | --- | --- |
 | LSP | `nvim/.config/nvim/lua/plugins/lsp/lsp.lua` |
@@ -47,7 +49,7 @@ Inside Neovim, run:
 | Fuzzy finder | `nvim/.config/nvim/lua/plugins/navigation/telescope.lua` |
 | Which-key | `nvim/.config/nvim/lua/plugins/navigation/which-key.lua` |
 | Git | `nvim/.config/nvim/lua/plugins/git.lua` |
-| Terminals | `nvim/.config/nvim/lua/plugins/editor/snacks.lua`, `nvim/.config/nvim/lua/plugins/ui/edgy.lua` |
+| Terminals | `plugins/editor/snacks.lua`, `plugins/ui/edgy.lua` |
 | AI agent | `nvim/.config/nvim/lua/plugins/agents.lua` |
 | Markdown | `nvim/.config/nvim/lua/plugins/markdown.lua` |
 | Diagrams/images | `nvim/.config/nvim/lua/plugins/diagram.lua` |
@@ -82,7 +84,7 @@ Leader key: `Space`
 | --- | --- |
 | `<leader>e` | Toggle Neo-tree |
 | `<leader>ef` | Reveal current file in Neo-tree |
-| `O` (in Neo-tree) | Folder: open in Finder; file: Quick Look preview |
+| `O` (in Neo-tree) | Open folder in Finder or file in its default application |
 | `<leader>ff` | Find files |
 | `<leader>fg` | Live grep |
 | `<leader>,` | Switch buffers |
@@ -98,12 +100,13 @@ Leader key: `Space`
 | `<leader>f` | Format buffer |
 | `<leader>ll` | Lint current file |
 | `<leader>ls` | Toggle ShellCheck strict mode |
+| `]C` / `[C` | Next / previous class (Treesitter) |
 | `<leader>gg` | Open Lazygit |
 | `<leader>gd` | Changes diff (CodeDiff float, read-only; `q` closes) |
 | `-` (in a diff) | Stage / unstage the file under the cursor |
 | `S` / `U` (in a diff) | Stage all / unstage all |
 | `<leader>hu` (in a diff) | Unstage hunk (`<leader>hs` stages) |
-| `<leader>gh` / `<leader>gH` | History of the branch / the current file (CodeDiff, in a float) |
+| `<leader>gh` / `<leader>gH` | Branch / file history (CodeDiff float) |
 | `<leader>hs` | Stage hunk |
 | `<leader>hr` | Reset hunk |
 | `<leader>hp` | Preview hunk |

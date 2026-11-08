@@ -292,7 +292,7 @@ Fixed during the review pass:
 - `:MasonVerify` is registered at startup and checks executable names instead of
   mixing Mason package names with runtime commands.
 - `:HealthCheck` no longer reports `dap` as missing when DAP is not configured.
-- `dressing.nvim` no longer requires `telescope.themes` during spec evaluation.
+- Snacks owns `vim.ui.input` and `vim.ui.select`; Dressing is removed.
 - LSP servers receive `blink.cmp` capabilities when `blink.cmp` is available.
 - `GoToggleTest` now rejects non-Go buffers and escapes paths before editing.
 - Stale bufferline-era mappings were removed from `keymaps-summary.lua`.

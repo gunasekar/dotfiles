@@ -9,14 +9,16 @@ configurations using GNU Stow.
 
 **Stack**: Zsh, Neovim (15 LSP servers), Terminal.app (default, macOS), kitty (alternate), Homebrew, Git
 **Platforms**: macOS (ARM/Intel), Linux
-**Current Version**: Neovim 0.11.5
+**Neovim**: Verify the installed version with `nvim --version`.
 
 ## Core Principles
 
 1. **Official documentation first**: fetch current official docs before changing
-   tool configuration.
+   tool configuration and check for deprecations — never rely on outdated blog
+   posts alone.
 2. **Security first**: never commit secrets such as `.aws/credentials`, SSH
-   private keys, API tokens, or machine-local credentials.
+   private keys, API tokens, or machine-local credentials. Use `pass` for
+   credential management.
 3. **Review before changing**: look for runtime bugs, tool ownership drift,
    keymap conflicts, lazy-loading issues, and documentation drift.
 4. **Follow local patterns**: prefer existing repo structure and helper APIs.
@@ -90,15 +92,6 @@ or explicitly apply the same review flow:
   are changed.
 - Report unrelated failures separately.
 
-## Workflow
-
-1. **Research**: fetch official documentation for changed tools.
-2. **Review**: identify likely bugs, drift, and simplification opportunities.
-3. **Implement**: follow existing patterns and keep the change scoped.
-4. **Validate**: run targeted checks.
-5. **Document**: update relevant docs for behavior/setup changes.
-6. **Report**: summarize what changed, what passed, and what remains.
-
 ## Commit Format
 
 ```text
@@ -112,24 +105,6 @@ Examples:
 - `feat(nvim): add telescope-file-browser extension`
 - `fix(zsh): correct PATH detection for ARM Macs`
 - `docs(readme): update installation instructions`
-
-## Critical Rules
-
-### Do
-
-- Fetch official documentation before implementing.
-- Check for API deprecations.
-- Test all changes before committing.
-- Update documentation with every user-facing change.
-- Use `pass` for credential management.
-
-### Do Not
-
-- Use outdated blog posts as the only source.
-- Commit secrets or credentials.
-- Skip testing or documentation.
-- Use deprecated APIs without checking.
-- Hardcode platform-specific paths.
 
 ## Key Resources
 

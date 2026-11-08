@@ -49,14 +49,13 @@ return {
 
       -- Configure shellcheck args based on strict mode
       if shellcheck_strict then
-        -- Enable all checks (override .shellcheckrc disables)
+        -- Enable optional checks while retaining project exclusions.
         lint.linters.shellcheck.args = {
           "--format=json",
           "--enable=all",
-          "--shell=bash",
           "-",
         }
-        print("Shellcheck STRICT mode enabled (all checks)")
+        print("Shellcheck STRICT mode (optional checks; project exclusions apply)")
       else
         -- Use default config from .shellcheckrc
         lint.linters.shellcheck.args = {

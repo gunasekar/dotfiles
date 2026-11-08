@@ -45,7 +45,7 @@ return {
 					"graphql", -- GraphQL
 					"lemminx", -- XML
 				},
-				automatic_installation = true,
+				automatic_enable = false,
 			})
 		end,
 	},
@@ -341,7 +341,7 @@ return {
 			-- Diagnostic configuration
 			vim.diagnostic.config({
 				-- Hide inline virtual text (those annoying messages on the right)
-				-- Use K or <leader>d to see diagnostics when needed
+				-- Use <leader>de to see diagnostics when needed
 				virtual_text = false,
 
 				-- Show signs in the gutter (left column)

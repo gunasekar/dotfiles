@@ -156,6 +156,7 @@ FILE EXPLORER (NEO-TREE)
 <Space>ef       Reveal current file in explorer
 
 In Neo-tree:
+  O             Open folder in Finder or file in default application
   Enter         Open file/folder
   a             New file
   A             New directory
@@ -327,6 +328,7 @@ In LazyGit:
 
 GIT HUNKS (GITSIGNS)
 --------------------
+]C / [C         Next / previous class (Treesitter)
 ]c              Next hunk (change)
 [c              Previous hunk (change)
 <Space>hp       Preview hunk (floating window)
@@ -638,7 +640,7 @@ ciw             Change word under cursor
 - Press <Space> and wait to see all available leader commands (which-key)
 - Use :help <topic> for detailed help on any feature
 - File paths in errors are clickable with gf (go to file)
-- Bufferline shows buffers 1-9, use <Space>1-9 to jump quickly
+- Neo-tree and the winbar show buffer numbers; use <Space>1-9 to jump
 - Auto-format on save is enabled (Conform)
 - Auto-lint on save is enabled (nvim-lint)
 

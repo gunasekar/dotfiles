@@ -101,6 +101,7 @@ K           Show documentation
 <Space>gg   Open Lazygit (visual Git UI)
 ]c          Next change
 [c          Previous change
+]C / [C     Next / previous class (Treesitter)
 <Space>hp   Preview hunk
 <Space>hs   Stage hunk
 <Space>hb   Blame line
@@ -121,6 +122,8 @@ K           Show documentation
 In the agent terminal:
 - `<Esc>` leaves terminal mode (back to Neovim normal)
 - `<C-Esc>` interrupts the agent (cancels the current prompt)
+
+Markdown renders only when you toggle the read-only view with `<Space>ui`.
 
 ## Git Workflow with Lazygit
 
@@ -201,6 +204,7 @@ n/N             Next/previous match
 Inside explorer:
   j/k           Navigate
   Enter         Open file/folder
+  O             Open folder in Finder or file in default application
   s             Open in vertical split
   S             Open in horizontal split
   a             New file
