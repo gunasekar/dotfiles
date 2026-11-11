@@ -1,11 +1,11 @@
 # Kitty Terminal Configuration
 
 **Alternate terminal** — Terminal.app is the default daily driver (see
-`terminal/README.md`). Keep kitty for GPU splits, the custom tab bar, and
+`terminal/README.md`). Keep kitty for GPU splits, the powerline tab bar, and
 kitty-protocol keys; open it with Spotlight or `open -a kitty`.
 
 Kitty configuration with the **g9n** theme (Ayu-dark on true black), a black
-title bar, a black equal-width custom tab bar, and free-form splits.
+title bar, a black powerline (slanted) tab bar, and free-form splits.
 
 ## Installation
 
@@ -19,7 +19,6 @@ stow --no-folding kitty
 its own files there (e.g. `current-theme.conf` from `kitten themes`). Symlinks:
 
 - `~/.config/kitty/kitty.conf` → `~/.dotfiles/kitty/.config/kitty/kitty.conf`
-- `~/.config/kitty/tab_bar.py` → `~/.dotfiles/kitty/.config/kitty/tab_bar.py`
 
 A fresh kitty install writes a commented-out default `kitty.conf`, which makes
 stow refuse. Delete it first (it holds no settings) and stow again.
@@ -76,12 +75,10 @@ no longer "clear to cursor".
 | `Ctrl+Cmd+F` | Toggle full screen |
 | `Cmd+Ctrl+M` | Toggle maximise (fills the screen, keeps the menu bar) |
 
-SSH / remote tabs get a 🖥️ prefix (for example `3: 🖥️ guna@probochs:~`),
-via `tab_bar.py` using kitty's `child_is_remote` and ssh-kitten detection.
-Tabs share the bar equally (`~100%/n`); titles centre and truncate with `…`
-when the share is tight. Separator style is `SEPARATOR_STYLE` in
-`tab_bar.py` (`slanted` /╱ or `hard` ▌/│) — reload with `Cmd+Ctrl+,`
-after edits (`stow --no-folding -R kitty` if the symlink is missing).
+Tabs use built-in `powerline` + `slanted` (`` / `╱`). Titles are
+`N: title`, centred/padded to the slot kitty allocates (~`columns/n`), and
+truncate with `…` when tight. Reload with `Cmd+Ctrl+,` after edits
+(`stow --no-folding -R kitty` if the symlink is missing).
 
 ### Ctrl keys belong to the programs
 
