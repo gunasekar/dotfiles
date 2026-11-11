@@ -5,7 +5,7 @@
 kitty-protocol keys; open it with Spotlight or `open -a kitty`.
 
 Kitty configuration with the **g9n** theme (Ayu-dark on true black), a black
-title bar, a black powerline tab bar with fixed-width tabs, and free-form splits.
+title bar, a black equal-width custom tab bar, and free-form splits.
 
 ## Installation
 
@@ -78,8 +78,10 @@ no longer "clear to cursor".
 
 SSH / remote tabs get a 🖥️ prefix (for example `3: 🖥️ guna@probochs:~`),
 via `tab_bar.py` using kitty's `child_is_remote` and ssh-kitten detection.
-Reload with `Cmd+Ctrl+,` after edits (`stow --no-folding -R kitty` if the
-symlink is missing).
+Tabs share the bar equally (`~100%/n`); titles centre and truncate with `…`
+when the share is tight. Separator style is `SEPARATOR_STYLE` in
+`tab_bar.py` (`slanted` /╱ or `hard` ▌/│) — reload with `Cmd+Ctrl+,`
+after edits (`stow --no-folding -R kitty` if the symlink is missing).
 
 ### Ctrl keys belong to the programs
 
