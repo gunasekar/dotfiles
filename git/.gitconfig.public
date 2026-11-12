@@ -23,6 +23,14 @@
 	diffFilter = delta --color-only
 [delta]
 	navigate = true
-	side-by-side = true
+	line-numbers = true
+	tabs = 2
+	# Dim decorations (default is bright blue). Side-by-side only via LazyGit `|`
+	# or: DELTA_FEATURES=+side-by-side git diff
+	file-decoration-style = "238 ul"
+	hunk-header-decoration-style = "238 box"
+	hunk-header-style = raw
+	line-numbers-left-style = 238
+	line-numbers-right-style = 238
 [merge]
 	conflictstyle = diff3

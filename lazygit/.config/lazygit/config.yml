@@ -1,8 +1,10 @@
 gui:
-  mouseEvents: true
   showDivergenceFromBaseBranch: arrowAndNumber
-  mainPanelSplitMode: vertical
+  tabWidth: 2
   sidePanelWidth: 0.2
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 3
+  shrinkSidePanelsToContent: true
 refresher:
   refreshInterval: 5
 notARepository: skip
@@ -11,5 +13,7 @@ git:
   log:
     showWholeGraph: true
   diffRenderers:
-    - colorArg: always
-      command: delta --paging=never --side-by-side
+    - name: delta
+      command: delta --{{colorScheme}} --paging=never
+    - name: delta (side-by-side)
+      command: delta --{{colorScheme}} --paging=never --side-by-side
