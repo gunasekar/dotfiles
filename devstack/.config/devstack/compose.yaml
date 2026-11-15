@@ -1,0 +1,46 @@
+# Local dev services: Postgres + Floci (AWS emulator).
+# Managed with the dev-* functions in sources/docker.sh — see devstack/README.md.
+#
+# Data lives in the named volumes at the bottom, not in the containers, so
+# recreating a container on an image update keeps it.
+
+name: devstack
+
+services:
+  postgres:
+    # Major version pinned: a new major needs a dump/restore (devstack/README.md).
+    # Keep it on the same major as prod RDS so lq-prod-db-restore loads cleanly.
+    image: postgres:17
+    container_name: postgresdb
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      # Local dev only — lq-prod-db-restore expects postgres/password.
+      POSTGRES_PASSWORD: password
+    shm_size: 256m
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  floci:
+    # Floci publishes only exact versions and latest-* tags, no major-version tag.
+    image: floci/floci:latest-compat
+    container_name: floci
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      FLOCI_STORAGE_MODE: persistent
+    volumes:
+      - floci-data:/app/data
+
+volumes:
+  pgdata:
+    name: pgdata
+  floci-data:
+    name: floci-data

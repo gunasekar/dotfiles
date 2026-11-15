@@ -3,3 +3,8 @@ no_retry = true
 
 [brew]
 greedy_cask = true
+
+[commands]
+# Local dev containers (devstack/README.md): pull newer images, recreate changed ones.
+# Exits 0 when Docker isn't running, so it never fails the run.
+"devstack" = "devstack update"

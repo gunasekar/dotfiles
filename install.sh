@@ -138,6 +138,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
   mkdir -p "$HOME/.config/colima/default"
   stow -v --no-folding colima
 
+  # Local dev containers — see devstack/README.md. --no-folding: ~/.config and
+  # ~/.local/bin are shared. Containers are started by hand (`dev-up`) once Colima
+  # is running; it may still be booting at this point.
+  echo "  • devstack → ~/.config/devstack/compose.yaml, ~/.local/bin/devstack"
+  mkdir -p "$HOME/.config/devstack"
+  stow -v --no-folding devstack
+
   # Print to PDF printer — see printer/README.md. --no-folding: ~/.local/bin and
   # ~/Library/LaunchAgents are shared with everything else that installs there.
   # The agent and the CUPS queue aren't files, so set them up here, each only if

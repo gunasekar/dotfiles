@@ -1,0 +1,79 @@
+#!/bin/bash
+# Manage the local dev containers (Postgres + Floci) — see devstack/README.md.
+# A script rather than shell functions so topgrade can call `devstack update`.
+set -euo pipefail
+
+compose_file="${XDG_CONFIG_HOME:-$HOME/.config}/devstack/compose.yaml"
+backup_dir="$HOME/backups/devstack"
+
+usage() {
+  cat <<EOF
+Usage: devstack <command>
+
+  up        create/start the containers and wait until healthy
+  down      stop the containers (data kept)
+  update    pull newer images, recreate changed containers, drop old images
+  logs [s]  follow logs (all, or one service: postgres | floci)
+  backup    pg_dumpall to $backup_dir/pg-<timestamp>.sql
+  ps        show container status
+EOF
+}
+
+dc() { docker compose -f "$compose_file" "$@"; }
+
+need_docker() {
+  if ! docker info &>/dev/null; then
+    echo "devstack: Docker is not running (start it with 'colima start')" >&2
+    exit "${1:-1}"
+  fi
+}
+
+cmd="${1:-}"
+[[ $# -gt 0 ]] && shift
+
+case "$cmd" in
+  up)
+    need_docker
+    dc up -d --wait
+    ;;
+  down)
+    need_docker
+    dc stop
+    ;;
+  update)
+    # Exit 0 when Docker is down so a topgrade run isn't marked failed.
+    need_docker 0
+    dc pull
+    dc up -d --wait
+    docker image prune -f >/dev/null
+    dc images
+    ;;
+  logs)
+    need_docker
+    dc logs -f --tail 100 "$@"
+    ;;
+  backup)
+    need_docker
+    mkdir -p "$backup_dir"
+    out="$backup_dir/pg-$(date +%Y%m%d-%H%M%S).sql"
+    if docker exec postgresdb pg_dumpall -U postgres >"$out"; then
+      echo "Backed up to $out ($(du -h "$out" | cut -f1))"
+    else
+      rm -f "$out"
+      echo "devstack: backup failed" >&2
+      exit 1
+    fi
+    ;;
+  ps)
+    need_docker
+    dc ps
+    ;;
+  -h | --help | help | "")
+    usage
+    ;;
+  *)
+    echo "devstack: unknown command '$cmd'" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

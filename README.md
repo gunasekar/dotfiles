@@ -79,6 +79,7 @@ sudo dnf install git stow      # Fedora/RHEL
 ├── terminal/         # Terminal.app (default terminal, macOS) — see terminal/README.md
 ├── kitty/            # Kitty (alternate terminal) — see kitty/README.md
 ├── colima/           # Colima container runtime config (see colima/README.md)
+├── devstack/         # Local dev Postgres + Floci via Compose (see devstack/README.md)
 ├── printer/          # "Print to PDF" printer, macOS (see printer/README.md)
 ├── lazygit/          # Lazygit Git TUI configuration
 ├── mpv/              # mpv player configuration
@@ -176,6 +177,15 @@ docker-stop-all          # Stop all containers
 docker-rm-all-containers # Remove all containers (with confirmation)
 docker-rm-all-images     # Remove all images (with confirmation)
 docker-ips               # Show container IP addresses
+```
+
+Local dev Postgres + Floci (see [devstack/README.md](devstack/README.md)):
+
+```bash
+dev-up / dev-down        # Start / stop both containers (data kept)
+dev-update               # Pull newer images, recreate changed containers (also a topgrade step)
+dev-logs [service]       # Follow logs
+dev-backup               # pg_dumpall to ~/backups/devstack/
 ```
 
 ## SSH Key Generation
