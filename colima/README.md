@@ -56,6 +56,16 @@ launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plis
 Creates: `~/.config/colima/default/colima.yaml` → `~/.dotfiles/colima/.config/colima/default/colima.yaml`
 and `~/Library/LaunchAgents/local.guna.colima.plist` → the tracked plist.
 
+`colima delete` removes `~/.config/colima/default/` including the symlink. Re-run the
+`stow` line above (or `install.sh`) before the next `colima start`, or Colima creates a
+fresh default `colima.yaml` that the repo no longer controls.
+
+## Resizing
+
+`memory` and `cpu` take effect on the next restart. `disk` can only grow in place. To
+shrink it, `colima delete --data` (wipes all images, containers and volumes), re-stow,
+then `colima start`.
+
 ## Migrating from a legacy `~/.colima`
 
 If you still have the old directory, move it once (stop Colima first):
