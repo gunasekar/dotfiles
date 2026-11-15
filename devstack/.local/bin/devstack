@@ -10,8 +10,9 @@ usage() {
   cat <<EOF
 Usage: devstack <command>
 
-  up        create/start the containers and wait until healthy
-  down      stop the containers (data kept)
+  up        start Colima if needed, then the containers; wait until healthy
+  down      stop the containers (data kept), Colima keeps running
+  off       stop the containers and Colima, freeing the VM's RAM
   update    pull newer images, recreate changed containers, drop old images
   logs [s]  follow logs (all, or one service: postgres | floci)
   backup    pg_dumpall to $backup_dir/pg-<timestamp>.sql
@@ -28,17 +29,32 @@ need_docker() {
   fi
 }
 
+# Hosts without Colima autostart (colima/README.md) bring the VM up on demand.
+ensure_docker() {
+  docker info &>/dev/null && return
+  echo "devstack: starting Colima…"
+  colima start
+}
+
 cmd="${1:-}"
 [[ $# -gt 0 ]] && shift
 
 case "$cmd" in
   up)
-    need_docker
+    ensure_docker
     dc up -d --wait
     ;;
   down)
     need_docker
     dc stop
+    ;;
+  off)
+    if docker info &>/dev/null; then
+      dc stop
+      colima stop
+    else
+      echo "devstack: Colima is already stopped"
+    fi
     ;;
   update)
     # Exit 0 when Docker is down so a topgrade run isn't marked failed.

@@ -8,15 +8,21 @@ The two containers I use for day-to-day development, defined in one Compose file
 | Floci (AWS emulator) | `floci` | `floci/floci:latest-compat` | `http://localhost:4566` |
 
 Runs on Colima (see `colima/README.md`). Both containers use `restart: unless-stopped`,
-so they come back whenever Colima starts at login.
+so they come back whenever Colima starts.
+
+- **Always-on host (probochs):** Colima autostarts at login, so the containers are
+  just there.
+- **On-demand host (airbochs):** Colima autostart is disabled. `dev-up` boots Colima
+  and the containers, and `dev-off` shuts both down to give the RAM back.
 
 ## Commands
 
 From `sources/docker.sh`, usable from any directory:
 
 ```bash
-dev-up        # create/start both containers
-dev-down      # stop them (data kept)
+dev-up        # start Colima if needed, then both containers
+dev-down      # stop the containers (data kept), Colima keeps running
+dev-off       # stop the containers and Colima
 dev-update    # pull newer images, recreate only the containers that changed
 dev-logs      # follow logs (dev-logs postgres / dev-logs floci for one)
 dev-backup    # pg_dumpall to ~/backups/devstack/pg-<timestamp>.sql

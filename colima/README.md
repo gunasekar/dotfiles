@@ -38,9 +38,16 @@ No `KeepAlive`, so `colima stop` is not fought.
 ```bash
 # load now (install.sh does this automatically)
 launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
-# disable autostart
+# disable autostart on this machine (persists across logins and install.sh reruns)
 launchctl bootout gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
+launchctl disable gui/"$(id -u)"/local.guna.colima
+# re-enable
+launchctl enable gui/"$(id -u)"/local.guna.colima
+launchctl bootstrap gui/"$(id -u)" ~/Library/LaunchAgents/local.guna.colima.plist
 ```
+
+probochs keeps autostart on. airbochs has it disabled and starts Colima on demand
+through `dev-up` (see `devstack/README.md`).
 
 Logs: `~/Library/Logs/colima.log`.
 
