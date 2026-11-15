@@ -182,8 +182,7 @@ docker-ips               # Show container IP addresses
 Local dev Postgres + Floci (see [devstack/README.md](devstack/README.md)):
 
 ```bash
-dev-up / dev-down        # Start / stop both containers (data kept), dev-up boots Colima if needed
-dev-off                  # Stop the containers and Colima
+dev-up / dev-down        # Start / stop Colima and both containers (data kept)
 dev-update               # Pull newer images, recreate changed containers (also a topgrade step)
 dev-logs [service]       # Follow logs
 dev-backup               # pg_dumpall to ~/backups/devstack/

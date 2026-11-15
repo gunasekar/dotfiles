@@ -90,7 +90,6 @@ function docker-ips {
 # driven by ~/.local/bin/devstack — see devstack/README.md.
 function dev-up { devstack up "$@"; }
 function dev-down { devstack down "$@"; }
-function dev-off { devstack off "$@"; }
 function dev-update { devstack update "$@"; }
 function dev-logs { devstack logs "$@"; }
 function dev-backup { devstack backup "$@"; }

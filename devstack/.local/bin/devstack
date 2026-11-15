@@ -11,8 +11,8 @@ usage() {
 Usage: devstack <command>
 
   up        start Colima if needed, then the containers; wait until healthy
-  down      stop the containers (data kept), Colima keeps running
-  off       stop the containers and Colima, freeing the VM's RAM
+  down      stop the containers (data kept), then Colima unless other
+            containers are still running in it
   update    pull newer images, recreate changed containers, drop old images
   logs [s]  follow logs (all, or one service: postgres | floci)
   backup    pg_dumpall to $backup_dir/pg-<timestamp>.sql
@@ -45,15 +45,18 @@ case "$cmd" in
     dc up -d --wait
     ;;
   down)
-    need_docker
-    dc stop
-    ;;
-  off)
-    if docker info &>/dev/null; then
-      dc stop
-      colima stop
-    else
+    if ! docker info &>/dev/null; then
       echo "devstack: Colima is already stopped"
+      exit 0
+    fi
+    dc stop
+    # Leave the VM up for anything else running in it — stopping Colima would
+    # take those containers down too.
+    others=$(docker ps --format '{{.Names}}')
+    if [[ -n "$others" ]]; then
+      echo "devstack: Colima left running for other containers: ${others//$'\n'/, }"
+    else
+      colima stop
     fi
     ;;
   update)
