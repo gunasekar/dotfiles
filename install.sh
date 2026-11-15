@@ -145,6 +145,15 @@ if [[ "$(uname)" == "Darwin" ]]; then
   mkdir -p "$HOME/.config/devstack"
   stow -v --no-folding devstack
 
+  # Homebrew's docker-buildx and docker-compose are CLI plugins, but the docker CLI
+  # only finds them in ~/.docker/cli-plugins. Link whichever are installed.
+  mkdir -p "$HOME/.docker/cli-plugins"
+  for plugin in docker-buildx docker-compose; do
+    for src in "/opt/homebrew/lib/docker/cli-plugins/$plugin" "/opt/homebrew/opt/$plugin/bin/$plugin"; do
+      [[ -x "$src" ]] && ln -sfn "$src" "$HOME/.docker/cli-plugins/$plugin" && break
+    done
+  done
+
   # Print to PDF printer — see printer/README.md. --no-folding: ~/.local/bin and
   # ~/Library/LaunchAgents are shared with everything else that installs there.
   # The agent and the CUPS queue aren't files, so set them up here, each only if
