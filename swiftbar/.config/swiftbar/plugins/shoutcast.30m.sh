@@ -48,10 +48,8 @@ player_running() {
   [[ -S $socket ]] && reply '{"command":["get_property","idle-active"]}' >/dev/null
 }
 
-radio_header() {
-  local style
-  style=$(printf '{"renderingMode":"Palette","colors":["%s"]}' "$1" | base64 | tr -d '\n')
-  printf ' | sfimage=radio sfconfig=%s\n---\n' "$style"
+player_playing() {
+  reply '{"command":["get_property","core-idle"]}' | jq -e '.data == false' >/dev/null
 }
 
 play() {
@@ -78,7 +76,15 @@ play() {
   fi
   reply '{"command":["set_property","pause",false]}' >/dev/null
   command=$(jq -cn --arg id "$id" '{command:["set_property","user-data/shoutcast/station",$id]}')
-  reply "$command" >/dev/null
+  reply "$command" >/dev/null || return 1
+
+  # SwiftBar refreshes when the action exits. Give a buffering stream time to start.
+  for _ in {1..10}; do
+    player_playing && break
+    player_running || break
+    sleep 0.2
+  done
+  return 0
 }
 
 stop() {
@@ -94,7 +100,7 @@ stop() {
 
 for dependency in jq mpv; do
   if ! command -v "$dependency" >/dev/null; then
-    radio_header '#808080'
+    printf '%s\n' ' | sfimage=radio' '---'
     printf '%s is required\n' "$dependency"
     exit 0
   fi
@@ -144,17 +150,17 @@ APPLESCRIPT
   *) exit 1 ;;
 esac
 
-icon_color='#808080'
 active=''
 running=false
+header=' | sfimage=radio'
 if player_running; then
   running=true
-  if reply '{"command":["get_property","core-idle"]}' | jq -e '.data == false' >/dev/null; then
-    icon_color='#A3D948'
+  if player_playing; then
+    header=' | sfimage=radio.fill'
     active=$(reply '{"command":["get_property","user-data/shoutcast/station"]}' | jq -r '.data')
   fi
 fi
-radio_header "$icon_color"
+printf '%s\n' "$header" '---'
 
 if [[ $running == true ]]; then
   printf "Stop Radio | bash='%s' param1=stop terminal=false refresh=true\n" "$script"
@@ -186,12 +192,12 @@ if [[ -z $cached ]]; then
 elif [[ $cached == '[]' ]]; then
   echo 'No matching stations'
 else
-  jq -r --argjson limit "$STATION_LIMIT" --arg script "$script" --arg active "$active" --arg color "$icon_color" '
+  jq -r --argjson limit "$STATION_LIMIT" --arg script "$script" --arg active "$active" '
     def menu_text: tostring | gsub("[[:cntrl:]]"; " ") | gsub("[|]"; "¦");
     map(objects | select((.ID | tostring) | test("^[0-9]+$"))) | .[:$limit][] |
     (if (.ID | tostring) == $active then "♪ " else "• " end) +
     "\(.Name | menu_text) · \(.Bitrate | menu_text) kbps · \(.Listeners | menu_text) listeners | bash=\u0027\($script)\u0027 param1=play param2=\(.ID) terminal=false refresh=true size=12" +
-    (if (.ID | tostring) == $active then " color=\($color)" else "" end)
+    (if (.ID | tostring) == $active then " color=#A3D948" else "" end)
   ' <<<"$cached"
 fi
 printf '%s\n' '---'
