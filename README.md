@@ -263,7 +263,8 @@ Plugins use native `<swiftbar.*>` metadata.
   or submit a blank search to restore the default. Set `DEFAULT_SEARCH_QUERY`
   and `STATION_LIMIT` at the top of the script to customize the defaults. Pick
   another station to switch streams, or choose **Stop Radio** to close the
-  plugin's player. macOS play/pause works when media keys are routed to `mpv`.
+  plugin's player. Use **Playing Color** to change the icon and active station
+  color. macOS play/pause works when media keys are routed to `mpv`.
 - **toolbox.sh**: Developer utilities (UUID, hash generators, etc.)
 - **totp.sh**: TOTP/2FA token generator
 

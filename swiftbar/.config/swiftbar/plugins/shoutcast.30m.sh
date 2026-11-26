@@ -13,6 +13,17 @@
 # Edit the default search and station limit here.
 DEFAULT_SEARCH_QUERY="tamil"
 STATION_LIMIT=15
+PLAYING_COLORS='Amber|#FFB340
+Sky Blue|#64D2FF
+Lavender|#BF5AF2
+Coral|#FF6961
+Mint|#66D4CF
+Pink|#FF375F
+Cobalt|#407BFF
+Lime|#A3D948
+Orange|#FF7A1A
+Magenta|#D946A6
+Teal|#00A89D'
 
 case "$(uname -m)" in
   arm64) export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH" ;;
@@ -46,6 +57,12 @@ reply() {
 
 player_running() {
   [[ -S $socket ]] && reply '{"command":["get_property","idle-active"]}' >/dev/null
+}
+
+radio_header() {
+  local style
+  style=$(printf '{"renderingMode":"Palette","colors":["%s"]}' "$1" | base64 | tr -d '\n')
+  printf ' | sfimage=radio sfconfig=%s\n---\n' "$style"
 }
 
 play() {
@@ -88,12 +105,23 @@ stop() {
 
 for dependency in jq mpv; do
   if ! command -v "$dependency" >/dev/null; then
-    printf '%s\n' ':radio: | symbolize=true sfcolor=#808080' '---' "$dependency is required"
+    radio_header '#808080'
+    printf '%s is required\n' "$dependency"
     exit 0
   fi
 done
 
 case "${1:-}" in
+  color)
+    while IFS='|' read -r name color; do
+      if [[ $name == "${2:-}" ]]; then
+        temp=$(mktemp color.XXXXXX) || exit 1
+        printf '%s\n' "$color" >"$temp" && mv -f "$temp" playing-color
+        exit $?
+      fi
+    done <<<"$PLAYING_COLORS"
+    exit 1
+    ;;
   search)
     query=$(
       /usr/bin/osascript - "$SEARCH_QUERY" <<'APPLESCRIPT'
@@ -137,17 +165,24 @@ APPLESCRIPT
   *) exit 1 ;;
 esac
 
+playing_color='#FFB340'
+if [[ -s playing-color ]]; then
+  IFS= read -r saved_color <playing-color
+  if [[ $saved_color =~ ^#[[:xdigit:]]{6}$ ]]; then
+    playing_color=$saved_color
+  fi
+fi
 icon_color='#808080'
 active=''
 running=false
 if player_running; then
   running=true
   if reply '{"command":["get_property","core-idle"]}' | jq -e '.data == false' >/dev/null; then
-    icon_color='#FFB340'
+    icon_color=$playing_color
     active=$(reply '{"command":["get_property","user-data/shoutcast/station"]}' | jq -r '.data')
   fi
 fi
-printf ':radio: | symbolize=true sfcolor=%s\n---\n' "$icon_color"
+radio_header "$icon_color"
 
 if [[ $running == true ]]; then
   printf "Stop Radio | bash='%s' param1=stop terminal=false refresh=true\n" "$script"
@@ -190,3 +225,10 @@ fi
 printf '%s\n' '---'
 printf "Search Stations… | bash='%s' param1=search terminal=false refresh=true\n" "$script"
 printf "Refresh Stations | bash='%s' param1=reload terminal=false refresh=true\n" "$script"
+printf '%s\n' 'Playing Color | color=#777777'
+while IFS='|' read -r name color; do
+  selected=false
+  [[ $color == "$playing_color" ]] && selected=true
+  printf -- "--%s | color=%s bash='%s' param1=color param2='%s' terminal=false refresh=true checked=%s\n" \
+    "$name" "$color" "$script" "$name" "$selected"
+done <<<"$PLAYING_COLORS"
