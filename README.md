@@ -258,7 +258,7 @@ Plugins use native `<swiftbar.*>` metadata.
   is holding the Mac awake. Replaces Amphetamine, which could not be driven over ssh
 - **worldclock.1m.sh**: World clock with multiple timezones
 - **mmi.30m.sh**: Market Mood Index tracker
-- **shoutcast.30m.sh**: Browse the first 15 Tamil stations from SHOUTcast and
+- **shoutcast.30m.sh**: Browse up to 15 Tamil stations with a positive bitrate and
   play them in `mpv`. Choose **Search Stations…** to change the saved search
   or submit a blank search to restore the default. Set `DEFAULT_SEARCH_QUERY`
   and `STATION_LIMIT` at the top of the script to customize the defaults. Pick

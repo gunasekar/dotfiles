@@ -189,15 +189,17 @@ fi
 
 if [[ -z $cached ]]; then
   echo 'Could not fetch stations'
-elif [[ $cached == '[]' ]]; then
-  echo 'No matching stations'
 else
   jq -r --argjson limit "$STATION_LIMIT" --arg script "$script" --arg active "$active" '
     def menu_text: tostring | gsub("[[:cntrl:]]"; " ") | gsub("[|]"; "¦");
-    map(objects | select((.ID | tostring) | test("^[0-9]+$"))) | .[:$limit][] |
+    map(objects | select((.ID | tostring) | test("^[0-9]+$")) |
+      select((try (.Bitrate | tonumber) catch 0) > 0)) | .[:$limit] |
+    if length == 0 then "No matching stations" else
+    .[] |
     (if (.ID | tostring) == $active then "♪ " else "• " end) +
     "\(.Name | menu_text) · \(.Bitrate | menu_text) kbps · \(.Listeners | menu_text) listeners | bash=\u0027\($script)\u0027 param1=play param2=\(.ID) terminal=false refresh=true size=12" +
     (if (.ID | tostring) == $active then " color=#A3D948" else "" end)
+    end
   ' <<<"$cached"
 fi
 printf '%s\n' '---'
